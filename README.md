@@ -9,6 +9,10 @@ Though this app does the job, I would ideally like to have an app that does it a
 
 ## Functionality to achieve
 - Recreate the Excel functionality
+  - Show income in front-end
+  - Establish connection between frontend and backend
+  - Attach database to store spending
+    - Figure out layout for db
   - Import account payments
   - View of spending
 
