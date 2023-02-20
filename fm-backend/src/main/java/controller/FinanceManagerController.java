@@ -1,16 +1,31 @@
 package controller;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
 import service.FinanceManagerService;
 
-public class FinanceManagerController {
-    FinanceManagerService service;
 
-    public FinanceManagerController() {
-        this.service = new FinanceManagerService();
+@RestController
+public class FinanceManagerController {
+    @GetMapping("/")
+    public String firstTry() {
+        System.out.print("Hi");
+        return "Welcome Friend";
     }
 
-    public int run() {
+    @GetMapping("/no")
+    public ResponseEntity<String> getHome() {
         System.out.print("Hi");
-        return service.getCurrentSalary();
+        return new ResponseEntity<>("<h1>The Finance Manager is running</h1>", HttpStatus.OK);
+    }
+
+
+    @GetMapping("/salary")
+    public ResponseEntity<Integer> getCurrentSalary() {
+        System.out.print("Salary!!");
+        FinanceManagerService service = new FinanceManagerService();
+        return new ResponseEntity<>(service.getCurrentSalary(), HttpStatus.OK);
     }
 }
