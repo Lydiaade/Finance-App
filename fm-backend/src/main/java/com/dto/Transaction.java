@@ -10,7 +10,8 @@ public class Transaction {
     @Id
     @SequenceGenerator(
             name = "transaction_id_sequence",
-            sequenceName = "transaction_id_sequence"
+            sequenceName = "transaction_id_sequence",
+            allocationSize = 1
     )
     @GeneratedValue(
             strategy = GenerationType.SEQUENCE,
@@ -23,8 +24,7 @@ public class Transaction {
     private String paid_to;
     private String memo;
 
-    public Transaction(Integer id, String date, Float amount, String category, String paid_to, String memo) {
-        this.id = id;
+    public Transaction(String date, Float amount, String category, String paid_to, String memo) {
         this.date = date;
         this.amount = amount;
         this.category = category;
