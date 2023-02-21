@@ -14,10 +14,9 @@ class App extends Component {
 
     getHome = () => {
         fetch(BACKEND_URL)
-            .then((data) => data.json())
-            .then((data) => console.log(data))
+            .then((data) => data.text())
             .then((data) => this.setState({message: data}));
-    };
+    }
 
     render() {
         return (
