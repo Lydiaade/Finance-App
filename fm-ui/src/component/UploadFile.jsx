@@ -12,7 +12,7 @@ class UploadFile extends Component {
         const formData = new FormData();
 
         formData.append(
-            "myFile",
+            "transaction files",
             this.state.selectedFile,
             this.state.selectedFile.name
         );
