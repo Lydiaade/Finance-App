@@ -1,5 +1,5 @@
 import React, {Component} from "react";
-import Transaction from "./transaction";
+import Transaction from "./Transaction";
 
 class TransactionContainer extends Component {
     render() {

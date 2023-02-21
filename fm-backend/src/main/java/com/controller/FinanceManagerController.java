@@ -6,11 +6,11 @@ import com.service.FinanceManagerService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Optional;
 
-@CrossOrigin(origins = "http://localhost:3000", maxAge = 3600)
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 public class FinanceManagerController {
 
@@ -51,6 +51,13 @@ public class FinanceManagerController {
         Transaction transaction = new Transaction(
                 request.date(), request.amount(), request.category(), request.paid_to(), request.memo());
         transactionRepository.save(transaction);
+    }
+
+    @PostMapping("/upload/transactions")
+    public void uploadTransactions(@RequestBody MultipartFile file) {
+        System.out.print("Transaction uploaded");
+        // TODO: Generate transactions from uploaded csv!
+        System.out.print(file);
     }
 
     @DeleteMapping("/transaction/{customerId}")

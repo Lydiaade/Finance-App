@@ -1,8 +1,8 @@
 import React, {Component} from "react";
 import './App.css';
-import TransactionContainer from "./component/transactionContainer";
-
-const BACKEND_URL = "http://localhost:8080/"
+import TransactionContainer from "./component/TransactionContainer";
+import {BACKEND_URL} from "./config";
+import UploadFile from "./component/UploadFile";
 
 class App extends Component {
     state = {
@@ -36,6 +36,7 @@ class App extends Component {
                             <p>{this.state.message}</p>
                         </header>
                     </div>
+                    <UploadFile/>
                     <main className="container-fluid m-2">
                         <div className="row">
                             <div className="itemList col-9">
