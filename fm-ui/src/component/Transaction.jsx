@@ -10,7 +10,7 @@ class Transaction extends Component {
                     {id}
                 </p>
                 <p className="transactionDate">{date}</p>
-                <p className="transactionAmount">£{amount}</p>
+                <p className="transactionAmount">{amount < 0 ? `- £${amount*-1}` : `£${amount}`}</p>
                 <p className="transactionCategory">{category}</p>
                 <p className="transactionPaidTo">{paid_to}</p>
                 <p className="transactionMemo">{memo}</p>

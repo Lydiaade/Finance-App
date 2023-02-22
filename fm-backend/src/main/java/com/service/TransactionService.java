@@ -12,15 +12,20 @@ import java.util.List;
 
 @Service
 public class TransactionService {
-    @Autowired
-    TransactionRepository transactionRepository;
+    private final TransactionRepository transactionRepository;
+    private final CSVHelper csvHelper;
+
+    public TransactionService(TransactionRepository transactionRepository, CSVHelper csvHelper) {
+        this.transactionRepository = transactionRepository;
+        this.csvHelper = csvHelper;
+    }
 
     public void saveFile(MultipartFile file) {
         try {
-            List<Transaction> csv_transactions = CSVHelper.csvToTransactions(file);
+            List<Transaction> csv_transactions = csvHelper.csvToTransactions(file);
             transactionRepository.saveAll(csv_transactions);
         } catch (IOException e) {
-            throw new RuntimeException("fail to store csv data: " + e.getMessage());
+            throw new RuntimeException("Fail to store csv data: " + e.getMessage());
         }
     }
 

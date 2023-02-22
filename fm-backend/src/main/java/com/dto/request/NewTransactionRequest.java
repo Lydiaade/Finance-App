@@ -2,7 +2,7 @@ package com.dto.request;
 
 public record NewTransactionRequest(
         String date,
-        Float amount,
+        Double amount,
         String category,
         String paid_to,
         String memo

@@ -19,12 +19,12 @@ public class Transaction {
     )
     private Integer id;
     private String date;
-    private Float amount;
+    private Double amount;
     private String category;
     private String paid_to;
     private String memo;
 
-    public Transaction(String date, Float amount, String category, String paid_to, String memo) {
+    public Transaction(String date, Double amount, String category, String paid_to, String memo) {
         this.date = date;
         this.amount = amount;
         this.category = category;
@@ -51,11 +51,11 @@ public class Transaction {
         this.date = date;
     }
 
-    public Float getAmount() {
+    public Double getAmount() {
         return amount;
     }
 
-    public void setAmount(Float amount) {
+    public void setAmount(Double amount) {
         this.amount = amount;
     }
 

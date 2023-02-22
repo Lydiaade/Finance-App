@@ -13,6 +13,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/home")
 public class FinanceManagerController {
 
+    private final FinanceManagerService financeManagerService;
+
+    public FinanceManagerController(FinanceManagerService financeManagerService) {
+        this.financeManagerService = financeManagerService;
+    }
+
     @GetMapping("/")
     public ResponseEntity<String> status_check() {
         return new ResponseEntity<>("Finance Manager is running", HttpStatus.OK);
@@ -20,7 +26,6 @@ public class FinanceManagerController {
 
     @GetMapping("/salary")
     public ResponseEntity<Integer> current_salary() {
-        FinanceManagerService service = new FinanceManagerService();
-        return new ResponseEntity<>(service.getCurrentSalary(), HttpStatus.OK);
+        return new ResponseEntity<>(financeManagerService.getCurrentSalary(), HttpStatus.OK);
     }
 }
