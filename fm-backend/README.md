@@ -4,8 +4,10 @@ The backend has been created to manage the db for the transactions and hopefully
 
 
 ## To-Do List
-- Create method to generate transactions when file is sent through in front end and saves to db
-- 
+- [x] Create method to generate transactions when file is sent through in front end and saves to db
+    - Handle error cases on file upload
+- [] Add starting salary endpoint
+- [] Collate spend and income
 
 ## How to's
 - To add dummy data to the db you can access the database in docker using the terminal. An examply transaction has been attached below.

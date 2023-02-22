@@ -44,23 +44,6 @@ public class CSVHelper {
 
     }
 
-//
-//    private List<String> fileToArray(MultipartFile file) throws IOException {
-//        BufferedReader br;
-//        List<String> result = new ArrayList<>();
-//        try {
-//            String line;
-//            InputStream is = file.getInputStream();
-//            br = new BufferedReader(new InputStreamReader(is));
-//            while ((line = br.readLine()) != null) {
-//                result.add(line);
-//            }
-//        } catch (IOException e) {
-//            System.err.println(e.getMessage());
-//        }
-//        return result;
-//    }
-
     private File multipartFileToFile(MultipartFile file) throws IOException {
         File convFile = new File(Objects.requireNonNull(file.getOriginalFilename()));
         FileOutputStream fos = new FileOutputStream(convFile);
