@@ -5,7 +5,7 @@ class Transaction extends Component {
         const {id, date, amount, category, paid_to, memo} = this.props.transaction;
         console.log(this.props.transaction);
         return (
-            <div className="transaction col-7 m-2">
+            <div className="transaction m-2">
                 <p className="transactionID" id={id}>
                     {id}
                 </p>
