@@ -16,12 +16,12 @@ class App extends Component {
     }
 
     getHome = () => {
-        fetch(BACKEND_URL)
+        fetch(`${BACKEND_URL}/home/`)
             .then((data) => data.text())
             .then((data) => this.setState({message: data}));
     }
     getTransactions = () => {
-        fetch(BACKEND_URL + "transactions", {method: "GET"})
+        fetch(`${BACKEND_URL}/transactions/`, )
             .then((data) => data.json())
             .then((data) => this.setState({transactionData: data}));
     }

@@ -12,14 +12,18 @@ class UploadFile extends Component {
         const formData = new FormData();
 
         formData.append(
-            "transaction files",
-            this.state.selectedFile,
-            this.state.selectedFile.name
+            "file",
+            this.state.selectedFile
         );
 
-        console.log(this.state.selectedFile);
+        console.log(formData);
 
-        fetch(`${BACKEND_URL}upload/transactions`, {method: "POST", body: formData})
+        fetch(`${BACKEND_URL}/transactions/upload/csv`, {
+            method: "POST",
+            headers: {
+                'Accept': 'application/json'
+            },
+            body: formData})
             .then((response) => console.log(response.status));
     };
 
