@@ -1,28 +1,26 @@
 package com.service;
 
+import com.helper.CSVHelper;
+import com.repository.TransactionRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class FinanceManagerServiceTest {
 
-    private final FinanceManagerService service;
+    private FinanceManagerService service;
 
-    public FinanceManagerServiceTest() {
-        service = new FinanceManagerService();
-    }
+    @Mock
+    private TransactionRepository repository;
 
 
-    @Test
-    public void getCurrentSalary() {
-        // arrange
-        int expectedResult = 3000;
-
-        // act
-        int actualResult = service.getCurrentSalary();
-
-        // assert
-        assertEquals(expectedResult, actualResult);
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+        service = new FinanceManagerService(repository);
     }
 
 }

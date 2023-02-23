@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
+import java.util.Dictionary;
+
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/home")
@@ -20,12 +23,12 @@ public class FinanceManagerController {
     }
 
     @GetMapping("/")
-    public ResponseEntity<String> status_check() {
+    public ResponseEntity<String> statusCheck() {
         return new ResponseEntity<>("Finance Manager is running", HttpStatus.OK);
     }
 
-    @GetMapping("/salary")
-    public ResponseEntity<Integer> current_salary() {
-        return new ResponseEntity<>(financeManagerService.getCurrentSalary(), HttpStatus.OK);
+    @GetMapping("/account/overview")
+    public ResponseEntity<Dictionary<String, BigDecimal>> getAccountOverview() {
+        return new ResponseEntity<>(financeManagerService.getAccountOverview(), HttpStatus.OK);
     }
 }

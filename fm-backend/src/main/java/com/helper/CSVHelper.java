@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -55,7 +56,7 @@ public class CSVHelper {
     private Transaction transformSingleCSVTransaction(String nextLine) {
         String[] transactionValues = nextLine.split(",");
         String date = transactionValues[1];
-        Double amount = Double.parseDouble(transactionValues[3]);
+        BigDecimal amount = new BigDecimal(transactionValues[3]);
         String category = transactionValues[4];
         String[] splitDetails = transactionValues[5].replaceAll("\"", "").split("\t");
         String paid_to = splitDetails[0].trim();

@@ -2,6 +2,7 @@ import React, {Component} from "react";
 import '../App.css';
 import {BACKEND_URL} from "../config";
 import 'bootstrap/dist/css/bootstrap.min.css';
+import AccountOverview from "../component/AccountOverview";
 
 class HomePage extends Component {
     state = {
@@ -26,6 +27,7 @@ class HomePage extends Component {
                         <header className="App-header">
                             <h1>Finance Manager</h1>
                             <p>{this.state.message}</p>
+                            <AccountOverview />
                         </header>
                     </div>
                 </React.Fragment>

@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,8 +38,8 @@ public class CSVHelperTest {
         String path = "src/test/resources/textData.csv";
 
         File file = new File(path);
-        Transaction expectedResult1 = new Transaction("31/03/2022",-9.0,"Debit","BAR BRUNO", "ON 29 MAR CPM");
-        Transaction expectedResult2 = new Transaction("31/04/2022",-150.79,"Bill Payment","MISS ADETOUN ADEJU", "4929136097234001 BBP");
+        Transaction expectedResult1 = new Transaction("31/03/2022", BigDecimal.valueOf(-9.0),"Debit","BAR BRUNO", "ON 29 MAR CPM");
+        Transaction expectedResult2 = new Transaction("31/04/2022", BigDecimal.valueOf(-150.79),"Bill Payment","MISS ADETOUN ADEJU", "4929136097234001 BBP");
 
         List<Transaction> result = csvHelper.transformFileToTransactions(file);
 

@@ -10,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 
@@ -36,9 +37,9 @@ public class TransactionServiceTest {
     @Test
     public void getTransactions() {
         // arrange
-        Transaction transaction1 = new Transaction("2022-01-01", 200.0, "paid out", "The other girl", "Friend Account");
+        Transaction transaction1 = new Transaction("2022-01-01", new BigDecimal(200), "paid out", "The other girl", "Friend Account");
         transaction1.setId(1);
-        Transaction transaction2 = new Transaction("2022-01-01", 10.0, "paid in", "The other boy", "Brother Account");
+        Transaction transaction2 = new Transaction("2022-01-01", new BigDecimal(10), "paid in", "The other boy", "Brother Account");
         transaction1.setId(2);
         List<Transaction> transactions = Arrays.asList(transaction1, transaction2);
         when(repository.findAll()).thenReturn(transactions);

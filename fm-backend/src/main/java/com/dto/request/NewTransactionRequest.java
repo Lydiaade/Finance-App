@@ -1,8 +1,10 @@
 package com.dto.request;
 
+import java.math.BigDecimal;
+
 public record NewTransactionRequest(
         String date,
-        Double amount,
+        BigDecimal amount,
         String category,
         String paid_to,
         String memo

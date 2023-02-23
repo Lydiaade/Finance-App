@@ -2,6 +2,7 @@ package com.dto;
 
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
 import java.util.Objects;
 
 @Entity
@@ -19,12 +20,12 @@ public class Transaction {
     )
     private Integer id;
     private String date;
-    private Double amount;
+    private BigDecimal amount;
     private String category;
     private String paid_to;
     private String memo;
 
-    public Transaction(String date, Double amount, String category, String paid_to, String memo) {
+    public Transaction(String date, BigDecimal amount, String category, String paid_to, String memo) {
         this.date = date;
         this.amount = amount;
         this.category = category;
@@ -51,11 +52,11 @@ public class Transaction {
         this.date = date;
     }
 
-    public Double getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
 
-    public void setAmount(Double amount) {
+    public void setAmount(BigDecimal amount) {
         this.amount = amount;
     }
 
