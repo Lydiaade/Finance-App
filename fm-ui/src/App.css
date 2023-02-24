@@ -1,15 +1,9 @@
-#vendingTitle {
+.pageTitle {
+    margin: 2rem;
     text-align: center;
-    border-bottom: solid;
-    border-width: 2px;
-    border-color: gray;
 }
-
 .transaction {
-    border-style: solid;
-    border-width: 3px;
-    border-color: gray;
-    border-radius: 5%;
+    border-bottom: 3px solid black;
     align-content: center;
     background-color: white;
     display: flex;
@@ -21,4 +15,15 @@
     align-self: center;
     margin-inline: 20%;
     border-radius: 1%;
+}
+
+.account {
+    border: 0.1rem solid black;
+    /*border-radius: 5%;*/
+    padding: 1rem;
+}
+
+.accounts {
+    display: flex;
+    justify-content: space-between;
 }
