@@ -5,16 +5,14 @@ class Transaction extends Component {
         const {id, date, amount, category, paid_to, memo} = this.props.transaction;
         console.log(this.props.transaction);
         return (
-            <div className="transaction m-2">
-                <p className="transactionID" id={id}>
-                    {id}
-                </p>
-                <p className="transactionDate">{date}</p>
-                <p className="transactionAmount">{amount < 0 ? `- £${amount*-1}` : `£${amount}`}</p>
-                <p className="transactionCategory">{category}</p>
-                <p className="transactionPaidTo">{paid_to}</p>
-                <p className="transactionMemo">{memo}</p>
-            </div>
+            <tr className="transaction">
+                <td className="transactionID" id={id}>{id}</td>
+                <td className="transactionDate">{date}</td>
+                <td className="transactionAmount">{amount < 0 ? `- £${amount*-1}` : `£${amount}`}</td>
+                <td className="transactionCategory">{category}</td>
+                <td className="transactionPaidTo">{paid_to}</td>
+                <td className="transactionMemo">{memo}</td>
+            </tr>
         );
     }
 }
