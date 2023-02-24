@@ -13,6 +13,7 @@ function NavigationBar() {
                         <Navbar.Collapse id="basic-navbar-nav">
                             <Nav className="me-auto">
                                 <Nav.Link href="/">Home</Nav.Link>
+                                <Nav.Link href="/accounts">Accounts</Nav.Link>
                                 <NavDropdown title="Transactions" id="basic-nav-dropdown">
                                     <NavDropdown.Item href="/transactions">View Transactions</NavDropdown.Item>
                                     <NavDropdown.Divider />

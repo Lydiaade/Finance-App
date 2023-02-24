@@ -1,6 +1,6 @@
 import React, {Component} from "react";
 import '../App.css';
-import TransactionContainer from "../component/TransactionContainer";
+import TransactionContainer from "../components/TransactionContainer";
 import {BACKEND_URL} from "../config";
 import 'bootstrap/dist/css/bootstrap.min.css';
 

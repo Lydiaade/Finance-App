@@ -1,11 +1,12 @@
 import React, {Component} from "react";
 import './App.css';
-import NavigationBar from "./component/Navbar";
+import NavigationBar from "./components/general/Navbar";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import {Route, Routes} from "react-router-dom";
 import HomePage from "./pages/Home";
 import TransactionsPage from "./pages/Transactions";
 import UploadTransactionPage from "./pages/UploadTransactions";
+import AccountsPage from "./pages/Accounts";
 
 class App extends Component {
     state = {}
@@ -23,6 +24,7 @@ class App extends Component {
                             <Route path="/" element={<HomePage/>}/>
                             <Route path="/transactions" element={<TransactionsPage/>}/>
                             <Route path="/uploadTransactions" element={<UploadTransactionPage/>}/>
+                            <Route path="/accounts" element={<AccountsPage/>}/>
                         </Routes>
                     </div>
                 </React.Fragment>

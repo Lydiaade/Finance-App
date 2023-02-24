@@ -1,6 +1,6 @@
 import React, {Component} from "react";
 import '../App.css';
-import UploadFile from "../component/UploadFile";
+import UploadFile from "../components/UploadFile";
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 class UploadTransactionPage extends Component {
@@ -11,7 +11,8 @@ class UploadTransactionPage extends Component {
 
     render() {
         return (
-            <div>
+            <div className="container">
+                <h1 className="pageTitle">Upload Transaction</h1>
                 <UploadFile/>
             </div>
         );

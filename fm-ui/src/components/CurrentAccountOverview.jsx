@@ -1,7 +1,7 @@
 import {Component} from "react";
 import {BACKEND_URL} from "../config";
 
-class AccountOverview extends Component<{}> {
+class CurrentAccountOverview extends Component {
     state = {
         accountInfo: {
             totalOutflow: 6000,
@@ -34,4 +34,4 @@ class AccountOverview extends Component<{}> {
     }
 }
 
-export default AccountOverview;
+export default CurrentAccountOverview;
