@@ -40,7 +40,7 @@ public class CSVHelperTest {
 
         File file = new File(path);
         Transaction expectedResult1 = new Transaction("31/03/2022", BigDecimal.valueOf(-9),"Debit","BAR BRUNO", "ON 29 MAR CPM");
-        Transaction expectedResult2 = new Transaction("30/04/2022", BigDecimal.valueOf(-150.79),"Bill Payment","MISS ADETOUN ADEJU", "4929136097234001 BBP");
+        Transaction expectedResult2 = new Transaction("30/04/2022", BigDecimal.valueOf(-150.79),"Bill Payment","PersonA", "4929136097234001 BBP");
 
         List<Transaction> result = csvHelper.transformFileToTransactions(file);
 

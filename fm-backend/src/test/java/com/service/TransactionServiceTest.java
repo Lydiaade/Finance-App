@@ -38,7 +38,7 @@ public class TransactionServiceTest {
 
     @Test
     public void getTransactions() {
-        Account account = new Account()
+        Account account = new Account();
         // arrange
         Transaction transaction1 = new Transaction("2022-01-01", new BigDecimal(200), "paid out", "The other girl", "Friend Account");
         transaction1.setId(1);
