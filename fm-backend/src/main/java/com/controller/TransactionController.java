@@ -41,9 +41,8 @@ public class TransactionController {
             transactionService.saveFile(file);
             message = "File uploaded: " + file.getOriginalFilename() + "!";
             return new ResponseEntity<>(message, HttpStatus.OK);
-        } catch (Exception e) {
-            message = "Could not upload the file: " + file.getOriginalFilename() + "!";
-            return new ResponseEntity<>(message, HttpStatus.EXPECTATION_FAILED);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
         }
     }
 

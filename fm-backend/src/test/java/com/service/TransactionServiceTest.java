@@ -40,9 +40,9 @@ public class TransactionServiceTest {
     public void getTransactions() {
         Account account = new Account();
         // arrange
-        Transaction transaction1 = new Transaction("2022-01-01", new BigDecimal(200), "paid out", "The other girl", "Friend Account");
+        Transaction transaction1 = new Transaction("31/03/2022", account, new BigDecimal(200), "paid out", "The other girl", "Friend Account");
         transaction1.setId(1);
-        Transaction transaction2 = new Transaction("2022-01-01", new BigDecimal(10), "paid in", "The other boy", "Brother Account");
+        Transaction transaction2 = new Transaction("31/03/2022",account, new BigDecimal(10), "paid in", "The other boy", "Brother Account");
         transaction1.setId(2);
         List<Transaction> transactions = Arrays.asList(transaction1, transaction2);
         when(repository.findAll()).thenReturn(transactions);

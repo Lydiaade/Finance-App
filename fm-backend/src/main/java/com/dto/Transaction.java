@@ -20,7 +20,10 @@ public class Transaction {
             generator = "transaction_id_sequence"
     )
     private Integer id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     private Account account;
+
     private LocalDate date;
     private BigDecimal amount;
     private String category;
