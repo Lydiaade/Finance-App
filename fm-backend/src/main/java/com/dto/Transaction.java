@@ -21,7 +21,7 @@ public class Transaction {
     )
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     private Account account;
 
     private LocalDate date;

@@ -26,6 +26,7 @@ public class CSVHelper {
 
     public List<Transaction> csvToTransactions(MultipartFile file) throws IOException {
         File transformedFile = multipartFileToFile(file);
+        System.out.println("File ready to be processed");
         return transformFileToTransactions(transformedFile);
     }
 
@@ -41,9 +42,10 @@ public class CSVHelper {
             while (scanner.hasNext()) {
                 String nextLine = scanner.nextLine();
                 Transaction transaction = transformSingleCSVTransaction(nextLine);
-                transactions.add(transaction);
+                if (transaction != null) {
+                    transactions.add(transaction);
+                }
             }
-
         } catch (FileNotFoundException e) {
             System.out.println("Error!!!");
         }
@@ -60,20 +62,31 @@ public class CSVHelper {
     }
 
     private Transaction transformSingleCSVTransaction(String nextLine) {
-        String[] transactionValues = nextLine.split(",");
-        String date = transactionValues[1];
-        Account account = retrieveAccountData(transactionValues[2]);
-        BigDecimal amount = new BigDecimal(transactionValues[3]);
-        String category = transactionValues[4];
-        String[] splitDetails = transactionValues[5].replaceAll("\"", "").split("\t");
-        String paid_to = splitDetails[0].trim();
-        String memo = splitDetails[1].trim();
-        return new Transaction(date, account, amount, category, paid_to, memo);
+        try {
+            System.out.println(nextLine);
+            String[] transactionValues = nextLine.split(",");
+            String date = transactionValues[1];
+            Account account = retrieveAccountData(transactionValues[2]);
+            BigDecimal amount = new BigDecimal(transactionValues[3]);
+            String category = transactionValues[4];
+            String[] splitDetails = transactionValues[5].replaceAll("\"", "").split("\t");
+            String paid_to = splitDetails[0].trim();
+            String memo = splitDetails[1].trim();
+            return new Transaction(date, account, amount, category, paid_to, memo);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            System.err.println("A row doesn't follow the structure required");
+            return null;
+        }
     }
 
     private Account retrieveAccountData(String accountString) {
+        System.out.println(accountString);
         String[] accountDetails = accountString.split("\s");
+        System.out.println(accountDetails[0]);
+        System.out.println(accountDetails[1]);
         List<Account> accounts = accountRepository.findBySortCodeAndAccountNumber(accountDetails[0], accountDetails[1]);
+        System.out.println(accounts.get(0).toString());
+
         if (accounts.size() == 0) {
             System.out.println("Account does not exist");
             throw new IllegalArgumentException("An account needs to be created first for for the account provided.");

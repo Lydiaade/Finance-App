@@ -22,6 +22,7 @@ public class TransactionService {
 
     public void saveFile(MultipartFile file) {
         try {
+            System.out.println("About to save");
             List<Transaction> csv_transactions = csvHelper.csvToTransactions(file);
             transactionRepository.saveAll(csv_transactions);
         } catch (IOException e) {
