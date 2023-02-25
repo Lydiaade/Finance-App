@@ -43,7 +43,7 @@ public class CSVHelperTest {
     @Test
     public void csvFileToTransactionObjects() {
         String path = "src/test/resources/testData.csv";
-        Account account = new Account(1, "Main Account", "SORTNUMBER", "ACCNUMBER");
+        Account account = new Account("Main Account", "SORTNUMBER", "ACCNUMBER");
         when(accRepository.findBySortCodeAndAccountNumber("SORTNUMBER", "ACCNUMBER")).thenReturn(List.of(account));
 
         File file = new File(path);

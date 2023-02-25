@@ -24,8 +24,7 @@ public class Account {
     private String sortCode;
     private String accountNumber;
 
-    public Account(Integer id, String name, String sortCode, String accountNumber) {
-        this.id = id;
+    public Account(String name, String sortCode, String accountNumber) {
         this.name = name;
         this.sortCode = sortCode;
         this.accountNumber = accountNumber;
