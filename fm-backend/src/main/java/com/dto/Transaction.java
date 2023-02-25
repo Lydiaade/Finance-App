@@ -3,6 +3,7 @@ package com.dto;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Objects;
 
 @Entity
@@ -19,14 +20,14 @@ public class Transaction {
             generator = "transaction_id_sequence"
     )
     private Integer id;
-    private String date;
+    private LocalDate date;
     private BigDecimal amount;
     private String category;
     private String paid_to;
     private String memo;
 
     public Transaction(String date, BigDecimal amount, String category, String paid_to, String memo) {
-        this.date = date;
+        this.date = transformStringToDate(date);
         this.amount = amount;
         this.category = category;
         this.paid_to = paid_to;
@@ -34,6 +35,14 @@ public class Transaction {
     }
 
     public Transaction() {
+    }
+
+    private LocalDate transformStringToDate(String date) {
+        String[] dateList = date.split("/");
+        int day = Integer.parseInt(dateList[0]);
+        int month = Integer.parseInt(dateList[1]);
+        int year = Integer.parseInt(dateList[2]);
+        return LocalDate.of(year, month, day);
     }
 
     public Integer getId() {
@@ -44,11 +53,11 @@ public class Transaction {
         this.id = id;
     }
 
-    public String getDate() {
+    public LocalDate getDate() {
         return date;
     }
 
-    public void setDate(String date) {
+    public void setDate(LocalDate date) {
         this.date = date;
     }
 

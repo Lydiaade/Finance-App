@@ -5,7 +5,6 @@ import com.repository.TransactionRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
@@ -35,7 +34,7 @@ public class FinanceManagerService {
 
     private BigDecimal getTotalAmount(List<Transaction> transactions) {
         BigDecimal inflow = new BigDecimal(0);
-        for (Transaction transaction: transactions) {
+        for (Transaction transaction : transactions) {
             inflow = inflow.add(transaction.getAmount());
         }
         return inflow;
