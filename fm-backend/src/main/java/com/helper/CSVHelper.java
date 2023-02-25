@@ -1,5 +1,6 @@
 package com.helper;
 
+import com.dto.Account;
 import com.dto.Transaction;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -53,11 +54,12 @@ public class CSVHelper {
     private Transaction transformSingleCSVTransaction(String nextLine) {
         String[] transactionValues = nextLine.split(",");
         String date = transactionValues[1];
+        Account account = new Account();
         BigDecimal amount = new BigDecimal(transactionValues[3]);
         String category = transactionValues[4];
         String[] splitDetails = transactionValues[5].replaceAll("\"", "").split("\t");
         String paid_to = splitDetails[0].trim();
         String memo = splitDetails[1].trim();
-        return new Transaction(date, amount, category, paid_to, memo);
+        return new Transaction(date, account, amount, category, paid_to, memo);
     }
 }

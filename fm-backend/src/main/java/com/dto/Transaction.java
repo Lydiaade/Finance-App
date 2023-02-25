@@ -20,14 +20,16 @@ public class Transaction {
             generator = "transaction_id_sequence"
     )
     private Integer id;
+    private Account account;
     private LocalDate date;
     private BigDecimal amount;
     private String category;
     private String paid_to;
     private String memo;
 
-    public Transaction(String date, BigDecimal amount, String category, String paid_to, String memo) {
+    public Transaction(String date, Account account, BigDecimal amount, String category, String paid_to, String memo) {
         this.date = transformStringToDate(date);
+        this.account = account;
         this.amount = amount;
         this.category = category;
         this.paid_to = paid_to;
@@ -59,6 +61,14 @@ public class Transaction {
 
     public void setDate(LocalDate date) {
         this.date = date;
+    }
+
+    public Account getAccount() {
+        return account;
+    }
+
+    public void setAccount(Account account) {
+        this.account = account;
     }
 
     public BigDecimal getAmount() {
@@ -98,19 +108,20 @@ public class Transaction {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Transaction that = (Transaction) o;
-        return Objects.equals(id, that.id) && Objects.equals(date, that.date) && Objects.equals(amount, that.amount) && Objects.equals(category, that.category) && Objects.equals(paid_to, that.paid_to) && Objects.equals(memo, that.memo);
+        return Objects.equals(id, that.id) && Objects.equals(account, that.account) && Objects.equals(date, that.date) && Objects.equals(amount, that.amount) && Objects.equals(category, that.category) && Objects.equals(paid_to, that.paid_to) && Objects.equals(memo, that.memo);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, date, amount, category, paid_to, memo);
+        return Objects.hash(id, account, date, amount, category, paid_to, memo);
     }
 
     @Override
     public String toString() {
         return "Transaction{" +
                 "id=" + id +
-                ", date='" + date + '\'' +
+                ", account=" + account +
+                ", date=" + date +
                 ", amount=" + amount +
                 ", category='" + category + '\'' +
                 ", paid_to='" + paid_to + '\'' +

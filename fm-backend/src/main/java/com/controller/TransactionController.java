@@ -30,7 +30,7 @@ public class TransactionController {
     @PostMapping("/transaction")
     public void addTransaction(@RequestBody NewTransactionRequest request) {
         Transaction transaction = new Transaction(
-                request.date(), request.amount(), request.category(), request.paid_to(), request.memo());
+                request.date(), request.account(), request.amount(), request.category(), request.paid_to(), request.memo());
         transactionService.addTransaction(transaction);
     }
 
