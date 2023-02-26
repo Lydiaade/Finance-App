@@ -27,7 +27,7 @@ public class AccountController {
 
     @PostMapping("/account")
     public void addAccount(@RequestBody NewAccountRequest request) {
-        Account account = new Account(request.name(), request.sortCode(), request.accountNumber());
+        Account account = new Account(request.name(), request.sortCode(), request.accountNumber(), request.currentBalance());
         accountService.addAccount(account);
     }
 }

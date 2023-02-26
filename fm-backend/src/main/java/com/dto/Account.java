@@ -23,11 +23,13 @@ public class Account {
     private String name;
     private String sortCode;
     private String accountNumber;
+    private BigDecimal currentBalance;
 
-    public Account(String name, String sortCode, String accountNumber) {
+    public Account(String name, String sortCode, String accountNumber, BigDecimal currentBalance) {
         this.name = name;
         this.sortCode = sortCode;
         this.accountNumber = accountNumber;
+        this.currentBalance = currentBalance;
     }
 
     public Account() {
@@ -65,16 +67,35 @@ public class Account {
         this.accountNumber = accountNumber;
     }
 
+    public BigDecimal getCurrentBalance() {
+        return currentBalance;
+    }
+
+    public void setCurrentBalance(BigDecimal currentBalance) {
+        this.currentBalance = currentBalance;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Account account = (Account) o;
-        return Objects.equals(id, account.id) && Objects.equals(name, account.name) && Objects.equals(sortCode, account.sortCode) && Objects.equals(accountNumber, account.accountNumber);
+        return Objects.equals(id, account.id) && Objects.equals(name, account.name) && Objects.equals(sortCode, account.sortCode) && Objects.equals(accountNumber, account.accountNumber) && Objects.equals(currentBalance, account.currentBalance);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, sortCode, accountNumber);
+        return Objects.hash(id, name, sortCode, accountNumber, currentBalance);
+    }
+
+    @Override
+    public String toString() {
+        return "Account{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", sortCode='" + sortCode + '\'' +
+                ", accountNumber='" + accountNumber + '\'' +
+                ", currentBalance=" + currentBalance +
+                '}';
     }
 }

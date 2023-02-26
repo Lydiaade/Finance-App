@@ -2,24 +2,24 @@ import React, {Component} from "react";
 import '../App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import AccountOverview from "../components/AccountOverview";
+import {BACKEND_URL} from "../config";
 
 class AccountsPage extends Component {
     state = {
         accounts: [
-            {name: "Current Account", balance: 5000},
-            {name: "Saving Account", balance: 10000}
+            {name: "Current Account", sortCode: "12-34-56", accountNumber: "12345678", currentBalance: "5000"},
         ]
     }
 
     componentDidMount() {
-        // this.getHome();
+        this.getAccounts();
     }
 
-    // getHome = () => {
-    //     fetch(`${BACKEND_URL}/home/`)
-    //         .then((data) => data.text())
-    //         .then((data) => this.setState({message: data}));
-    // }
+    getAccounts = () => {
+        fetch(`${BACKEND_URL}/accounts/`)
+            .then((data) => data.json())
+            .then((data) => this.setState({accounts: data}));
+    }
 
     render() {
         return (
