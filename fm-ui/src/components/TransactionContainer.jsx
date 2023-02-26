@@ -4,6 +4,8 @@ import Transaction from "./Transaction";
 class TransactionContainer extends Component {
     render() {
         const {transactions} = this.props;
+        console.log(`Transactions ${transactions.length}`);
+        console.log(transactions);
         return (
             <table className="row container-fluid">
                 <thead>

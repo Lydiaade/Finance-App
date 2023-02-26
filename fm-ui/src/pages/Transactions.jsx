@@ -23,6 +23,7 @@ class TransactionsPage extends Component {
         return (
             <div>
                 <React.Fragment>
+                    <h1 className="pageTitle">All Transactions</h1>
                     <main className="container-fluid m-2">
                         <div className="row">
                             <div className="itemList">

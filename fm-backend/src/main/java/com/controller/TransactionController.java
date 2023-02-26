@@ -46,8 +46,8 @@ public class TransactionController {
         }
     }
 
-    @DeleteMapping("/transaction/{customerId}")
-    public void deleteTransaction(@PathVariable("customerId") Integer id) {
+    @DeleteMapping("/transaction/{id}")
+    public void deleteTransaction(@PathVariable("id") Integer id) {
         transactionService.deleteTransaction(id);
     }
 }

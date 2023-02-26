@@ -10,4 +10,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Intege
     List<Transaction> findByAmountGreaterThan(Double amount);
 
     List<Transaction> findByAmountLessThan(Double amount);
+
+    List<Transaction> findAllByAccount_Id(Integer id);
 }
