@@ -7,7 +7,7 @@ This front has been created to recreate the excel spreadsheet but with an update
 - [ ] Add precommit hooks
 - [ ] Look into tdd for javascript react
 - [x] Allow for upload of file which will update backend with transactions
-- [ ] Fix disappearing navbar for adjusted screen
+- [x] Fix disappearing navbar for adjusted screen
 - [ ] Allow update of transaction info
 - [ ] Fix transaction view so column widths are fixed
 - [ ] Show n transactions per page
