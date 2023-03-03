@@ -8,6 +8,7 @@ The backend has been created to manage the db for the transactions and hopefully
     - [ ] Handle error cases on file upload
 - [ ] Add starting salary endpoint
 - [ ] Collate spend and income
+- [ ] Figure out how to save vsc file uploads to directory to gitignore for security reasons
 - [x] Link transactions to an account to view monthly transactions per account
 
 ## How to's
