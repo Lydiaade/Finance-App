@@ -1,13 +1,15 @@
 package com.service;
 
 import com.dto.Account;
+import com.dto.MonthlyTransactionTotal;
 import com.dto.Transaction;
-import com.fasterxml.jackson.databind.JsonSerializer;
 import com.repository.AccountRepository;
 import com.repository.TransactionRepository;
 import org.springframework.stereotype.Service;
 
 import java.io.FileNotFoundException;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,8 +35,24 @@ public class AccountService {
         return account.get();
     }
 
-    public List<Transaction> getAccountTransactions(Integer id){
+    public List<Transaction> getAccountTransactions(Integer id) {
         return transactionRepository.findAllByAccount_Id(id);
+    }
+
+    public List<MonthlyTransactionTotal> getAccountAnnualMonthlyTransactions(Integer id) {
+        LocalDate yearPriorToToday = LocalDate.now().minusYears(1);
+        System.out.println(yearPriorToToday);
+        List<Transaction> transactions = transactionRepository.findAllByAccount_IdAndDateAfter(
+                id, yearPriorToToday);
+        System.out.println(transactions);
+        List<MonthlyTransactionTotal> annualMonthlyTransactions = new ArrayList<>();
+        for (int i = 0; i < 12; i++) {
+            MonthlyTransactionTotal newMonth = new MonthlyTransactionTotal();
+
+        }
+
+
+            return new ArrayList<>();
     }
 
     public void addAccount(Account account) {
