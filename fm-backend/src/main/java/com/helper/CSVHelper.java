@@ -85,7 +85,6 @@ public class CSVHelper {
         System.out.println(accountDetails[0]);
         System.out.println(accountDetails[1]);
         List<Account> accounts = accountRepository.findBySortCodeAndAccountNumber(accountDetails[0], accountDetails[1]);
-        System.out.println(accounts.get(0).toString());
 
         if (accounts.size() == 0) {
             System.out.println("Account does not exist");

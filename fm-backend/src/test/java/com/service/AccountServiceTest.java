@@ -12,6 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.FileNotFoundException;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -36,7 +37,8 @@ public class AccountServiceTest {
 
     @Test
     public void getAccountWhenItExists() throws FileNotFoundException {
-        Account account = new Account("Account Name", "SORT NUMBER", "ACCOUNT NUMBER", new BigDecimal(1000));
+        LocalDate currentBalanceDate = LocalDate.now();
+        Account account = new Account("Account Name", "SORT NUMBER", "ACCOUNT NUMBER", new BigDecimal(1000), currentBalanceDate);
         Integer id = 1;
         // arrange
         when(accountRepository.findById(id)).thenReturn(java.util.Optional.of(account));

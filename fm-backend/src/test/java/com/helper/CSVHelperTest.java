@@ -10,6 +10,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.io.File;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,7 +44,8 @@ public class CSVHelperTest {
     @Test
     public void csvFileToTransactionObjects() {
         String path = "src/test/resources/testData.csv";
-        Account account = new Account("Main Account", "SORTNUMBER", "ACCNUMBER", new BigDecimal(2000));
+        LocalDate currentBalanceDate = LocalDate.now();
+        Account account = new Account("Main Account", "SORTNUMBER", "ACCNUMBER", new BigDecimal(2000), currentBalanceDate);
         when(accRepository.findBySortCodeAndAccountNumber("SORTNUMBER", "ACCNUMBER")).thenReturn(List.of(account));
 
         File file = new File(path);
