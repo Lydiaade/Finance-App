@@ -2,12 +2,8 @@
     margin: 2rem;
     text-align: center;
 }
-.transaction {
+.transaction-header {
     border-bottom: 3px solid black;
-    align-content: center;
-    background-color: white;
-    display: flex;
-    justify-content: space-between;
 }
 
 .transactionList {

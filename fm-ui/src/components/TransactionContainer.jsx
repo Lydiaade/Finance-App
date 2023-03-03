@@ -7,16 +7,16 @@ class TransactionContainer extends Component {
         console.log(`Transactions ${transactions.length}`);
         console.log(transactions);
         return (
-            <table className="row container-fluid">
+            <table className="table container-fluid">
                 <thead>
-                <tr className="transaction">
-                    <th scope="col" className="ID">ID</th>
-                    <th scope="col" className="Date">Date</th>
-                    <th scope="col" className="Amount">Amount</th>
-                    <th scope="col" className="Category">Category</th>
-                    <th scope="col" className="PaidTo">Paid To</th>
-                    <th scope="col" className="Memo">Memo</th>
-                </tr>
+                    <tr className="transaction-header">
+                        <th scope="col" className="ID">ID</th>
+                        <th scope="col" className="Date">Date</th>
+                        <th scope="col" className="Amount">Amount</th>
+                        <th scope="col" className="Category">Category</th>
+                        <th scope="col" className="PaidTo">Paid To</th>
+                        <th scope="col" className="Memo">Memo</th>
+                    </tr>
                 </thead>
                 <tbody>
                 {transactions.map((transaction) => (

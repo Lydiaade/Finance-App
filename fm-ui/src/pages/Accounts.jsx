@@ -27,7 +27,6 @@ class AccountsPage extends Component {
                 <React.Fragment>
                     <header className="App-header">
                         <h1 className="pageTitle">Existing Accounts</h1>
-                        {/*TODO: Add account component*/}
                         <div className="container">
                             <a href={`/account`}>
                                 <button type="button" className="btn btn-primary">Add new account</button>
@@ -36,12 +35,10 @@ class AccountsPage extends Component {
                         {this.state.accounts.length === 0 ? <h5>You currently have no existing accounts</h5> :
                         <div className="container-fluid accounts">
                             {this.state.accounts.map((account) => (
-                                <div className="row">
                                 <AccountOverview
                                     key={this.state.accounts.indexOf(account)}
                                     account={account}
                                 />
-                                </div>
                             ))}
                         </div>}
                     </header>

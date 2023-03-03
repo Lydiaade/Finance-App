@@ -25,12 +25,10 @@ class TransactionsPage extends Component {
                 <React.Fragment>
                     <h1 className="pageTitle">All Transactions</h1>
                     <main className="container-fluid m-2">
-                        <div className="row">
-                            <div className="itemList">
-                                <TransactionContainer
-                                    transactions={this.state.transactionData}
-                                />
-                            </div>
+                        <div className="itemList">
+                            <TransactionContainer
+                                transactions={this.state.transactionData}
+                            />
                         </div>
                     </main>
                 </React.Fragment>

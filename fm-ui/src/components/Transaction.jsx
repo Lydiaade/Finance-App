@@ -6,7 +6,7 @@ class Transaction extends Component {
         console.log(this.props.transaction);
         return (
             <tr className="transaction">
-                <td className="transactionID" id={id}>{id}</td>
+                <th scope="row" className="transactionID" id={id}>{id}</th>
                 <td className="transactionDate">{date}</td>
                 <td className="transactionAmount">{amount < 0 ? `- £${amount*-1}` : `£${amount}`}</td>
                 <td className="transactionCategory">{category}</td>
