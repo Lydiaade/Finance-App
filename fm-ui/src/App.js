@@ -8,6 +8,7 @@ import TransactionsPage from "./pages/Transactions";
 import UploadTransactionPage from "./pages/UploadTransactions";
 import AccountsPage from "./pages/Accounts";
 import AccountTransactions from "./pages/AccountTransactions";
+import CreateNewAccount from "./components/CreateNewAccount";
 
 class App extends Component {
     state = {}
@@ -27,6 +28,7 @@ class App extends Component {
                             <Route path="/transactions" element={<TransactionsPage/>}/>
                             <Route path="/uploadTransactions" element={<UploadTransactionPage/>}/>
                             <Route path="/accounts" element={<AccountsPage/>}/>
+                            <Route path="/account" element={<CreateNewAccount/>}/>
                         </Routes>
                     </div>
                 </React.Fragment>
