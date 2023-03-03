@@ -24,12 +24,14 @@ public class Account {
     private String sortCode;
     private String accountNumber;
     private BigDecimal currentBalance;
+    private LocalDate currentBalanceDate;
 
-    public Account(String name, String sortCode, String accountNumber, BigDecimal currentBalance) {
+    public Account(String name, String sortCode, String accountNumber, BigDecimal currentBalance, LocalDate currentBalanceDate) {
         this.name = name;
         this.sortCode = sortCode;
         this.accountNumber = accountNumber;
         this.currentBalance = currentBalance;
+        this.currentBalanceDate = currentBalanceDate;
     }
 
     public Account() {
@@ -75,17 +77,25 @@ public class Account {
         this.currentBalance = currentBalance;
     }
 
+    public LocalDate getCurrentBalanceDate() {
+        return currentBalanceDate;
+    }
+
+    public void setCurrentBalanceDate(LocalDate currentBalanceDate) {
+        this.currentBalanceDate = currentBalanceDate;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Account account = (Account) o;
-        return Objects.equals(id, account.id) && Objects.equals(name, account.name) && Objects.equals(sortCode, account.sortCode) && Objects.equals(accountNumber, account.accountNumber) && Objects.equals(currentBalance, account.currentBalance);
+        return Objects.equals(id, account.id) && Objects.equals(name, account.name) && Objects.equals(sortCode, account.sortCode) && Objects.equals(accountNumber, account.accountNumber) && Objects.equals(currentBalance, account.currentBalance) && Objects.equals(currentBalanceDate, account.currentBalanceDate);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, sortCode, accountNumber, currentBalance);
+        return Objects.hash(id, name, sortCode, accountNumber, currentBalance, currentBalanceDate);
     }
 
     @Override
@@ -96,6 +106,7 @@ public class Account {
                 ", sortCode='" + sortCode + '\'' +
                 ", accountNumber='" + accountNumber + '\'' +
                 ", currentBalance=" + currentBalance +
+                ", currentBalanceDate=" + currentBalanceDate +
                 '}';
     }
 }

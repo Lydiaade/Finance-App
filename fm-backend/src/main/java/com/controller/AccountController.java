@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.FileNotFoundException;
+import java.time.LocalDate;
 import java.util.List;
 
 @CrossOrigin(origins = "http://localhost:3000")
@@ -42,7 +43,8 @@ public class AccountController {
 
     @PostMapping("/account")
     public void addAccount(@RequestBody NewAccountRequest request) {
-        Account account = new Account(request.name(), request.sortCode(), request.accountNumber(), request.currentBalance());
+        LocalDate currentBalanceDate = LocalDate.now();
+        Account account = new Account(request.name(), request.sortCode(), request.accountNumber(), request.currentBalance(), currentBalanceDate);
         accountService.addAccount(account);
     }
 }
