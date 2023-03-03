@@ -3,6 +3,7 @@ import '../App.css';
 import {BACKEND_URL} from "../config";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import CurrentAccountOverview from "../components/CurrentAccountOverview";
+import Chart from "../components/Chart";
 
 class HomePage extends Component {
     state = {
@@ -31,6 +32,7 @@ class HomePage extends Component {
                             </div>
                             <CurrentAccountOverview />
                         </header>
+                        <Chart />
                     </div>
                 </React.Fragment>
             </div>
