@@ -46,8 +46,8 @@ public class AccountService {
         LocalDate yearPriorToToday = LocalDate.now().minusYears(1);
         System.out.println(yearPriorToToday);
         List<MonthlyTransactionTotal> annualMonthlyTransactions = new ArrayList<>();
-        for (int i = 0; i < 12; i++) {
-            String currentMonthYear = yearPriorToToday.getMonth() + String.valueOf(yearPriorToToday.getYear());
+        while (yearPriorToToday.equals(LocalDate.now()) || yearPriorToToday.isBefore(LocalDate.now())) {
+            String currentMonthYear = yearPriorToToday.getMonth() + " " + yearPriorToToday.getYear();
             List<Transaction> transactions = transactionRepository.findAllByAccount_IdAndDateInMonthYear(
                     id, yearPriorToToday.getMonthValue(), yearPriorToToday.getYear());
             BigDecimal totalFlow = financeManagerService.getTotalAmount(transactions);

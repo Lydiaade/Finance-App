@@ -3,7 +3,6 @@ import {Component} from "react";
 class Transaction extends Component {
     render() {
         const {id, date, amount, category, paid_to, memo} = this.props.transaction;
-        console.log(this.props.transaction);
         return (
             <tr className="transaction">
                 <th scope="row" className="transactionID" id={id}>{id}</th>

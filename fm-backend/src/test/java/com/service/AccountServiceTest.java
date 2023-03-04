@@ -58,32 +58,6 @@ public class AccountServiceTest {
     }
 
     @Test
-    public void getAccountAnnualMonthlyTransactions(){
-        LocalDate currentBalanceDate = LocalDate.now();
-        Account account = new Account("Account Name", "SORT NUMBER", "ACCOUNT NUMBER", new BigDecimal(1000), currentBalanceDate);
-        Integer id = 1;
-
-        Transaction transaction1 = new Transaction("31/03/2023", account, new BigDecimal(200), "paid out", "The other girl", "Friend Account");
-        transaction1.setId(1);
-        Transaction transaction2 = new Transaction("1/1/2023",account, new BigDecimal(10), "paid in", "The other boy", "Brother Account");
-        transaction1.setId(2);
-        Transaction transaction3 = new Transaction("5/1/2023",account, new BigDecimal(-20), "paid out", "The other boy", "Brother Account");
-        transaction1.setId(3);
-        List<Transaction> transactionsJan = Arrays.asList(transaction1, transaction2);
-        List<Transaction> transactionsMar = List.of(transaction3);
-
-        // arrange
-        when(transactionRepository.findAllByAccount_IdAndDateInMonthYear(id, )).thenReturn(transactionsJan);
-        when(transactionRepository.findAllByAccount_IdAndDateInMonthYear(id, )).thenReturn(transactionsMar);
-
-        // act
-//        List<MonthlyTransactionTotal> actualResult = service.getAccountAnnualMonthlyTransactions(id);
-
-        // assert
-//        assertEquals(12, actualResult.size());
-    }
-
-    @Test
     public void failsToGetAccountWhenItDoesNotExists() {
         Integer id = 1;
         // arrange
