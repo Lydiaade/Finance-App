@@ -1,15 +1,16 @@
 import {BACKEND_URL} from "../config";
 import {useEffect, useState} from "react";
-import TransactionContainer from "../components/TransactionContainer";
 import Chart from "../components/Chart";
+import TransactionContainer from "../components/TransactionContainer";
 
 const {useParams} = require("react-router-dom");
 
 
-function AccountTransactions() {
+function AccountInformation() {
     const [transactions, setTransactions] = useState([]);
-    const [account, setAccount] = useState({id: "", name:"", sortCode: "", accountNumber: "", currentBalance: ""});
-    const [chart, setChart] = useState( []);
+    const [account, setAccount] = useState({id: "", name: "", sortCode: "", accountNumber: "", currentBalance: ""});
+    const [chart, setChart] = useState([]);
+    const [transactionView, setTransactionView] = useState(false);
 
     const {id} = useParams();
     useEffect(() => {
@@ -31,17 +32,26 @@ function AccountTransactions() {
                     setChart(data)
                 });
         }
+
         fetchData()
     });
-    console.log(chart)
+
+    function changeView() {
+        setTransactionView(!transactionView)
+    }
+
     return (
         <div>
             <h1 className="pageTitle">{account.name}</h1>
-            <Chart data={chart}/>
-            {transactions.length === 0 ? <p>One moment please</p> :
-            <TransactionContainer transactions={transactions}/>}
+            <button className="btn btn-primary" onClick={changeView}>{transactionView ? "View All Transactions" : "Hide All Transactions"}</button>
+            {transactionView ?
+                <div>
+                    <Chart data={chart}/>
+                </div> :
+                transactions.length === 0 ? <p>One moment please</p> :
+                    <TransactionContainer transactions={transactions}/>}
         </div>
     );
 }
 
-export default AccountTransactions;
+export default AccountInformation;

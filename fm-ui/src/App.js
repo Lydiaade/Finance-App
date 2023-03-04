@@ -7,7 +7,7 @@ import HomePage from "./pages/Home";
 import TransactionsPage from "./pages/Transactions";
 import UploadTransactionPage from "./pages/UploadTransactions";
 import AccountsPage from "./pages/Accounts";
-import AccountTransactions from "./pages/AccountTransactions";
+import AccountInformation from "./pages/AccountInformation";
 import CreateNewAccount from "./components/CreateNewAccount";
 
 class App extends Component {
@@ -24,7 +24,7 @@ class App extends Component {
                     <div className="container">
                         <Routes>
                             <Route path="/" element={<HomePage/>}/>
-                            <Route path="/:id/transactions" element={<AccountTransactions/>}/>
+                            <Route path="/:id/transactions" element={<AccountInformation/>}/>
                             <Route path="/transactions" element={<TransactionsPage/>}/>
                             <Route path="/uploadTransactions" element={<UploadTransactionPage/>}/>
                             <Route path="/accounts" element={<AccountsPage/>}/>
