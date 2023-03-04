@@ -10,8 +10,10 @@ import org.springframework.stereotype.Service;
 import java.io.FileNotFoundException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 @Service
@@ -47,7 +49,7 @@ public class AccountService {
         System.out.println(yearPriorToToday);
         List<MonthlyTransactionTotal> annualMonthlyTransactions = new ArrayList<>();
         while (yearPriorToToday.equals(LocalDate.now()) || yearPriorToToday.isBefore(LocalDate.now())) {
-            String currentMonthYear = yearPriorToToday.getMonth() + " " + yearPriorToToday.getYear();
+            String currentMonthYear = yearPriorToToday.getMonth().getDisplayName(TextStyle.SHORT, Locale.US) + " " + yearPriorToToday.getYear();
             List<Transaction> transactions = transactionRepository.findAllByAccount_IdAndDateInMonthYear(
                     id, yearPriorToToday.getMonthValue(), yearPriorToToday.getYear());
             BigDecimal totalFlow = financeManagerService.getTotalAmount(transactions);
