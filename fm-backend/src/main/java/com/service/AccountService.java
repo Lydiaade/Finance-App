@@ -8,6 +8,7 @@ import com.repository.TransactionRepository;
 import org.springframework.stereotype.Service;
 
 import java.io.FileNotFoundException;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,10 +18,12 @@ import java.util.Optional;
 public class AccountService {
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
+    private final FinanceManagerService financeManagerService;
 
-    public AccountService(AccountRepository accountRepository, TransactionRepository transactionRepository) {
+    public AccountService(AccountRepository accountRepository, TransactionRepository transactionRepository, FinanceManagerService financeManagerService) {
         this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
+        this.financeManagerService = financeManagerService;
     }
 
     public List<Account> getAllAccounts() {
@@ -42,17 +45,17 @@ public class AccountService {
     public List<MonthlyTransactionTotal> getAccountAnnualMonthlyTransactions(Integer id) {
         LocalDate yearPriorToToday = LocalDate.now().minusYears(1);
         System.out.println(yearPriorToToday);
-        List<Transaction> transactions = transactionRepository.findAllByAccount_IdAndDateAfter(
-                id, yearPriorToToday);
-        System.out.println(transactions);
         List<MonthlyTransactionTotal> annualMonthlyTransactions = new ArrayList<>();
         for (int i = 0; i < 12; i++) {
-            MonthlyTransactionTotal newMonth = new MonthlyTransactionTotal();
-
+            String currentMonthYear = yearPriorToToday.getMonth() + String.valueOf(yearPriorToToday.getYear());
+            List<Transaction> transactions = transactionRepository.findAllByAccount_IdAndDateInMonthYear(
+                    id, yearPriorToToday.getMonthValue(), yearPriorToToday.getYear());
+            BigDecimal totalFlow = financeManagerService.getTotalAmount(transactions);
+            MonthlyTransactionTotal newMonth = new MonthlyTransactionTotal(currentMonthYear, totalFlow);
+            annualMonthlyTransactions.add(newMonth);
+            yearPriorToToday = yearPriorToToday.plusMonths(1);
         }
-
-
-            return new ArrayList<>();
+        return annualMonthlyTransactions;
     }
 
     public void addAccount(Account account) {
