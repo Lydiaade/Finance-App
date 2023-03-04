@@ -1,6 +1,7 @@
 package com.controller;
 
 import com.dto.Account;
+import com.dto.Transaction;
 import com.dto.request.NewAccountRequest;
 import com.service.AccountService;
 import org.springframework.http.HttpStatus;
@@ -37,8 +38,13 @@ public class AccountController {
     }
 
     @GetMapping("/account/{id}/transactions")
-    public Object getAccountTransactions(@PathVariable("id") Integer id) {
+    public ResponseEntity<List<Transaction>> getAccountTransactions(@PathVariable("id") Integer id) {
         return new ResponseEntity<>(accountService.getAccountTransactions(id), HttpStatus.OK);
+    }
+
+    @GetMapping("/account/{id}/transactions/monthly")
+    public Object getAccountAnnualMonthlyTransactions(@PathVariable("id") Integer id) {
+        return new ResponseEntity<>(accountService.getAccountAnnualMonthlyTransactions(id), HttpStatus.OK);
     }
 
     @PostMapping("/account")

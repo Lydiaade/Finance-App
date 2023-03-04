@@ -29,7 +29,7 @@ class HomePage extends Component {
                                 <h1>Finance Manager</h1>
                                 <p>{this.state.message}</p>
                             </div>
-                            <CurrentAccountOverview />
+                            <CurrentAccountOverview/>
                         </header>
                     </div>
                 </React.Fragment>
