@@ -43,13 +43,14 @@ function AccountInformation() {
     return (
         <div>
             <h1 className="pageTitle">{account.name}</h1>
-            <button className="btn btn-primary" onClick={changeView}>{transactionView ? "View All Transactions" : "Hide All Transactions"}</button>
+            <button className="btn btn-primary"
+                    onClick={changeView}>{transactionView ? "Hide All Transactions" : "View All Transactions"}</button>
             {transactionView ?
+                transactions.length === 0 ? <p>One moment please</p> :
+                    <TransactionContainer transactions={transactions}/> :
                 <div>
                     <Chart data={chart}/>
-                </div> :
-                transactions.length === 0 ? <p>One moment please</p> :
-                    <TransactionContainer transactions={transactions}/>}
+                </div>}
         </div>
     );
 }
