@@ -1,5 +1,5 @@
 import {Component} from "react";
-import {CartesianGrid, Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Label} from 'recharts';
+import {CartesianGrid, Line, LineChart, ResponsiveContainer, XAxis, YAxis,ReferenceLine, Tooltip, Label} from 'recharts';
 
 class Chart extends Component {
     render() {
@@ -20,6 +20,7 @@ class Chart extends Component {
                         <YAxis tickCount={10} label={{ value: 'Total Spend (£)', angle: -90, position: 'insideLeft' }}/>
                         <Tooltip />
                         <Line type="monotone" dataKey="total" stroke="#8884d8" fill="#8884d8" activeDot={{ r: 8 }} />
+                        <ReferenceLine y={0} stroke="red" strokeDasharray="3 3" />
                     </LineChart>
                 </ResponsiveContainer>
             </div>
