@@ -12,6 +12,7 @@ class TransactionContainer extends Component {
                         <th scope="col" className="Date">Date</th>
                         <th scope="col" className="Amount">Amount</th>
                         <th scope="col" className="Category">Category</th>
+                        <th scope="col" className="Segment">Segment</th>
                         <th scope="col" className="PaidTo">Paid To</th>
                         <th scope="col" className="Memo">Memo</th>
                     </tr>
