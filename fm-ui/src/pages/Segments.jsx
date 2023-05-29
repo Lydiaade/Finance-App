@@ -6,18 +6,17 @@ import SegmentContainer from "../components/SegmentContainer";
 
 class TransactionsPage extends Component {
     state = {
-        segmentData: [{"id": 1, "name": "Unclassified"}],
+        segmentData: [],
     }
 
     componentDidMount() {
-        // this.getSegments();
+        this.getSegments();
     }
 
     getSegments = () => {
-        // fetch(`${BACKEND_URL}/segments/`,)
-        //     .then((data) => data.json())
-        //     .then((data) => this.setState({transactionData: data}));
-        this.setState([])
+        fetch(`${BACKEND_URL}/segments/`,)
+            .then((data) => data.json())
+            .then((data) => this.setState({segmentData: data}));
     }
 
     render() {
