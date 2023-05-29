@@ -24,6 +24,9 @@ public class Transaction {
     @ManyToOne(fetch = FetchType.EAGER)
     private Account account;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    private Segment segment = null;
+
     private LocalDate date;
     private BigDecimal amount;
     private String category;
@@ -37,6 +40,16 @@ public class Transaction {
         this.category = category;
         this.paid_to = paid_to;
         this.memo = memo;
+    }
+
+    public Transaction(String date, Account account, BigDecimal amount, String category, String paid_to, String memo, Segment segment) {
+        this.date = transformStringToDate(date);
+        this.account = account;
+        this.amount = amount;
+        this.category = category;
+        this.paid_to = paid_to;
+        this.memo = memo;
+        this.segment = segment;
     }
 
     public Transaction() {
@@ -72,6 +85,14 @@ public class Transaction {
 
     public void setAccount(Account account) {
         this.account = account;
+    }
+
+    public Segment getSegment() {
+        return segment;
+    }
+
+    public void setSegment(Segment segment) {
+        this.segment = segment;
     }
 
     public BigDecimal getAmount() {
@@ -111,12 +132,12 @@ public class Transaction {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Transaction that = (Transaction) o;
-        return Objects.equals(id, that.id) && Objects.equals(account, that.account) && Objects.equals(date, that.date) && Objects.equals(amount, that.amount) && Objects.equals(category, that.category) && Objects.equals(paid_to, that.paid_to) && Objects.equals(memo, that.memo);
+        return Objects.equals(id, that.id) && Objects.equals(account, that.account) && Objects.equals(segment, that.segment) && Objects.equals(date, that.date) && Objects.equals(amount, that.amount) && Objects.equals(category, that.category) && Objects.equals(paid_to, that.paid_to) && Objects.equals(memo, that.memo);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, account, date, amount, category, paid_to, memo);
+        return Objects.hash(id, account, segment, date, amount, category, paid_to, memo);
     }
 
     @Override
@@ -124,6 +145,7 @@ public class Transaction {
         return "Transaction{" +
                 "id=" + id +
                 ", account=" + account +
+                ", segment=" + segment +
                 ", date=" + date +
                 ", amount=" + amount +
                 ", category='" + category + '\'' +
