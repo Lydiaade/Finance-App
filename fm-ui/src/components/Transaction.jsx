@@ -9,7 +9,7 @@ class Transaction extends Component {
                 <td className="transactionDate">{date}</td>
                 <td className="transactionAmount">{amount < 0 ? `- £${amount*-1}` : `£${amount}`}</td>
                 <td className="transactionCategory">{category}</td>
-                <td className="transactionSegment">{segment ? segment: "Unclassified"}</td>
+                <td className="transactionSegment">{segment.name}</td>
                 <td className="transactionPaidTo">{paid_to}</td>
                 <td className="transactionMemo">{memo}</td>
             </tr>

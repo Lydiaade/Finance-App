@@ -17,6 +17,6 @@ public class TransactionTest {
         LocalDate expectedDate = LocalDate.of(2022, 3, 31);
         assertEquals(expectedDate, transaction.getDate());
         assertEquals(account.getName(), transaction.getAccount().getName());
-        assertEquals(null, transaction.getSegment());
+        assertEquals(new Segment("Undefined"), transaction.getSegment());
     }
 }

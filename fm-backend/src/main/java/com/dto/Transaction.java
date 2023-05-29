@@ -25,7 +25,7 @@ public class Transaction {
     private Account account;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    private Segment segment = null;
+    private Segment segment = new Segment("Undefined");
 
     private LocalDate date;
     private BigDecimal amount;
