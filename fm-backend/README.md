@@ -10,7 +10,8 @@ The backend has been created to manage the db for the transactions and hopefully
 ## Helper
 - If there are other ports open using port 8080 you must destroy them, this can easily be done by running the following command ` lsof -i :8080`
 
-## To-Do List
+## To-Do List 
+#### Can now be found in this Notion Kanban Board: https://www.notion.so/80f901f8bbc14207b7769e1c03c299c9?v=724be6485f7f468b8cd5a6e05404945d&pvs=4
 - [x] Create method to generate transactions when file is sent through in front end and saves to db
     - [ ] Handle error cases on file upload
 - [ ] Add starting salary endpoint
