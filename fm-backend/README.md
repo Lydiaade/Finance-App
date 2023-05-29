@@ -2,6 +2,13 @@
 
 The backend has been created to manage the db for the transactions and hopefully accounts soon.
 
+## How to start backend
+1. Ensure docker is running
+2. Run the docker compose file, to load the database
+3. Run the FinanceManagerApplication file
+
+## Helper
+- If there are other ports open using port 8080 you must destroy them, this can easily be done by running the following command ` lsof -i :8080`
 
 ## To-Do List
 - [x] Create method to generate transactions when file is sent through in front end and saves to db
