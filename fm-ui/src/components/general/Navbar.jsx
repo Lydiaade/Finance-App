@@ -21,6 +21,7 @@ function NavigationBar() {
                                     Upload Transactions
                                 </NavDropdown.Item>
                             </NavDropdown>
+                            <Nav.Link href="/segments">Segments</Nav.Link>
                         </Nav>
                     </Navbar.Collapse>
                 </Container>
