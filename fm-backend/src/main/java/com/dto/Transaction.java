@@ -24,14 +24,12 @@ public class Transaction {
     @ManyToOne(fetch = FetchType.EAGER)
     private Account account;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    private Segment segment = new Segment("Undefined");
-
     private LocalDate date;
     private BigDecimal amount;
     private String category;
     private String paid_to;
     private String memo;
+    private String segment = "Undefined";
 
     public Transaction(String date, Account account, BigDecimal amount, String category, String paid_to, String memo) {
         this.date = transformStringToDate(date);
@@ -49,7 +47,7 @@ public class Transaction {
         this.category = category;
         this.paid_to = paid_to;
         this.memo = memo;
-        this.segment = segment;
+        this.segment = segment.getName();
     }
 
     public Transaction() {
@@ -87,11 +85,15 @@ public class Transaction {
         this.account = account;
     }
 
-    public Segment getSegment() {
+    public String getSegment() {
         return segment;
     }
 
     public void setSegment(Segment segment) {
+        this.segment = segment.getName();
+    }
+
+    public void setSegment(String segment) {
         this.segment = segment;
     }
 
