@@ -7,67 +7,34 @@ class UploadFile extends Component {
         this.setState({selectedFile: event.target.files[0]});
     };
 
-    // On file upload (click the upload button)
     onFileUpload = () => {
         const formData = new FormData();
 
-        formData.append(
-            "file",
-            this.state.selectedFile
-        );
-
-        console.log(formData);
+        formData.append("file", this.state.selectedFile);
 
         fetch(`${BACKEND_URL}/transactions/upload/csv`, {
             method: "POST",
             headers: {
                 'Accept': 'application/json'
             },
-            body: formData})
+            body: formData
+        })
             .then((response) => console.log(response.status));
     };
 
-    // File content to be displayed after
-    // file upload is complete
-    fileData = () => {
-
-        if (this.state.selectedFile) {
-
-            return (
-                <div>
-                    <h2>File Details:</h2>
-                    <p>File Name: {this.state.selectedFile.name}</p>
-
-                    <p>File Type: {this.state.selectedFile.type}</p>
-
-                    <p>
-                        Last Modified:{" "}
-                        {this.state.selectedFile.lastModifiedDate.toDateString()}
-                    </p>
-
-                </div>
-            );
-        } else {
-            return (
-                <div>
-                    <br/>
-                    <h4>Choose before Pressing the Upload button</h4>
-                </div>
-            );
-        }
-    };
-
     render() {
-
         return (
             <div>
-                <div>
-                    <input type="file" accept=".csv" onChange={this.onFileChange}/>
-                    <button onClick={this.onFileUpload}>
-                        Upload File
-                    </button>
-                </div>
-                {this.fileData()}
+                <form>
+                    <fieldset>
+                        <div className="mb-3">
+                            <label htmlFor="formFile" className="form-label">Upload transactions csv file</label>
+                            <input className="form-control" type="file" accept=".csv" id="formFile"
+                                   onChange={this.onFileChange} required/>
+                        </div>
+                        <button onClick={this.onFileUpload} className="btn btn-primary">Upload</button>
+                    </fieldset>
+                </form>
             </div>
         );
     }
