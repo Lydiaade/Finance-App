@@ -9,6 +9,10 @@ class UploadFile extends Component {
 
     onFileUpload = () => {
         const formData = new FormData();
+        if (!this.state.selectedFile) {
+            this.setState({errorMessage: "Please select a csv file to upload"})
+            return
+        }
 
         formData.append("file", this.state.selectedFile);
 
@@ -19,22 +23,30 @@ class UploadFile extends Component {
             },
             body: formData
         })
-            .then((response) => console.log(response.status));
+            .then((response) => this.setState({isSuccess: response.status === 200}) response.text())
+            .then((text) => this.setState({message: text}));
+
     };
 
     render() {
         return (
             <div>
-                <form>
-                    <fieldset>
-                        <div className="mb-3">
-                            <label htmlFor="formFile" className="form-label">Upload transactions csv file</label>
-                            <input className="form-control" type="file" accept=".csv" id="formFile"
-                                   onChange={this.onFileChange} required/>
-                        </div>
-                        <button onClick={this.onFileUpload} className="btn btn-primary">Upload</button>
-                    </fieldset>
-                </form>
+                {this.state.isSuccess ?
+                    <div className="alert alert-success" role="alert">
+                        <h4 className="alert-heading">Successfully Uploaded File!</h4>
+                        <p>{this.state.isSuccess}</p>
+                        <p className="mb-0">File Type: {this.state.selectedFile.type}</p>
+                    </div> :
+                    <div/>
+                }
+                <fieldset>
+                    <div className="mb-3">
+                        <label htmlFor="formFile" className="form-label">Upload transactions csv file</label>
+                        <input className="form-control" type="file" accept=".csv" id="formFile"
+                               onChange={this.onFileChange} required/>
+                    </div>
+                    <button onClick={this.onFileUpload} className="btn btn-primary">Upload</button>
+                </fieldset>
             </div>
         );
     }
