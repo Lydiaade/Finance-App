@@ -1,8 +1,9 @@
-import {Component} from 'react';
+import {Component, useRef} from 'react';
 import {BACKEND_URL} from "../config";
 
 class UploadFile extends Component {
-    state = {}
+    state = {fileName: null}
+
     onFileChange = event => {
         this.setState({selectedFile: event.target.files[0]});
     };
@@ -23,9 +24,17 @@ class UploadFile extends Component {
             },
             body: formData
         })
-            .then((response) => this.setState({isSuccess: response.status === 200}) response.text())
+            .then((response) => {
+                if (response.status === 200) {
+                    this.setState({isSuccess: response.status === 200});
+                    return response.text();
+                } else {
+                    console.log(response.status)
+                }
+            })
             .then((text) => this.setState({message: text}));
 
+        this.setState({fileName: null});
     };
 
     render() {
@@ -34,8 +43,7 @@ class UploadFile extends Component {
                 {this.state.isSuccess ?
                     <div className="alert alert-success" role="alert">
                         <h4 className="alert-heading">Successfully Uploaded File!</h4>
-                        <p>{this.state.isSuccess}</p>
-                        <p className="mb-0">File Type: {this.state.selectedFile.type}</p>
+                        <p>{this.state.message}</p>
                     </div> :
                     <div/>
                 }
@@ -43,7 +51,7 @@ class UploadFile extends Component {
                     <div className="mb-3">
                         <label htmlFor="formFile" className="form-label">Upload transactions csv file</label>
                         <input className="form-control" type="file" accept=".csv" id="formFile"
-                               onChange={this.onFileChange} required/>
+                               onChange={this.onFileChange} ref={this.state.fileName} required/>
                     </div>
                     <button onClick={this.onFileUpload} className="btn btn-primary">Upload</button>
                 </fieldset>
