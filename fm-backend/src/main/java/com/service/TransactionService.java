@@ -1,9 +1,10 @@
 package com.service;
 
 import com.dto.Transaction;
+import com.dto.FileTransferObject;
+import com.dto.response.FileInfoResponse;
 import com.helper.CSVHelper;
 import com.repository.TransactionRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,11 +21,12 @@ public class TransactionService {
         this.csvHelper = csvHelper;
     }
 
-    public void saveFile(MultipartFile file) {
+    public FileInfoResponse saveFile(MultipartFile file) {
         try {
             System.out.println("About to save");
-            List<Transaction> csv_transactions = csvHelper.csvToTransactions(file);
-            transactionRepository.saveAll(csv_transactions);
+            FileTransferObject response = csvHelper.csvToTransactions(file);
+            transactionRepository.saveAll(response.getTransactions());
+            return response.getFileInfo();
         } catch (IOException e) {
             throw new RuntimeException("Fail to store csv data: " + e.getMessage());
         }

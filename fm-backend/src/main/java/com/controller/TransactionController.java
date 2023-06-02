@@ -2,8 +2,9 @@ package com.controller;
 
 import com.dto.Transaction;
 import com.dto.request.NewTransactionRequest;
+import com.dto.FileTransferObject;
+import com.dto.response.FileInfoResponse;
 import com.service.TransactionService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -35,12 +36,10 @@ public class TransactionController {
     }
 
     @PostMapping("/upload/csv")
-    public ResponseEntity<String> uploadTransactions(@RequestBody MultipartFile file) {
-        String message;
+    public ResponseEntity uploadTransactions(@RequestBody MultipartFile file) {
         try {
-            transactionService.saveFile(file);
-            message = "File uploaded: " + file.getOriginalFilename() + "!";
-            return new ResponseEntity<>(message, HttpStatus.OK);
+            FileInfoResponse response = transactionService.saveFile(file);
+            return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
         }

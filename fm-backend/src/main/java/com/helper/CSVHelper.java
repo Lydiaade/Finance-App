@@ -2,6 +2,7 @@ package com.helper;
 
 import com.dto.Account;
 import com.dto.Transaction;
+import com.dto.FileTransferObject;
 import com.repository.AccountRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -11,10 +12,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Scanner;
+import java.util.*;
 
 @Service
 public class CSVHelper {
@@ -24,15 +22,17 @@ public class CSVHelper {
         this.accountRepository = accRepository;
     }
 
-    public List<Transaction> csvToTransactions(MultipartFile file) throws IOException {
+    public FileTransferObject csvToTransactions(MultipartFile file) throws IOException {
+        FileTransferObject file_info = new FileTransferObject(file.getOriginalFilename());
         File transformedFile = multipartFileToFile(file);
         System.out.println("File ready to be processed");
-        return transformFileToTransactions(transformedFile);
+        return transformFileToTransactions(transformedFile, file_info);
     }
 
-    public List<Transaction> transformFileToTransactions(File file) {
+    public FileTransferObject transformFileToTransactions(File file, FileTransferObject file_info) {
         List<Transaction> transactions = new ArrayList<>();
         System.out.println("About to transform file, " + file.getName());
+        int failed_transactions = 0;
         try {
             Scanner scanner = new Scanner(file);
             if (scanner.hasNext()) {
@@ -41,15 +41,19 @@ public class CSVHelper {
             }
             while (scanner.hasNext()) {
                 String nextLine = scanner.nextLine();
-                Transaction transaction = transformSingleCSVTransaction(nextLine);
-                if (transaction != null) {
+                try {
+                    Transaction transaction = transformSingleCSVTransaction(nextLine);
                     transactions.add(transaction);
+                } catch (Exception e) {
+                    failed_transactions++;
                 }
             }
         } catch (FileNotFoundException e) {
-            System.out.println("Error!!!");
+            System.err.println("Error!!!");
         }
-        return transactions;
+        file_info.setTransactions(transactions);
+        file_info.setFailedTransactions(failed_transactions);
+        return file_info;
 
     }
 
@@ -61,7 +65,7 @@ public class CSVHelper {
         return convFile;
     }
 
-    private Transaction transformSingleCSVTransaction(String nextLine) {
+    private Transaction transformSingleCSVTransaction(String nextLine) throws Exception {
         try {
             System.out.println(nextLine);
             String[] transactionValues = nextLine.split(",");
@@ -75,7 +79,9 @@ public class CSVHelper {
             return new Transaction(date, account, amount, category, paid_to, memo);
         } catch (ArrayIndexOutOfBoundsException e) {
             System.err.println("A row doesn't follow the structure required");
-            return null;
+            throw new UnsuccesfulTransactionRetrival("Unsuccessful Transaction");
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(e.getMessage());
         }
     }
 

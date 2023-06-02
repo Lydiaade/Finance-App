@@ -1,6 +1,7 @@
 package com.helper;
 
 import com.dto.Account;
+import com.dto.FileTransferObject;
 import com.dto.Transaction;
 import com.repository.AccountRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,14 +50,15 @@ public class CSVHelperTest {
         when(accRepository.findBySortCodeAndAccountNumber("SORTNUMBER", "ACCNUMBER")).thenReturn(List.of(account));
 
         File file = new File(path);
+        FileTransferObject file_transfer = new FileTransferObject(file.getName());
         Transaction expectedResult1 = new Transaction("31/03/2022", account, BigDecimal.valueOf(-9), "Debit", "BAR BRUNO", "ON 29 MAR CPM");
         Transaction expectedResult2 = new Transaction("30/04/2022", account, BigDecimal.valueOf(-150.79), "Bill Payment", "PersonA", "4929136097234001 BBP");
 
-        List<Transaction> result = csvHelper.transformFileToTransactions(file);
+        FileTransferObject result = csvHelper.transformFileToTransactions(file, file_transfer);
 
-        assertEquals(2, result.size());
-        assertEquals(expectedResult1, result.get(0));
-        assertEquals(expectedResult2, result.get(1));
+        assertEquals(2, result.getTransactions().size());
+        assertEquals(expectedResult1, result.getTransactions().get(0));
+        assertEquals(expectedResult2, result.getTransactions().get(1));
     }
 
     @Test
@@ -65,7 +67,8 @@ public class CSVHelperTest {
         when(accRepository.findBySortCodeAndAccountNumber("SORTNUMBER", "ACCNUMBER")).thenReturn(new ArrayList<>());
 
         File file = new File(path);
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> csvHelper.transformFileToTransactions(file));
+        FileTransferObject file_transfer = new FileTransferObject(file.getName());
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> csvHelper.transformFileToTransactions(file, file_transfer));
 
         String expectedMessage = "An account needs to be created first for for the account provided.";
         String actualMessage = exception.getMessage();
