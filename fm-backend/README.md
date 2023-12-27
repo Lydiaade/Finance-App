@@ -4,7 +4,7 @@ The backend has been created to manage the db for the transactions and hopefully
 
 ## How to start backend
 1. Ensure docker is running
-2. Run the docker compose file, to load the database `docker-compose up`
+2. Run the docker compose file, to load the database and do so in the background `docker-compose up -d` 
 3. Run the FinanceManagerApplication file
 
 
