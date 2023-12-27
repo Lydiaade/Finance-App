@@ -1,6 +1,7 @@
 services:
   db:
-    container_name: postgres
+    container_name: finance-manager
+    hostname: postgres
     image: postgres
     environment:
       POSTGRES_USER: lydia

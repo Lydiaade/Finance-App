@@ -4,8 +4,9 @@ The backend has been created to manage the db for the transactions and hopefully
 
 ## How to start backend
 1. Ensure docker is running
-2. Run the docker compose file, to load the database
+2. Run the docker compose file, to load the database `docker-compose up`
 3. Run the FinanceManagerApplication file
+
 
 ## Helper
 - If there are other ports open using port 8080 you must destroy them, this can easily be done by running the following command ` lsof -i :8080`
