@@ -3,7 +3,7 @@
 The backend has been created to manage the db for the transactions and hopefully accounts soon.
 
 ## How to start backend
-1. Ensure docker is running
+1. Ensure docker is running and your terminal is open to the current directory for the `fm-backend`
 2. Run the docker compose file, to load the database and do so in the background `docker-compose up -d` 
 3. Run the FinanceManagerApplication file
 

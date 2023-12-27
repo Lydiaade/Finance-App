@@ -63,4 +63,8 @@ public class AccountService {
     public void addAccount(Account account) {
         accountRepository.save(account);
     }
+
+    public void deleteAccount(Integer id){
+        accountRepository.deleteById(id);
+    }
 }

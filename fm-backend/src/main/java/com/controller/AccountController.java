@@ -53,4 +53,9 @@ public class AccountController {
         Account account = new Account(request.name(), request.sortCode(), request.accountNumber(), request.currentBalance(), currentBalanceDate);
         accountService.addAccount(account);
     }
+
+    @DeleteMapping("/account/{id}")
+    public void deleteAccount(@PathVariable("id") Integer id) {
+        accountService.deleteAccount(id);
+    }
 }
