@@ -3,6 +3,7 @@ package com.helper;
 import com.dto.Account;
 import com.dto.Transaction;
 import com.dto.FileTransferObject;
+import com.exceptions.UnsuccessfulTransactionRetrieval;
 import com.repository.AccountRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -79,7 +80,7 @@ public class CSVHelper {
             return new Transaction(date, account, amount, category, paid_to, memo);
         } catch (ArrayIndexOutOfBoundsException e) {
             System.err.println("A row doesn't follow the structure required");
-            throw new UnsuccesfulTransactionRetrival("Unsuccessful Transaction");
+            throw new UnsuccessfulTransactionRetrieval("Unsuccessful Transaction");
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException(e.getMessage());
         }
