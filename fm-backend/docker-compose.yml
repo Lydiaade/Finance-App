@@ -6,6 +6,7 @@ services:
     environment:
       POSTGRES_USER: lydia
       POSTGRES_PASSWORD: password
+      POSTGRES_DB: transaction
       PG_DATA: /data/postgres
     volumes:
       - db:/data/postgres
