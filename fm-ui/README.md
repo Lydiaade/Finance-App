@@ -1,6 +1,6 @@
 # Finance Manager UI
 
-This front has been created to recreate the excel spreadsheet but with an updated dashboard.
+This frontend has been created to recreate the excel spreadsheet but with an updated dashboard.
 
 ## To Do List
 - [ ] Add makefile for lint fixing 
