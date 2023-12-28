@@ -63,4 +63,12 @@ public class AccountService {
     public void addAccount(Account account) {
         accountRepository.save(account);
     }
+
+    public void deleteAccount(Integer id){
+        List<Transaction> transactions = transactionRepository.findAllByAccount_Id(id);
+        for (Transaction transaction: transactions) {
+            transactionRepository.deleteById(transaction.getId());
+        }
+        accountRepository.deleteById(id);
+    }
 }

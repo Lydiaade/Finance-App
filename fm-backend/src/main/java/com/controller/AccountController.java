@@ -12,7 +12,9 @@ import java.io.FileNotFoundException;
 import java.time.LocalDate;
 import java.util.List;
 
-@CrossOrigin(origins = "http://localhost:3000")
+import static org.springframework.web.bind.annotation.RequestMethod.*;
+
+
 @RestController
 @RequestMapping("/accounts")
 public class AccountController {
@@ -52,5 +54,15 @@ public class AccountController {
         LocalDate currentBalanceDate = LocalDate.now();
         Account account = new Account(request.name(), request.sortCode(), request.accountNumber(), request.currentBalance(), currentBalanceDate);
         accountService.addAccount(account);
+    }
+
+    @DeleteMapping("/account/{id}")
+    public Object deleteAccount(@PathVariable("id") Integer id) {
+        try {
+            accountService.deleteAccount(id);
+            return HttpStatus.NO_CONTENT;
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }
     }
 }
