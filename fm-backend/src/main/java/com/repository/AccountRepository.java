@@ -1,10 +1,10 @@
 package com.repository;
 
-import com.dto.Account;
+import com.dto.BankAccount;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface AccountRepository extends JpaRepository<Account, Integer> {
-    List<Account> findBySortCodeAndAccountNumber(String sortCode, String accountNumber);
+public interface AccountRepository extends JpaRepository<BankAccount, Integer> {
+    List<BankAccount> findBySortCodeAndAccountNumber(String sortCode, String accountNumber);
 }

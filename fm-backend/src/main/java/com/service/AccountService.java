@@ -1,6 +1,6 @@
 package com.service;
 
-import com.dto.Account;
+import com.dto.BankAccount;
 import com.dto.MonthlyTransactionTotal;
 import com.dto.Transaction;
 import com.repository.AccountRepository;
@@ -28,12 +28,12 @@ public class AccountService {
         this.financeManagerService = financeManagerService;
     }
 
-    public List<Account> getAllAccounts() {
+    public List<BankAccount> getAllAccounts() {
         return accountRepository.findAll();
     }
 
-    public Account getAccount(Integer id) throws FileNotFoundException {
-        Optional<Account> account = accountRepository.findById(id);
+    public BankAccount getAccount(Integer id) throws FileNotFoundException {
+        Optional<BankAccount> account = accountRepository.findById(id);
         if (account.isEmpty()) {
             throw new FileNotFoundException("This account does not exist");
         }
@@ -60,7 +60,7 @@ public class AccountService {
         return annualMonthlyTransactions;
     }
 
-    public void addAccount(Account account) {
+    public void addAccount(BankAccount account) {
         accountRepository.save(account);
     }
 

@@ -1,2 +1,5 @@
-package com.dto;public enum BankName {
+package com.dto;
+
+public enum BankName {
+    BARCLAYS
 }

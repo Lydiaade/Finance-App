@@ -1,10 +1,9 @@
 package com.service;
 
-import com.dto.Account;
+import com.dto.BankAccount;
 import com.dto.Transaction;
 import com.helper.CSVHelper;
 import com.repository.TransactionRepository;
-import org.checkerframework.checker.units.qual.A;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,7 +37,7 @@ public class TransactionServiceTest {
 
     @Test
     public void getTransactions() {
-        Account account = new Account();
+        BankAccount account = new BankAccount();
         // arrange
         Transaction transaction1 = new Transaction("31/03/2022", account, new BigDecimal(200), "paid out", "The other girl", "Friend Account");
         transaction1.setId(1);

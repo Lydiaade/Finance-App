@@ -1,6 +1,6 @@
 package com.helper;
 
-import com.dto.Account;
+import com.dto.BankAccount;
 import com.dto.Transaction;
 import com.dto.FileTransferObject;
 import com.exceptions.UnsuccessfulTransactionRetrieval;
@@ -71,7 +71,7 @@ public class CSVHelper {
             System.out.println(nextLine);
             String[] transactionValues = nextLine.split(",");
             String date = transactionValues[1];
-            Account account = retrieveAccountData(transactionValues[2]);
+            BankAccount account = retrieveAccountData(transactionValues[2]);
             BigDecimal amount = new BigDecimal(transactionValues[3]);
             String category = transactionValues[4];
             String[] splitDetails = transactionValues[5].replaceAll("\"", "").split("\t");
@@ -86,12 +86,12 @@ public class CSVHelper {
         }
     }
 
-    private Account retrieveAccountData(String accountString) {
+    private BankAccount retrieveAccountData(String accountString) {
         System.out.println(accountString);
         String[] accountDetails = accountString.split("\s");
         System.out.println(accountDetails[0]);
         System.out.println(accountDetails[1]);
-        List<Account> accounts = accountRepository.findBySortCodeAndAccountNumber(accountDetails[0], accountDetails[1]);
+        List<BankAccount> accounts = accountRepository.findBySortCodeAndAccountNumber(accountDetails[0], accountDetails[1]);
 
         if (accounts.size() == 0) {
             System.out.println("Account does not exist");

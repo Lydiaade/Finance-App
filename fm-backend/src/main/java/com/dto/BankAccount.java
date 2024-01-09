@@ -30,6 +30,8 @@ public class BankAccount {
     private BigDecimal currentBalance;
     private LocalDate currentBalanceDate;
 
+    private boolean isMainBankAccount;
+
     public BankAccount(String name, String sortCode, String accountNumber, BigDecimal currentBalance, LocalDate currentBalanceDate) {
         this.name = name;
         this.sortCode = sortCode;

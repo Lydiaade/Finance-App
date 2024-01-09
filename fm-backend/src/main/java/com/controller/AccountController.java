@@ -1,8 +1,8 @@
 package com.controller;
 
-import com.dto.Account;
+import com.dto.BankAccount;
 import com.dto.Transaction;
-import com.dto.request.NewAccountRequest;
+import com.dto.request.NewBankAccountRequest;
 import com.service.AccountService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,8 +11,6 @@ import org.springframework.web.bind.annotation.*;
 import java.io.FileNotFoundException;
 import java.time.LocalDate;
 import java.util.List;
-
-import static org.springframework.web.bind.annotation.RequestMethod.*;
 
 
 @RestController
@@ -26,7 +24,7 @@ public class AccountController {
     }
 
     @GetMapping("/")
-    public ResponseEntity<List<Account>> getAccounts() {
+    public ResponseEntity<List<BankAccount>> getAccounts() {
         return new ResponseEntity<>(accountService.getAllAccounts(), HttpStatus.OK);
     }
 
@@ -50,9 +48,9 @@ public class AccountController {
     }
 
     @PostMapping("/account")
-    public void addAccount(@RequestBody NewAccountRequest request) {
+    public void addAccount(@RequestBody NewBankAccountRequest request) {
         LocalDate currentBalanceDate = LocalDate.now();
-        Account account = new Account(request.name(), request.sortCode(), request.accountNumber(), request.currentBalance(), currentBalanceDate);
+        BankAccount account = new BankAccount(request.name(), request.sortCode(), request.accountNumber(), request.currentBalance(), currentBalanceDate);
         accountService.addAccount(account);
     }
 
