@@ -4,10 +4,11 @@ import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Currency;
 import java.util.Objects;
 
 @Entity
-public class Account {
+public class BankAccount {
 
     @Id
     @SequenceGenerator(
@@ -23,10 +24,13 @@ public class Account {
     private String name;
     private String sortCode;
     private String accountNumber;
+    private BankAccountType accountType;
+    private BankName bankName;
+    private Currency currency;
     private BigDecimal currentBalance;
     private LocalDate currentBalanceDate;
 
-    public Account(String name, String sortCode, String accountNumber, BigDecimal currentBalance, LocalDate currentBalanceDate) {
+    public BankAccount(String name, String sortCode, String accountNumber, BigDecimal currentBalance, LocalDate currentBalanceDate) {
         this.name = name;
         this.sortCode = sortCode;
         this.accountNumber = accountNumber;
@@ -34,7 +38,18 @@ public class Account {
         this.currentBalanceDate = currentBalanceDate;
     }
 
-    public Account() {
+    public BankAccount() {
+    }
+
+    public BankAccount(String name, String sortCode, String accountNumber, BankAccountType accountType, BankName bankName, Currency currency, BigDecimal currentBalance, LocalDate currentBalanceDate) {
+        this.name = name;
+        this.sortCode = sortCode;
+        this.accountNumber = accountNumber;
+        this.accountType = accountType;
+        this.bankName = bankName;
+        this.currency = currency;
+        this.currentBalance = currentBalance;
+        this.currentBalanceDate = currentBalanceDate;
     }
 
     public Integer getId() {
@@ -85,26 +100,53 @@ public class Account {
         this.currentBalanceDate = currentBalanceDate;
     }
 
+    public BankAccountType getAccountType() {
+        return accountType;
+    }
+
+    public void setAccountType(BankAccountType accountType) {
+        this.accountType = accountType;
+    }
+
+    public BankName getBankName() {
+        return bankName;
+    }
+
+    public void setBankName(BankName bankName) {
+        this.bankName = bankName;
+    }
+
+    public Currency getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(Currency currency) {
+        this.currency = currency;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Account account = (Account) o;
-        return Objects.equals(id, account.id) && Objects.equals(name, account.name) && Objects.equals(sortCode, account.sortCode) && Objects.equals(accountNumber, account.accountNumber) && Objects.equals(currentBalance, account.currentBalance) && Objects.equals(currentBalanceDate, account.currentBalanceDate);
+        BankAccount that = (BankAccount) o;
+        return Objects.equals(getId(), that.getId()) && Objects.equals(getName(), that.getName()) && Objects.equals(getSortCode(), that.getSortCode()) && Objects.equals(getAccountNumber(), that.getAccountNumber()) && accountType == that.accountType && bankName == that.bankName && Objects.equals(currency, that.currency) && Objects.equals(getCurrentBalance(), that.getCurrentBalance()) && Objects.equals(getCurrentBalanceDate(), that.getCurrentBalanceDate());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, sortCode, accountNumber, currentBalance, currentBalanceDate);
+        return Objects.hash(getId(), getName(), getSortCode(), getAccountNumber(), accountType, bankName, currency, getCurrentBalance(), getCurrentBalanceDate());
     }
 
     @Override
     public String toString() {
-        return "Account{" +
+        return "BankAccount{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", sortCode='" + sortCode + '\'' +
                 ", accountNumber='" + accountNumber + '\'' +
+                ", accountType=" + accountType +
+                ", bankName=" + bankName +
+                ", currency=" + currency +
                 ", currentBalance=" + currentBalance +
                 ", currentBalanceDate=" + currentBalanceDate +
                 '}';

@@ -8,7 +8,7 @@ import TransactionsPage from "./pages/Transactions";
 import UploadTransactionPage from "./pages/UploadTransactions";
 import AccountsPage from "./pages/Accounts";
 import AccountInformation from "./pages/AccountInformation";
-import CreateNewAccount from "./components/CreateNewAccount";
+import CreateNewAccount from "./components/CreateNewBankAccount";
 import Segments from "./pages/Segments";
 
 class App extends Component {

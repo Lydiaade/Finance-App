@@ -1,0 +1,15 @@
+.new-account-form {
+    padding-top: 5rem;
+    padding-bottom: 5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    padding-bottom: 1rem;
+}
+label {
+    padding-right: 3rem;
+}

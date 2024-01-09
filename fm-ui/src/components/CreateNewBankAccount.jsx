@@ -1,5 +1,6 @@
 import {Component} from "react";
 import {BACKEND_URL} from "../config";
+import './CreateNewBankAccount.css'
 
 class CurrentAccountOverview extends Component {
     state = {
@@ -41,12 +42,19 @@ class CurrentAccountOverview extends Component {
 
     render() {
         return (
-            <div className="container col-6">
+            <div className="new-account-form container">
                 <form onSubmit={this.handleSubmit}>
                     <div className="form-group">
                         <label>Account Name:</label>
                         <input type="text" className="form-control" name="accountName" value={this.state.name}
                                onChange={(e) => this.setState({name: e.target.value})}/>
+
+                    </div>
+                    <div className="form-group">
+                        <label>Account Type:</label>
+                        <input type="text" className="form-control" name="Account Type"
+                               value={this.state.accountNumber}
+                               onChange={(e) => this.setState({accountNumber: e.target.value})}/>
                     </div>
                     <div className="form-group">
                         <label>Sort Code:</label>
@@ -60,8 +68,32 @@ class CurrentAccountOverview extends Component {
                                onChange={(e) => this.setState({accountNumber: e.target.value})}/>
                     </div>
                     <div className="form-group">
-                        <label>Current Balance:</label>
+                        <label>Bank Name:</label>
+                        <input type="text" className="form-control" name="Account Number"
+                               value={this.state.accountNumber}
+                               onChange={(e) => this.setState({accountNumber: e.target.value})}/>
+                    </div>
+                    <div className="form-group">
+                        <label>Currency:</label>
                         <input type="number" className="form-control" name="Current Balance"
+                               value={this.state.currentBalance}
+                               onChange={(e) => this.setState({currentBalance: e.target.value})}/>
+                    </div>
+                    <div className="form-group">
+                        <label>Balance:</label>
+                        <input type="number" className="form-control" name="Current Balance"
+                               value={this.state.currentBalance}
+                               onChange={(e) => this.setState({currentBalance: e.target.value})}/>
+                    </div>
+                    <div className="form-group">
+                        <label>Balance Date:</label>
+                        <input type="number" className="form-control" name="Current Balance"
+                               value={this.state.currentBalance}
+                               onChange={(e) => this.setState({currentBalance: e.target.value})}/>
+                    </div>
+                    <div className="form-group">
+                        <label>Is this your main account?</label>
+                        <input type="checkbox" className="form-control" name="Main Account"
                                value={this.state.currentBalance}
                                onChange={(e) => this.setState({currentBalance: e.target.value})}/>
                     </div>
