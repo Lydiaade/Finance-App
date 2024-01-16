@@ -1,13 +1,15 @@
-import {Component} from "react";
+import React, {Component} from "react";
 import {BACKEND_URL} from "../config";
 import './CreateNewBankAccount.css'
+import Transaction from "./Transaction";
 
 class CurrentAccountOverview extends Component {
     state = {
         name: "",
         sortCode: "",
         accountNumber: "",
-        currentBalance: ""
+        currentBalance: "",
+        accountTypes: []
     }
 
     constructor(props) {
@@ -16,10 +18,23 @@ class CurrentAccountOverview extends Component {
             name: "",
             sortCode: "",
             accountNumber: "",
-            currentBalance: ""
+            currentBalance: "",
+            accountTypes: []
         }
         this.handleSubmit = this.handleSubmit.bind(this);
     }
+
+    componentDidMount() {
+        this.getAccountTypes();
+    }
+
+
+    getAccountTypes() {
+        fetch(`${BACKEND_URL}/accounts/types`)
+            .then((data) => data.json())
+            .then((data) => this.setState({accountTypes: data}));
+    }
+
 
     handleSubmit(event) {
         // event.preventDefault();
@@ -38,9 +53,9 @@ class CurrentAccountOverview extends Component {
         })
             .then((response) => console.log(response.status));
     }
-
-
     render() {
+        console.log(this.state.accountTypes)
+        // this.getAccountTypes();
         return (
             <div className="new-account-form container">
                 <form onSubmit={this.handleSubmit}>
@@ -51,10 +66,12 @@ class CurrentAccountOverview extends Component {
 
                     </div>
                     <div className="form-group">
-                        <label>Account Type:</label>
-                        <input type="text" className="form-control" name="Account Type"
-                               value={this.state.accountNumber}
-                               onChange={(e) => this.setState({accountNumber: e.target.value})}/>
+                        <label htmlFor="exampleFormControlSelect1">Account Type:</label>
+                        <select className="form-control" id="exampleFormControlSelect1">
+                            {this.state.accountTypes.map((accountType) => (
+                                <option>{accountType}</option>
+                            ))}
+                        </select>
                     </div>
                     <div className="form-group">
                         <label>Sort Code:</label>

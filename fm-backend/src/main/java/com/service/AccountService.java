@@ -1,6 +1,7 @@
 package com.service;
 
 import com.dto.BankAccount;
+import com.dto.BankAccountType;
 import com.dto.MonthlyTransactionTotal;
 import com.dto.Transaction;
 import com.repository.AccountRepository;
@@ -70,5 +71,9 @@ public class AccountService {
             transactionRepository.deleteById(transaction.getId());
         }
         accountRepository.deleteById(id);
+    }
+
+    public BankAccountType[] getAccountTypes() {
+        return BankAccountType.values();
     }
 }

@@ -1,6 +1,7 @@
 package com.controller;
 
 import com.dto.BankAccount;
+import com.dto.BankAccountType;
 import com.dto.Transaction;
 import com.dto.request.NewBankAccountRequest;
 import com.service.AccountService;
@@ -35,6 +36,11 @@ public class AccountController {
         } catch (FileNotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
+    }
+
+    @GetMapping("/types")
+    public ResponseEntity<BankAccountType[]> getAccountTypes() {
+        return new ResponseEntity<>(accountService.getAccountTypes(), HttpStatus.OK);
     }
 
     @GetMapping("/account/{id}/transactions")
