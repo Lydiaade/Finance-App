@@ -110,7 +110,7 @@ class CurrentAccountOverview extends Component {
                     </div>
                     <div className="form-group">
                         <label>Is this your main account?</label>
-                        <input type="checkbox" className="form-control" name="Main Account"
+                        <input type="checkbox" className="form-check-input" name="Main Account"
                                value={this.state.currentBalance}
                                onChange={(e) => this.setState({currentBalance: e.target.value})}/>
                     </div>
