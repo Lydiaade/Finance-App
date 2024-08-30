@@ -1,4 +1,4 @@
-import {Component} from "react";
+import React, {Component} from "react";
 import {BACKEND_URL} from "../config";
 import './CreateNewBankAccount.css'
 
@@ -7,7 +7,10 @@ class CurrentAccountOverview extends Component {
         name: "",
         sortCode: "",
         accountNumber: "",
-        currentBalance: ""
+        currentBalance: "",
+        accountType: "",
+        accountTypes: [],
+        bankNames: [],
     }
 
     constructor(props) {
@@ -16,9 +19,17 @@ class CurrentAccountOverview extends Component {
             name: "",
             sortCode: "",
             accountNumber: "",
-            currentBalance: ""
+            currentBalance: "",
+            accountType: "",
+            accountTypes: [],
+            bankNames: [],
         }
         this.handleSubmit = this.handleSubmit.bind(this);
+    }
+
+    componentDidMount() {
+        this.getAccountTypes();
+        this.getAccountBanks();
     }
 
     handleSubmit(event) {
@@ -27,7 +38,8 @@ class CurrentAccountOverview extends Component {
             "name": this.state.name,
             "sortCode": this.state.sortCode,
             "accountNumber": this.state.accountNumber,
-            "currentBalance": parseInt(this.state.currentBalance)
+            "currentBalance": parseInt(this.state.currentBalance),
+            "accountType": this.state.accountType,
         }
         fetch(`${BACKEND_URL}/accounts/account`, {
             method: "POST",
@@ -37,6 +49,18 @@ class CurrentAccountOverview extends Component {
             body: JSON.stringify(payload)
         })
             .then((response) => console.log(response.status));
+    }
+
+    getAccountTypes = () => {
+        fetch(`${BACKEND_URL}/accounts/types`)
+            .then((data) => data.json())
+            .then((data) => this.setState({accountTypes: data}));
+    }
+
+    getAccountBanks = () => {
+        fetch(`${BACKEND_URL}/accounts/banks`)
+            .then((data) => data.json())
+            .then((data) => this.setState({bankNames: data}));
     }
 
 
@@ -52,9 +76,11 @@ class CurrentAccountOverview extends Component {
                     </div>
                     <div className="form-group">
                         <label>Account Type:</label>
-                        <input type="text" className="form-control" name="Account Type"
-                               value={this.state.accountNumber}
-                               onChange={(e) => this.setState({accountNumber: e.target.value})}/>
+                        <select className="form-control" name="Account Type">
+                            {this.state.accountTypes.map((type) => (
+                                <option key={type}>{type}</option>
+                            ))}
+                        </select>
                     </div>
                     <div className="form-group">
                         <label>Sort Code:</label>
@@ -69,9 +95,11 @@ class CurrentAccountOverview extends Component {
                     </div>
                     <div className="form-group">
                         <label>Bank Name:</label>
-                        <input type="text" className="form-control" name="Account Number"
-                               value={this.state.accountNumber}
-                               onChange={(e) => this.setState({accountNumber: e.target.value})}/>
+                        <select className="form-control" name="Account Bank">
+                            {this.state.bankNames.map((type) => (
+                                <option key={type}>{type}</option>
+                            ))}
+                        </select>
                     </div>
                     <div className="form-group">
                         <label>Currency:</label>
@@ -93,7 +121,7 @@ class CurrentAccountOverview extends Component {
                     </div>
                     <div className="form-group">
                         <label>Is this your main account?</label>
-                        <input type="checkbox" className="form-control" name="Main Account"
+                        <input type="checkbox" name="Main Account"
                                value={this.state.currentBalance}
                                onChange={(e) => this.setState({currentBalance: e.target.value})}/>
                     </div>

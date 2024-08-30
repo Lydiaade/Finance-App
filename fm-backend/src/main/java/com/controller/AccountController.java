@@ -1,15 +1,20 @@
 package com.controller;
 
 import com.dto.BankAccount;
+import com.dto.BankAccountType;
+import com.dto.BankName;
 import com.dto.Transaction;
 import com.dto.request.NewBankAccountRequest;
 import com.service.AccountService;
+import org.springframework.data.auditing.CurrentDateTimeProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.FileNotFoundException;
 import java.time.LocalDate;
+import java.util.Currency;
+import java.util.EnumSet;
 import java.util.List;
 
 
@@ -35,6 +40,16 @@ public class AccountController {
         } catch (FileNotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
+    }
+
+    @GetMapping("/types")
+    public ResponseEntity<EnumSet<BankAccountType>> getAccountTypes() {
+        return new ResponseEntity<>(EnumSet.allOf(BankAccountType.class), HttpStatus.OK);
+    }
+
+    @GetMapping("/banks")
+    public ResponseEntity<EnumSet<BankName>> getBankAccounts() {
+        return new ResponseEntity<>(EnumSet.allOf(BankName.class), HttpStatus.OK);
     }
 
     @GetMapping("/account/{id}/transactions")

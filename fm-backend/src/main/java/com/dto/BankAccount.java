@@ -29,7 +29,6 @@ public class BankAccount {
     private Currency currency;
     private BigDecimal currentBalance;
     private LocalDate currentBalanceDate;
-
     private boolean isMainBankAccount;
 
     public BankAccount(String name, String sortCode, String accountNumber, BigDecimal currentBalance, LocalDate currentBalanceDate) {
@@ -126,17 +125,25 @@ public class BankAccount {
         this.currency = currency;
     }
 
+    public boolean isMainBankAccount() {
+        return isMainBankAccount;
+    }
+
+    public void setMainBankAccount(boolean mainBankAccount) {
+        isMainBankAccount = mainBankAccount;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         BankAccount that = (BankAccount) o;
-        return Objects.equals(getId(), that.getId()) && Objects.equals(getName(), that.getName()) && Objects.equals(getSortCode(), that.getSortCode()) && Objects.equals(getAccountNumber(), that.getAccountNumber()) && accountType == that.accountType && bankName == that.bankName && Objects.equals(currency, that.currency) && Objects.equals(getCurrentBalance(), that.getCurrentBalance()) && Objects.equals(getCurrentBalanceDate(), that.getCurrentBalanceDate());
+        return isMainBankAccount() == that.isMainBankAccount() && Objects.equals(getId(), that.getId()) && Objects.equals(getName(), that.getName()) && Objects.equals(getSortCode(), that.getSortCode()) && Objects.equals(getAccountNumber(), that.getAccountNumber()) && getAccountType() == that.getAccountType() && getBankName() == that.getBankName() && Objects.equals(getCurrency(), that.getCurrency()) && Objects.equals(getCurrentBalance(), that.getCurrentBalance()) && Objects.equals(getCurrentBalanceDate(), that.getCurrentBalanceDate());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getName(), getSortCode(), getAccountNumber(), accountType, bankName, currency, getCurrentBalance(), getCurrentBalanceDate());
+        return Objects.hash(getId(), getName(), getSortCode(), getAccountNumber(), getAccountType(), getBankName(), getCurrency(), getCurrentBalance(), getCurrentBalanceDate(), isMainBankAccount());
     }
 
     @Override
@@ -151,6 +158,7 @@ public class BankAccount {
                 ", currency=" + currency +
                 ", currentBalance=" + currentBalance +
                 ", currentBalanceDate=" + currentBalanceDate +
+                ", isMainBankAccount=" + isMainBankAccount +
                 '}';
     }
 }
