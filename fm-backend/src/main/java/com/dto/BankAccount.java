@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Currency;
 import java.util.Objects;
 
@@ -24,7 +25,9 @@ public class BankAccount {
     private String name;
     private String sortCode;
     private String accountNumber;
+    @Enumerated(EnumType.STRING)
     private BankAccountType accountType;
+    @Enumerated(EnumType.STRING)
     private BankName bankName;
     private Currency currency;
     private BigDecimal currentBalance;
@@ -42,15 +45,16 @@ public class BankAccount {
     public BankAccount() {
     }
 
-    public BankAccount(String name, String sortCode, String accountNumber, BankAccountType accountType, BankName bankName, Currency currency, BigDecimal currentBalance, LocalDate currentBalanceDate) {
+    public BankAccount(String name, String sortCode, String accountNumber, String accountType, String bankName, String currency, BigDecimal currentBalance, String currentBalanceDate) {
         this.name = name;
         this.sortCode = sortCode;
         this.accountNumber = accountNumber;
-        this.accountType = accountType;
-        this.bankName = bankName;
-        this.currency = currency;
+        this.accountType = BankAccountType.valueOf(accountType);
+        this.bankName = BankName.valueOf(bankName);
+        this.currency = Currency.getInstance(currency);
         this.currentBalance = currentBalance;
-        this.currentBalanceDate = currentBalanceDate;
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        this.currentBalanceDate = LocalDate.parse(currentBalanceDate, dtf);
     }
 
     public Integer getId() {

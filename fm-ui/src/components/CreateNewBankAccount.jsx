@@ -1,46 +1,67 @@
 import React, {Component} from "react";
 import {BACKEND_URL} from "../config";
-import './CreateNewBankAccount.css'
+import "./CreateNewBankAccount.css"
 
 class CurrentAccountOverview extends Component {
     state = {
-        name: "",
-        sortCode: "",
-        accountNumber: "",
-        currentBalance: "",
-        accountType: "",
-        accountTypes: [],
-        bankNames: [],
-    }
-
-    constructor(props) {
-        super(props);
-        this.state = {
+        account: {
             name: "",
             sortCode: "",
             accountNumber: "",
             currentBalance: "",
             accountType: "",
+            bankName: "",
+            currency: "",
+            balanceDate: undefined
+        },
+        accountTypes: [],
+        bankNames: [],
+        currencies: [],
+    }
+
+    constructor(props) {
+        super(props);
+        this.state = {
+            account: {
+                name: "",
+                sortCode: "",
+                accountNumber: "",
+                currentBalance: "",
+                accountType: "",
+                bankName: "",
+                isMainAccount: true,
+                currency: "",
+            },
             accountTypes: [],
             bankNames: [],
+            currencies: [],
         }
+        this.handleAccountTypeChange = this.handleAccountTypeChange.bind(this);
+        this.handleAccountBankChange = this.handleAccountBankChange.bind(this);
+        this.handleAccountCurrencyChange = this.handleAccountCurrencyChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
     }
 
     componentDidMount() {
         this.getAccountTypes();
         this.getAccountBanks();
+        this.getAccountCurrencies();
     }
 
     handleSubmit(event) {
-        // event.preventDefault();
+        event.preventDefault();
         let payload = {
-            "name": this.state.name,
-            "sortCode": this.state.sortCode,
-            "accountNumber": this.state.accountNumber,
-            "currentBalance": parseInt(this.state.currentBalance),
-            "accountType": this.state.accountType,
+            "name": this.state.account.name,
+            "accountType": this.state.account.accountType,
+            "sortCode": this.state.account.sortCode,
+            "accountNumber": this.state.account.accountNumber,
+            "accountBank": this.state.account.bankName,
+            "currentBalance": parseInt(this.state.account.currentBalance),
+            "balanceDate": this.state.account.balanceDate,
+            "currency": this.state.account.currency,
+            "isMainAccount": this.state.account.isMainAccount,
         }
+        console.log(payload);
         fetch(`${BACKEND_URL}/accounts/account`, {
             method: "POST",
             headers: {
@@ -57,73 +78,175 @@ class CurrentAccountOverview extends Component {
             .then((data) => this.setState({accountTypes: data}));
     }
 
+    handleAccountTypeChange(event) {
+        this.setState(prevState => ({
+            account: {
+                ...prevState.account,
+                accountType: event.target.value
+            }
+        }));
+    }
+
     getAccountBanks = () => {
         fetch(`${BACKEND_URL}/accounts/banks`)
             .then((data) => data.json())
             .then((data) => this.setState({bankNames: data}));
     }
 
+    handleAccountBankChange(event) {
+        this.setState(prevState => ({
+            account: {
+                ...prevState.account,
+                bankName: event.target.value
+            }
+        }));
+    }
+
+    getAccountCurrencies() {
+        fetch(`${BACKEND_URL}/accounts/currencies`)
+            .then((data) => data.json())
+            .then((data) => this.setState({currencies: data}));
+    }
+
+    handleAccountCurrencyChange(event) {
+        this.setState(prevState => ({
+            account: {
+                ...prevState.account,
+                currency: event.target.value
+            }
+        }))
+    }
+
+    setAccountName(event) {
+        this.setState(prevState => ({
+            account: {
+                ...prevState.account,
+                name: event.target.value
+            }
+        }))
+    }
+
+    setSortCode(event) {
+        this.setState(prevState => ({
+            account: {
+                ...prevState.account,
+                sortCode: event.target.value
+            }
+        }))
+    }
+    setAccountNumber(event) {
+        this.setState(prevState => ({
+            account: {
+                ...prevState.account,
+                accountNumber: event.target.value
+            }
+        }))
+    }
+
+    setCurrentBalance(event) {
+        this.setState(prevState => ({
+            account: {
+                ...prevState.account,
+                currentBalance: event.target.value
+            }
+        }))
+    }
+
+    setCurrentBalanceDate(event) {
+        this.setState(prevState => ({
+            account: {
+                ...prevState.account,
+                balanceDate: event.target.value
+            }
+        }))
+    }
+
+    setCurrency(event) {
+        this.setState(prevState => ({
+            account: {
+                ...prevState.account,
+                currency: event.target.value
+            }
+        }))
+    }
+
+    setIsMainAccount(event) {
+        this.setState(prevState => ({
+            account: {
+                ...prevState.account,
+                isMainAccount: !prevState.account.isMainAccount
+            }
+        }))
+    }
+
 
     render() {
         return (
             <div className="new-account-form container">
+                <h1>Account Details</h1>
                 <form onSubmit={this.handleSubmit}>
                     <div className="form-group">
                         <label>Account Name:</label>
-                        <input type="text" className="form-control" name="accountName" value={this.state.name}
-                               onChange={(e) => this.setState({name: e.target.value})}/>
+                        <input type="text" className="form-control" name="accountName" value={this.state.account.name}
+                               onChange={(e) => this.setAccountName(e)}/>
 
                     </div>
                     <div className="form-group">
                         <label>Account Type:</label>
-                        <select className="form-control" name="Account Type">
+                        <select className="form-control" value={this.state.account.accountType} onChange={this.handleAccountTypeChange}>
+                            <option value="">Please select account type</option>
                             {this.state.accountTypes.map((type) => (
-                                <option key={type}>{type}</option>
+                                <option value={type} key={type}>{type}</option>
                             ))}
                         </select>
                     </div>
                     <div className="form-group">
                         <label>Sort Code:</label>
-                        <input type="text" className="form-control" name="Sort Code" value={this.state.sortCode}
-                               onChange={(e) => this.setState({sortCode: e.target.value})}/>
+                        <input type="text" className="form-control" name="Sort Code" value={this.state.account.sortCode}
+                               onChange={(e) => this.setSortCode(e)}/>
                     </div>
                     <div className="form-group">
                         <label>Account Number:</label>
                         <input type="text" className="form-control" name="Account Number"
-                               value={this.state.accountNumber}
-                               onChange={(e) => this.setState({accountNumber: e.target.value})}/>
+                               value={this.state.account.accountNumber}
+                               onChange={(e) => this.setAccountNumber(e)}/>
                     </div>
                     <div className="form-group">
                         <label>Bank Name:</label>
-                        <select className="form-control" name="Account Bank">
+                        <select value={this.state.account.accountBank} onChange={this.handleAccountBankChange}
+                                className="form-control">
+                            <option value="">Please select account bank name</option>
                             {this.state.bankNames.map((type) => (
-                                <option key={type}>{type}</option>
+                                <option value={type} key={type}>{type}</option>
                             ))}
                         </select>
                     </div>
                     <div className="form-group">
                         <label>Currency:</label>
-                        <input type="number" className="form-control" name="Current Balance"
-                               value={this.state.currentBalance}
-                               onChange={(e) => this.setState({currentBalance: e.target.value})}/>
+                        <select value={this.state.account.currency} onChange={this.handleAccountCurrencyChange}
+                                className="form-control">
+                            <option value="">Please select account currency</option>
+                            {this.state.currencies.map((type) => (
+                                <option value={type} key={type}>{type}</option>
+                            ))}
+                        </select>
                     </div>
                     <div className="form-group">
                         <label>Balance:</label>
                         <input type="number" className="form-control" name="Current Balance"
-                               value={this.state.currentBalance}
-                               onChange={(e) => this.setState({currentBalance: e.target.value})}/>
+                               value={this.state.account.currentBalance}
+                               onChange={(e) => this.setCurrentBalance(e)}/>
                     </div>
                     <div className="form-group">
                         <label>Balance Date:</label>
-                        <input type="number" className="form-control" name="Current Balance"
-                               value={this.state.currentBalance}
-                               onChange={(e) => this.setState({currentBalance: e.target.value})}/>
+                        <input type="date" className="form-control" name="Balance Date:"
+                            value={this.state.account.balanceDate}
+                               onChange={(e) => this.setCurrentBalanceDate(e)}/>
                     </div>
                     <div className="form-group">
                         <label>Is this your main account?</label>
-                        <input type="checkbox" name="Main Account"
-                               value={this.state.currentBalance}
-                               onChange={(e) => this.setState({currentBalance: e.target.value})}/>
+                        <input type="checkbox" defaultChecked name="Main Account" value={this.state.account.isMainAccount}
+                               onChange={(e) => this.setIsMainAccount(e)}/>
                     </div>
                     <input type="submit" className="btn btn-primary" value="Submit"/>
                 </form>

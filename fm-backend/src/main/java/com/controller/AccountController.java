@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.util.Currency;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 
 @RestController
@@ -52,6 +53,11 @@ public class AccountController {
         return new ResponseEntity<>(EnumSet.allOf(BankName.class), HttpStatus.OK);
     }
 
+    @GetMapping("/currencies")
+    public ResponseEntity<Set<Currency>> getCurrencies() {
+        return new ResponseEntity<>(Currency.getAvailableCurrencies(), HttpStatus.OK);
+    }
+
     @GetMapping("/account/{id}/transactions")
     public ResponseEntity<List<Transaction>> getAccountTransactions(@PathVariable("id") Integer id) {
         return new ResponseEntity<>(accountService.getAccountTransactions(id), HttpStatus.OK);
@@ -64,8 +70,7 @@ public class AccountController {
 
     @PostMapping("/account")
     public void addAccount(@RequestBody NewBankAccountRequest request) {
-        LocalDate currentBalanceDate = LocalDate.now();
-        BankAccount account = new BankAccount(request.name(), request.sortCode(), request.accountNumber(), request.currentBalance(), currentBalanceDate);
+        BankAccount account = new BankAccount(request.name(), request.sortCode(), request.accountNumber(), request.accountType(), request.accountBank(), request.currency(), request.currentBalance(), request.balanceDate());
         accountService.addAccount(account);
     }
 
