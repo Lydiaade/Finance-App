@@ -40,6 +40,7 @@ class CurrentAccountOverview extends Component {
         this.handleAccountBankChange = this.handleAccountBankChange.bind(this);
         this.handleAccountCurrencyChange = this.handleAccountCurrencyChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
+        this.handleReset = this.handleReset.bind(this);
     }
 
     componentDidMount() {
@@ -49,7 +50,6 @@ class CurrentAccountOverview extends Component {
     }
 
     handleSubmit(event) {
-        event.preventDefault();
         let payload = {
             "name": this.state.account.name,
             "accountType": this.state.account.accountType,
@@ -70,6 +70,22 @@ class CurrentAccountOverview extends Component {
             body: JSON.stringify(payload)
         })
             .then((response) => console.log(response.status));
+        this.handleReset()
+    }
+
+    handleReset(event) {
+        this.setState({
+            account: {
+                name: "",
+                sortCode: "",
+                accountNumber: "",
+                currentBalance: "",
+                accountType: "",
+                bankName: "",
+                isMainAccount: true,
+                currency: "",
+            }
+        })
     }
 
     getAccountTypes = () => {
@@ -184,7 +200,7 @@ class CurrentAccountOverview extends Component {
         return (
             <div className="new-account-form container">
                 <h1>Account Details</h1>
-                <form onSubmit={this.handleSubmit}>
+                <form onSubmit={this.handleSubmit} onReset={this.handleReset}>
                     <div className="form-group">
                         <label>Account Name:</label>
                         <input type="text" className="form-control" name="accountName" value={this.state.account.name}
@@ -193,7 +209,8 @@ class CurrentAccountOverview extends Component {
                     </div>
                     <div className="form-group">
                         <label>Account Type:</label>
-                        <select className="form-control" value={this.state.account.accountType} onChange={this.handleAccountTypeChange}>
+                        <select className="form-control" value={this.state.account.accountType}
+                                onChange={this.handleAccountTypeChange}>
                             <option value="">Please select account type</option>
                             {this.state.accountTypes.map((type) => (
                                 <option value={type} key={type}>{type}</option>
@@ -240,15 +257,19 @@ class CurrentAccountOverview extends Component {
                     <div className="form-group">
                         <label>Balance Date:</label>
                         <input type="date" className="form-control" name="Balance Date:"
-                            value={this.state.account.balanceDate}
+                               value={this.state.account.balanceDate}
                                onChange={(e) => this.setCurrentBalanceDate(e)}/>
                     </div>
                     <div className="form-group">
                         <label>Is this your main account?</label>
-                        <input type="checkbox" defaultChecked name="Main Account" value={this.state.account.isMainAccount}
+                        <input type="checkbox" defaultChecked name="Main Account"
+                               value={this.state.account.isMainAccount}
                                onChange={(e) => this.setIsMainAccount(e)}/>
                     </div>
-                    <input type="submit" className="btn btn-primary" value="Submit"/>
+                    <div className="form-buttons">
+                        <input type="reset" className="btn btn-danger" value="Cancel"/>
+                        <input type="submit" className="btn btn-primary" value="Save"/>
+                    </div>
                 </form>
             </div>
         )

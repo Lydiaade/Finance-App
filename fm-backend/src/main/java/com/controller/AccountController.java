@@ -6,13 +6,11 @@ import com.dto.BankName;
 import com.dto.Transaction;
 import com.dto.request.NewBankAccountRequest;
 import com.service.AccountService;
-import org.springframework.data.auditing.CurrentDateTimeProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.FileNotFoundException;
-import java.time.LocalDate;
 import java.util.Currency;
 import java.util.EnumSet;
 import java.util.List;
