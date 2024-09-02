@@ -1,12 +1,12 @@
 package com.dto.request;
 
-import com.dto.Account;
+import com.dto.BankAccount;
 
 import java.math.BigDecimal;
 
 public record NewTransactionRequest(
         String date,
-        Account account,
+        BankAccount account,
         BigDecimal amount,
         String category,
         String paid_to,

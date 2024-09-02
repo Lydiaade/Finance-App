@@ -1,0 +1,19 @@
+.new-account-form {
+    padding-top: 5rem;
+    padding-bottom: 5rem;
+}
+
+.btn {
+    width: 8rem;
+}
+
+h1 {
+    margin-bottom: 3rem;
+}
+
+.form-buttons {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: right;
+    grid-column-gap: 2rem
+}

@@ -1,6 +1,6 @@
 package com.helper;
 
-import com.dto.Account;
+import com.dto.BankAccount;
 import com.dto.FileTransferObject;
 import com.dto.Transaction;
 import com.repository.AccountRepository;
@@ -46,7 +46,7 @@ public class CSVHelperTest {
     public void csvFileToTransactionObjects() {
         String path = "src/test/resources/testData.csv";
         LocalDate currentBalanceDate = LocalDate.now();
-        Account account = new Account("Main Account", "SORTNUMBER", "ACCNUMBER", new BigDecimal(2000), currentBalanceDate);
+        BankAccount account = new BankAccount("Main Account", "SORTNUMBER", "ACCNUMBER", new BigDecimal(2000), currentBalanceDate);
         when(accRepository.findBySortCodeAndAccountNumber("SORTNUMBER", "ACCNUMBER")).thenReturn(List.of(account));
 
         File file = new File(path);

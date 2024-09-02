@@ -22,7 +22,7 @@ public class Transaction {
     private Integer id;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    private Account account;
+    private BankAccount account;
 
     private LocalDate date;
     private BigDecimal amount;
@@ -31,7 +31,7 @@ public class Transaction {
     private String memo;
     private String segment = "Undefined";
 
-    public Transaction(String date, Account account, BigDecimal amount, String category, String paid_to, String memo) {
+    public Transaction(String date, BankAccount account, BigDecimal amount, String category, String paid_to, String memo) {
         this.date = transformStringToDate(date);
         this.account = account;
         this.amount = amount;
@@ -40,7 +40,7 @@ public class Transaction {
         this.memo = memo;
     }
 
-    public Transaction(String date, Account account, BigDecimal amount, String category, String paid_to, String memo, Segment segment) {
+    public Transaction(String date, BankAccount account, BigDecimal amount, String category, String paid_to, String memo, Segment segment) {
         this.date = transformStringToDate(date);
         this.account = account;
         this.amount = amount;
@@ -77,11 +77,11 @@ public class Transaction {
         this.date = date;
     }
 
-    public Account getAccount() {
+    public BankAccount getAccount() {
         return account;
     }
 
-    public void setAccount(Account account) {
+    public void setAccount(BankAccount account) {
         this.account = account;
     }
 

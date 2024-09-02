@@ -1,18 +1,20 @@
 package com.controller;
 
-import com.dto.Account;
+import com.dto.BankAccount;
+import com.dto.BankAccountType;
+import com.dto.BankName;
 import com.dto.Transaction;
-import com.dto.request.NewAccountRequest;
+import com.dto.request.NewBankAccountRequest;
 import com.service.AccountService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.FileNotFoundException;
-import java.time.LocalDate;
+import java.util.Currency;
+import java.util.EnumSet;
 import java.util.List;
-
-import static org.springframework.web.bind.annotation.RequestMethod.*;
+import java.util.Set;
 
 
 @RestController
@@ -26,7 +28,7 @@ public class AccountController {
     }
 
     @GetMapping("/")
-    public ResponseEntity<List<Account>> getAccounts() {
+    public ResponseEntity<List<BankAccount>> getAccounts() {
         return new ResponseEntity<>(accountService.getAllAccounts(), HttpStatus.OK);
     }
 
@@ -37,6 +39,21 @@ public class AccountController {
         } catch (FileNotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
+    }
+
+    @GetMapping("/types")
+    public ResponseEntity<EnumSet<BankAccountType>> getAccountTypes() {
+        return new ResponseEntity<>(EnumSet.allOf(BankAccountType.class), HttpStatus.OK);
+    }
+
+    @GetMapping("/banks")
+    public ResponseEntity<EnumSet<BankName>> getBankAccounts() {
+        return new ResponseEntity<>(EnumSet.allOf(BankName.class), HttpStatus.OK);
+    }
+
+    @GetMapping("/currencies")
+    public ResponseEntity<Set<Currency>> getCurrencies() {
+        return new ResponseEntity<>(Currency.getAvailableCurrencies(), HttpStatus.OK);
     }
 
     @GetMapping("/account/{id}/transactions")
@@ -50,9 +67,8 @@ public class AccountController {
     }
 
     @PostMapping("/account")
-    public void addAccount(@RequestBody NewAccountRequest request) {
-        LocalDate currentBalanceDate = LocalDate.now();
-        Account account = new Account(request.name(), request.sortCode(), request.accountNumber(), request.currentBalance(), currentBalanceDate);
+    public void addAccount(@RequestBody NewBankAccountRequest request) {
+        BankAccount account = new BankAccount(request.name(), request.sortCode(), request.accountNumber(), request.accountType(), request.accountBank(), request.currency(), request.currentBalance(), request.balanceDate());
         accountService.addAccount(account);
     }
 

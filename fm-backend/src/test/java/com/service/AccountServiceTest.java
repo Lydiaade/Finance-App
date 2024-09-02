@@ -1,8 +1,6 @@
 package com.service;
 
-import com.dto.Account;
-import com.dto.MonthlyTransactionTotal;
-import com.dto.Transaction;
+import com.dto.BankAccount;
 import com.repository.AccountRepository;
 import com.repository.TransactionRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,9 +13,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.io.FileNotFoundException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -45,13 +40,13 @@ public class AccountServiceTest {
     @Test
     public void getAccountWhenItExists() throws FileNotFoundException {
         LocalDate currentBalanceDate = LocalDate.now();
-        Account account = new Account("Account Name", "SORT NUMBER", "ACCOUNT NUMBER", new BigDecimal(1000), currentBalanceDate);
+        BankAccount account = new BankAccount("Account Name", "SORT NUMBER", "ACCOUNT NUMBER", new BigDecimal(1000), currentBalanceDate);
         Integer id = 1;
         // arrange
         when(accountRepository.findById(id)).thenReturn(java.util.Optional.of(account));
 
         // act
-        Account actualResult = service.getAccount(id);
+        BankAccount actualResult = service.getAccount(id);
 
         // assert
         assertEquals(account, actualResult);

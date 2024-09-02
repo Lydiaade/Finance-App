@@ -1,5 +1,5 @@
 import {BACKEND_URL} from "../config";
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import Chart from "../components/Chart";
 import TransactionContainer from "../components/TransactionContainer";
 
@@ -11,6 +11,7 @@ function AccountInformation() {
     const [account, setAccount] = useState({id: "", name: "", sortCode: "", accountNumber: "", currentBalance: ""});
     const [chart, setChart] = useState([]);
     const [transactionView, setTransactionView] = useState(false);
+    const initialised = useRef(false)
 
     const {id} = useParams();
     useEffect(() => {
@@ -32,8 +33,10 @@ function AccountInformation() {
                     setChart(data)
                 });
         }
-
-        fetchData()
+        if (!initialised.current) {
+            initialised.current = true
+            fetchData()
+        }
     });
 
     function changeView() {
