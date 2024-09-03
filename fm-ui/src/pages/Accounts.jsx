@@ -28,7 +28,7 @@ class AccountsPage extends Component {
                 <React.Fragment>
                     <header className="App-header">
                         <h1 className="pageTitle">Bank Accounts</h1>
-                        <div className="container">
+                        <div className="container accounts">
                             {this.state.accounts.length === 0 ? <h5>You currently have no existing accounts</h5> :
                                 <div className="container">
                                     {this.state.accounts.map((account) => (
@@ -38,13 +38,13 @@ class AccountsPage extends Component {
                                         />
                                     ))}
                                 </div>}
-                            <div className="container">
-                                <Col>
-                                    <a href={`/account`}>
-                                        <button type="button" className="btn btn-primary">Add new account</button>
-                                    </a>
-                                </Col>
-                            </div>
+                            <a href={`/account`}>
+                                <div className="container add-account">
+                                    <Col>
+                                        <h3>+</h3>
+                                    </Col>
+                                </div>
+                            </a>
                         </div>
                     </header>
                 </React.Fragment>

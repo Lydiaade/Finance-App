@@ -1,0 +1,20 @@
+.account-buttons {
+    display: grid;
+    align-items: center;
+    justify-content: center;
+    align-content: space-between;
+}
+
+.account {
+    /*border: 0.1rem solid black;*/
+    border-radius: 1rem;
+    padding: 1rem;
+    background: RGB(240,240,240);
+}
+
+.accountInfo {
+    display: inline-flex;
+    width: 100%;
+    background: rebeccapurple;
+}
+

@@ -1,6 +1,7 @@
 import {Component} from "react";
 import {BACKEND_URL} from "../config";
-import {Col} from "react-bootstrap";
+import {Col, Row} from "react-bootstrap";
+import "./AccountOverview.css"
 
 class AccountOverview extends Component {
     deleteAccount = (id) => {
@@ -11,24 +12,26 @@ class AccountOverview extends Component {
     }
 
     render() {
-        console.log(this.props.account)
         const {id, name, accountType, currentBalance, currentBalanceDate} = this.props.account;
-        console.log(name);
         return (
-            <div className="account">
-                <Col lg={8} className="col">
-                    <h5 className="accountName">Account Name: {name.toString().toLocaleUpperCase()}</h5>
+            <Row className="account">
+                <Col lg={10} className="col">
+                    <h6 className="accountName">Account Name: {name.toString().toLocaleUpperCase()}</h6>
                     <h3 className="accountCurrentBalance">Current Balance: £{currentBalance}</h3>
-                    <h6>As of: {currentBalanceDate}</h6>
+                    <p>As of: {currentBalanceDate}</p>
                     <p className="accountType">Account Type: {accountType}</p>
                 </Col>
-                <Col lg={4}>
-                    <a role="button" className="btn btn-primary" href={`/${id}/transactions`}>View Transactions</a>
-                    <button type="button" className="btn btn-danger" onClick={() => this.deleteAccount(id)}>Delete
-                        Account
-                    </button>
+                <Col lg={2} className="account-buttons">
+                    <Row>
+                        <button type="button" className="btn btn-warning">Edit
+                            Account
+                        </button>
+                    </Row>
+                    <Row>
+                        <a role="button" className="btn btn-primary" href={`/${id}/transactions`}>View Account</a>
+                    </Row>
                 </Col>
-            </div>
+            </Row>
         );
     }
 }
