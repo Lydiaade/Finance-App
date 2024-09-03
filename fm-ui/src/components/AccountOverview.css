@@ -18,3 +18,7 @@
     background: rebeccapurple;
 }
 
+div.accountMain h1{
+    margin-top: 1rem;
+    margin-bottom: 0;
+}

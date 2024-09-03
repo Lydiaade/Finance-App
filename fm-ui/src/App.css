@@ -31,3 +31,8 @@ div .add-account {
     justify-content: center;
     /*align-content/;*/
 }
+
+a.hide-link {
+    text-decoration: none;
+    text-decoration-color: black;
+}

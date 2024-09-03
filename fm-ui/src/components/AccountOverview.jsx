@@ -16,20 +16,18 @@ class AccountOverview extends Component {
         return (
             <Row className="account">
                 <Col lg={10} className="col">
-                    <h6 className="accountName">Account Name: {name.toString().toLocaleUpperCase()}</h6>
-                    <h3 className="accountCurrentBalance">Current Balance: £{currentBalance}</h3>
-                    <p>As of: {currentBalanceDate}</p>
-                    <p className="accountType">Account Type: {accountType}</p>
+                    <h4 className="accountName">Account Name: {name.toString().toLocaleUpperCase()}</h4>
+                    <div className="accountMain">
+                        <h1 className="accountCurrentBalance">Current Balance: £{currentBalance}</h1>
+                        <p>As of: {currentBalanceDate}</p>
+                    </div>
+                    <h6 className="accountType">Account Type: {accountType}</h6>
                 </Col>
                 <Col lg={2} className="account-buttons">
-                    <Row>
-                        <button type="button" className="btn btn-warning">Edit
-                            Account
-                        </button>
-                    </Row>
-                    <Row>
-                        <a role="button" className="btn btn-primary" href={`/${id}/transactions`}>View Account</a>
-                    </Row>
+                    <button type="button" className="btn btn-warning">Edit
+                        Account
+                    </button>
+                    <a role="button" className="btn btn-primary" href={`/${id}/transactions`}>View Account</a>
                 </Col>
             </Row>
         );

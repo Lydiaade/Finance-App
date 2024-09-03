@@ -38,7 +38,7 @@ class AccountsPage extends Component {
                                         />
                                     ))}
                                 </div>}
-                            <a href={`/account`}>
+                            <a className="hide-link" href={`/account`}>
                                 <div className="container add-account">
                                     <Col>
                                         <h3>+</h3>
