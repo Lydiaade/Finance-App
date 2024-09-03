@@ -1,27 +1,35 @@
 import {Component} from "react";
 import {BACKEND_URL} from "../config";
+import {Col, Row} from "react-bootstrap";
+import "./AccountOverview.css"
 
 class AccountOverview extends Component {
     deleteAccount = (id) => {
-        fetch(`${BACKEND_URL}/accounts/account/${id}`, {method: 'DELETE'})
+        fetch(`${BACKEND_URL}/accounts/account/${id}`, {method: "DELETE"})
             .then((data) => console.log(data))
 
         window.location.reload()
     }
 
     render() {
-        const {id, name, sortCode, accountNumber, currentBalance, currentBalanceDate} = this.props.account;
-        console.log(name);
+        const {id, name, accountType, currentBalance, currentBalanceDate} = this.props.account;
         return (
-            <div className="account col">
-                <h3 className="accountName">{name}</h3>
-                <h5 className="accountCurrentBalance">Current Balance: £{currentBalance}</h5>
-                <h6>As of date: {currentBalanceDate}</h6>
-                <p className="accountDetails">Sort Code: {sortCode} | Account Number: {accountNumber}</p>
-                <a role="button" className="btn btn-primary" href={`/${id}/transactions`}>View Transactions</a>
-                <button type="button" className="btn btn-danger" onClick={() => this.deleteAccount(id)}>Delete Account
-                </button>
-            </div>
+            <Row className="account">
+                <Col lg={10} className="col">
+                    <h4 className="accountName">Account Name: {name.toString().toLocaleUpperCase()}</h4>
+                    <div className="accountMain">
+                        <h1 className="accountCurrentBalance">Current Balance: £{currentBalance}</h1>
+                        <p>As of: {currentBalanceDate}</p>
+                    </div>
+                    <h6 className="accountType">Account Type: {accountType}</h6>
+                </Col>
+                <Col lg={2} className="account-buttons">
+                    <button type="button" className="btn btn-warning">Edit
+                        Account
+                    </button>
+                    <a role="button" className="btn btn-primary" href={`/${id}/transactions`}>View Account</a>
+                </Col>
+            </Row>
         );
     }
 }

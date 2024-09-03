@@ -1,8 +1,9 @@
 import React, {Component} from "react";
-import '../App.css';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import "../App.css";
+import "bootstrap/dist/css/bootstrap.min.css";
 import AccountOverview from "../components/AccountOverview";
 import {BACKEND_URL} from "../config";
+import {Col} from "react-bootstrap";
 
 class AccountsPage extends Component {
     state = {
@@ -26,21 +27,25 @@ class AccountsPage extends Component {
             <div>
                 <React.Fragment>
                     <header className="App-header">
-                        <h1 className="pageTitle">Existing Accounts</h1>
-                        <div className="container">
-                            <a href={`/account`}>
-                                <button type="button" className="btn btn-primary">Add new account</button>
+                        <h1 className="pageTitle">Bank Accounts</h1>
+                        <div className="container accounts">
+                            {this.state.accounts.length === 0 ? <h5>You currently have no existing accounts</h5> :
+                                <div className="container">
+                                    {this.state.accounts.map((account) => (
+                                        <AccountOverview
+                                            key={this.state.accounts.indexOf(account)}
+                                            account={account}
+                                        />
+                                    ))}
+                                </div>}
+                            <a className="hide-link" href={`/account`}>
+                                <div className="container add-account">
+                                    <Col>
+                                        <h3>+</h3>
+                                    </Col>
+                                </div>
                             </a>
                         </div>
-                        {this.state.accounts.length === 0 ? <h5>You currently have no existing accounts</h5> :
-                        <div className="container-fluid accounts">
-                            {this.state.accounts.map((account) => (
-                                <AccountOverview
-                                    key={this.state.accounts.indexOf(account)}
-                                    account={account}
-                                />
-                            ))}
-                        </div>}
                     </header>
                 </React.Fragment>
             </div>

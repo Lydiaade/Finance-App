@@ -2,6 +2,7 @@
     margin: 2rem;
     text-align: center;
 }
+
 .transaction-header {
     border-bottom: 3px solid black;
 }
@@ -13,13 +14,25 @@
     border-radius: 1%;
 }
 
-.account {
-    border: 0.1rem solid black;
-    /*border-radius: 5%;*/
-    padding: 1rem;
+.accounts {
+    flex-direction: row;
 }
 
-.accounts {
-    display: flex;
-    justify-content: space-between;
+.accounts div.account {
+    margin-bottom: 1rem;
+}
+
+div .add-account {
+    /*border: 0.1rem solid black;*/
+    border-radius: 1rem;
+    background: RGB(240, 240, 240);
+    display: grid;
+    align-items: center;
+    justify-content: center;
+    /*align-content/;*/
+}
+
+a.hide-link {
+    text-decoration: none;
+    text-decoration-color: black;
 }
