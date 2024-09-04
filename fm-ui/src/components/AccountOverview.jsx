@@ -24,9 +24,7 @@ class AccountOverview extends Component {
                     <h6 className="accountType">Account Type: {accountType}</h6>
                 </Col>
                 <Col lg={2} className="account-buttons">
-                    <button type="button" className="btn btn-warning">Edit
-                        Account
-                    </button>
+                    <a role="button" className="btn btn-warning" href={`/${id}/edit`}>Edit Account</a>
                     <a role="button" className="btn btn-primary" href={`/${id}/transactions`}>View Account</a>
                 </Col>
             </Row>

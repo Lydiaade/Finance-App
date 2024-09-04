@@ -10,6 +10,7 @@ import AccountsPage from "./pages/Accounts";
 import AccountInformation from "./pages/AccountInformation";
 import CreateNewAccount from "./components/CreateNewBankAccount";
 import Segments from "./pages/Segments";
+import EditAccount from "./pages/EditAccount";
 
 class App extends Component {
     state = {}
@@ -31,6 +32,7 @@ class App extends Component {
                             <Route path="/accounts" element={<AccountsPage/>}/>
                             <Route path="/account" element={<CreateNewAccount/>}/>
                             <Route path="/segments" element={<Segments/>}/>
+                            <Route path="/:id/edit" element={<EditAccount/>}/>
                         </Routes>
                     </div>
                 </React.Fragment>

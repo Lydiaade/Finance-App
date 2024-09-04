@@ -23,13 +23,11 @@
 }
 
 div .add-account {
-    /*border: 0.1rem solid black;*/
     border-radius: 1rem;
     background: RGB(240, 240, 240);
     display: grid;
     align-items: center;
     justify-content: center;
-    /*align-content/;*/
 }
 
 a.hide-link {
