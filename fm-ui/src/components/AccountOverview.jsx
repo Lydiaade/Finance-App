@@ -1,16 +1,8 @@
 import {Component} from "react";
-import {BACKEND_URL} from "../config";
 import {Col, Row} from "react-bootstrap";
 import "./AccountOverview.css"
 
 class AccountOverview extends Component {
-    deleteAccount = (id) => {
-        fetch(`${BACKEND_URL}/accounts/account/${id}`, {method: "DELETE"})
-            .then((data) => console.log(data))
-
-        window.location.reload()
-    }
-
     render() {
         const {id, name, accountType, currentBalance, currentBalanceDate} = this.props.account;
         return (

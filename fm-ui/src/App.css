@@ -34,3 +34,7 @@ a.hide-link {
     text-decoration: none;
     text-decoration-color: black;
 }
+
+.btn {
+    width: 10rem;
+}
