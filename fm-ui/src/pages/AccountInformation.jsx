@@ -17,7 +17,7 @@ function AccountInformation() {
     useEffect(() => {
         async function fetchData() {
             // You can await here
-            await fetch(`${BACKEND_URL}/accounts/account/1`)
+            await fetch(`${BACKEND_URL}/accounts/account/${id}`)
                 .then((data) => data.json())
                 .then((data) => {
                     setAccount(data)
