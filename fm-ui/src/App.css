@@ -38,3 +38,18 @@ a.hide-link {
 .btn {
     width: 10rem;
 }
+
+.edit-account {
+    margin-top: 3rem;
+    height: 100%;
+    display: grid;
+    grid-template-rows: 3fr 1fr; /* Divides height equally */
+    .btn {
+        float: right;
+        margin-top: 8%;
+    }
+    .pageTitle {
+        margin-left: 0rem;
+        text-align: left;
+    }
+}

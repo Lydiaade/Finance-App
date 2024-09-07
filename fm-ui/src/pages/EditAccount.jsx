@@ -36,7 +36,7 @@ function EditAccount() {
     }
 
     return (
-        <div>
+        <Container className="edit-account">
             <Container>
                 <h1 className="pageTitle">Account Details</h1>
                 <Form
@@ -66,11 +66,11 @@ function EditAccount() {
                 </Form>
             </Container>
             <Container>
-                <p>If you delete your account all the transactions uploaded will also be removed and you will not be
-                    able to retrieve it so please take heed!</p>
+                <h6>If you delete your account all the transactions uploaded will also be removed and you will not be
+                    able to retrieve it so please take heed!</h6>
                 <Button className="btn btn-danger" onClick={deleteAccount}>Delete Account</Button>
             </Container>
-        </div>
+        </Container>
     );
 }
 
