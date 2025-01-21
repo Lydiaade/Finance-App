@@ -1,11 +1,28 @@
-import React, {Component} from "react";
+import React, {useState} from "react";
+import {BACKEND_URL} from "../config";
 
-class SegmentContainer extends Component {
+const SegmentContainer = ( {segments}) => {
+    const [segmentValue, setSegementValue] = useState("");
 
-    render() {
-        const {segments} = this.props;
+    const handleKeyPress = async (e) => {
+        if (e.key === "Enter") {
+          try {
+            console.log(`Value: ${segmentValue}`);
+            fetch(`${BACKEND_URL}/segments/segment`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({"name": segmentValue})
+                    })
+            window.location.reload();
+          } catch (error) {
+            console.error("Error saving data:", error);
+          }
+        }
+      };
 
-        return (
+    return (
             <table className="table container-fluid">
                 <thead>
                 <tr className="segment-header">
@@ -13,15 +30,27 @@ class SegmentContainer extends Component {
                 </tr>
                 </thead>
                 <tbody>
-                {segments.map((segment) => (
-                    <tr className="segment" key={segments.indexOf(segment)}>
-                        <td className="segmentName">{segment.name}</td>
-                    </tr>
+                {!(segments && Array.isArray(segments)) ? null : segments.map((segment) => (
+                     <tr className="segment" key={segments.indexOf(segment)}>
+                         <td className="segmentName">{segment.name}</td>
+                     </tr>
                 ))}
+            <tr>
+            <div className="form-group">
+                <input
+                  type="text"
+                  className="form-control"
+                  id="inputBox"
+                  placeholder="Add a new segment"
+                  value={segmentValue}
+                  onChange={(e) => setSegementValue(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                />
+                </div>
+                </tr>
                 </tbody>
             </table>
-        );
-    }
+    );
 }
 
 export default SegmentContainer;
