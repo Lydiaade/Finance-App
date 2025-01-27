@@ -1,1 +1,4 @@
 .idea
+*.csv
+./test-data
+*.class
