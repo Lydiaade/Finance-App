@@ -21,4 +21,8 @@ public class SegmentService {
     public void addSegment(Segment segment) {
         segmentRepository.save(segment);
     }
+
+    public void deleteSegment(int segmentId) {
+        segmentRepository.deleteById(segmentId);
+    }
 }

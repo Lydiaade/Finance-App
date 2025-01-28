@@ -7,7 +7,6 @@ const SegmentContainer = ( {segments}) => {
     const handleKeyPress = async (e) => {
         if (e.key === "Enter") {
           try {
-            console.log(`Value: ${segmentValue}`);
             fetch(`${BACKEND_URL}/segments/segment`, {
                         method: "POST",
                         headers: {
