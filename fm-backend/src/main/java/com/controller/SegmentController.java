@@ -34,4 +34,9 @@ public class SegmentController {
         Segment segment = new Segment(request.name());
         segmentService.addSegment(segment);
     }
+
+    @DeleteMapping("/segment/{id}")
+    public void deleteSegment(@PathVariable("id") Integer id) {
+        segmentService.deleteSegment(id);
+    }
 }
