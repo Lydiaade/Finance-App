@@ -43,7 +43,7 @@ public class TransactionService {
         transactionRepository.save(transaction);
     }
 
-    public void deleteTransaction(Integer id){
+    public void deleteTransaction(int id){
         transactionRepository.deleteById(id);
     }
 }

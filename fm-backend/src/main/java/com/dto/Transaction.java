@@ -19,7 +19,7 @@ public class Transaction {
             strategy = GenerationType.SEQUENCE,
             generator = "transaction_id_sequence"
     )
-    private Integer id;
+    private int id;
 
     @ManyToOne(fetch = FetchType.EAGER)
     private BankAccount account;
@@ -61,11 +61,11 @@ public class Transaction {
         return LocalDate.of(year, month, day);
     }
 
-    public Integer getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(int id) {
         this.id = id;
     }
 
