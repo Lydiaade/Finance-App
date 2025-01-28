@@ -1,5 +1,6 @@
 import React, {useState} from "react";
 import {BACKEND_URL} from "../config";
+import "./SegmentContainer.css";
 
 const SegmentContainer = ( {segments}) => {
     const [segmentValue, setSegementValue] = useState("");
@@ -22,19 +23,23 @@ const SegmentContainer = ( {segments}) => {
       };
 
     return (
+      <div>
             <table className="table container-fluid">
                 <thead>
-                <tr className="segment-header">
-                    <th scope="col" className="Segment">Segment Name</th>
+                <tr className="segmentHeader">
+                    <th scope="col" className="SegmentName">Segment Name</th>
+                    <th scope="col" className="SegmentDelete"></th>
                 </tr>
                 </thead>
                 <tbody>
                 {!(segments && Array.isArray(segments)) ? null : segments.map((segment) => (
                      <tr className="segment" key={segments.indexOf(segment)}>
                          <td className="segmentName">{segment.name}</td>
+                         <td className="segmentDelete"><button type="button" class="btn btn-danger">Delete Segment</button></td>
                      </tr>
                 ))}
-            <tr>
+                </tbody>
+            </table>
             <div className="form-group">
                 <input
                   type="text"
@@ -45,10 +50,8 @@ const SegmentContainer = ( {segments}) => {
                   onChange={(e) => setSegementValue(e.target.value)}
                   onKeyDown={handleKeyPress}
                 />
-                </div>
-                </tr>
-                </tbody>
-            </table>
+              </div>
+      </div>
     );
 }
 
