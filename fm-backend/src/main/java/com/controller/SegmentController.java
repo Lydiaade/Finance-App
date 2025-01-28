@@ -6,6 +6,7 @@ import com.dto.request.NewSegmentRequest;
 import com.dto.request.NewTransactionRequest;
 import com.service.SegmentService;
 import com.service.TransactionService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,11 +19,8 @@ import java.util.List;
 @RequestMapping("/segments")
 public class SegmentController {
 
-    private final SegmentService segmentService;
-
-    public SegmentController(SegmentService segmentService) {
-        this.segmentService = segmentService;
-    }
+    @Autowired
+    private SegmentService segmentService;
 
     @GetMapping("/")
     public ResponseEntity<List<Segment>> getSegments() {

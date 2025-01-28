@@ -1,6 +1,7 @@
 package com.controller;
 
 import com.service.FinanceManagerService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -16,11 +17,8 @@ import java.util.Dictionary;
 @RequestMapping("/home")
 public class FinanceManagerController {
 
-    private final FinanceManagerService financeManagerService;
-
-    public FinanceManagerController(FinanceManagerService financeManagerService) {
-        this.financeManagerService = financeManagerService;
-    }
+    @Autowired
+    private FinanceManagerService financeManagerService;
 
     @GetMapping("/")
     public ResponseEntity<String> statusCheck() {

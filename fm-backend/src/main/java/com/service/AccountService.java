@@ -5,6 +5,10 @@ import com.dto.MonthlyTransactionTotal;
 import com.dto.Transaction;
 import com.repository.AccountRepository;
 import com.repository.TransactionRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.io.FileNotFoundException;
@@ -18,21 +22,21 @@ import java.util.Optional;
 
 @Service
 public class AccountService {
-    private final AccountRepository accountRepository;
-    private final TransactionRepository transactionRepository;
-    private final FinanceManagerService financeManagerService;
 
-    public AccountService(AccountRepository accountRepository, TransactionRepository transactionRepository, FinanceManagerService financeManagerService) {
-        this.accountRepository = accountRepository;
-        this.transactionRepository = transactionRepository;
-        this.financeManagerService = financeManagerService;
-    }
+    @Autowired
+    private AccountRepository accountRepository;
+
+    @Autowired
+    private TransactionRepository transactionRepository;
+
+    @Autowired
+    private FinanceManagerService financeManagerService;
 
     public List<BankAccount> getAllAccounts() {
         return accountRepository.findAll();
     }
 
-    public BankAccount getAccount(Integer id) throws FileNotFoundException {
+    public BankAccount getAccount(int id) throws FileNotFoundException {
         Optional<BankAccount> account = accountRepository.findById(id);
         if (account.isEmpty()) {
             throw new FileNotFoundException("This account does not exist");

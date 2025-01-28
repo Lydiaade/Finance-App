@@ -6,6 +6,8 @@ import com.dto.BankName;
 import com.dto.Transaction;
 import com.dto.request.NewBankAccountRequest;
 import com.service.AccountService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,16 +18,13 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
-
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/accounts")
 public class AccountController {
 
-    private final AccountService accountService;
-
-    public AccountController(AccountService accountService) {
-        this.accountService = accountService;
-    }
+    @Autowired
+    private AccountService accountService;
 
     @GetMapping("/")
     public ResponseEntity<List<BankAccount>> getAccounts() {
