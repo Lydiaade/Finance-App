@@ -18,7 +18,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Intege
 
     List<Transaction> findAllByAccount_Id(int id);
 
-    @Query(value = "SELECT transaction FROM transaction WHERE account_id=?1", nativeQuery = true)
+    @Query(value = "SELECT * FROM transaction WHERE account_id=?1", countQuery = "SELECT COUNT(*) FROM transaction WHERE account_id=?1", nativeQuery = true)
     Page<Transaction> findAllByAccount_IdWithPagination(int id, Pageable pageable);
 
     @Query(value = "SELECT * FROM transaction WHERE account_id=?1 AND EXTRACT('month' from date) = ?2 AND EXTRACT('year' from date) = ?3", nativeQuery = true)

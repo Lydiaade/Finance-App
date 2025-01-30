@@ -26,7 +26,7 @@ public class AccountController {
     @Autowired
     private AccountService accountService;
 
-    @GetMapping("/")
+    @GetMapping
     public ResponseEntity<List<BankAccount>> getAccounts() {
         return new ResponseEntity<>(accountService.getAllAccounts(), HttpStatus.OK);
     }
@@ -55,13 +55,8 @@ public class AccountController {
         return new ResponseEntity<>(Currency.getAvailableCurrencies(), HttpStatus.OK);
     }
 
-//    @GetMapping("/account/{id}/transactions")
-//    public ResponseEntity<List<Transaction>> getAccountTransactions(@PathVariable("id") int id) {
-//        return new ResponseEntity<>(accountService.getAccountTransactions(id), HttpStatus.OK);
-//    }
-
     @GetMapping("/account/{id}/transactions")
-    public Page<Transaction> getAccountTransactionsPagination(
+    public Page<Transaction> getAccountTransactions(
             @PathVariable("id") int id,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {

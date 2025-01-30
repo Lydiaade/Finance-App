@@ -14,7 +14,7 @@ class TransactionsPage extends Component {
     }
 
     getSegments = () => {
-        fetch(`${BACKEND_URL}/segments/`,)
+        fetch(`${BACKEND_URL}/segments`,)
             .then((data) => data.json())
             .then((data) => this.setState({segmentData: data}));
     }

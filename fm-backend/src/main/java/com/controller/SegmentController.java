@@ -22,7 +22,7 @@ public class SegmentController {
     @Autowired
     private SegmentService segmentService;
 
-    @GetMapping("/")
+    @GetMapping
     public ResponseEntity<List<Segment>> getSegments() {
         return new ResponseEntity<>(segmentService.getAllSegments(), HttpStatus.OK);
     }

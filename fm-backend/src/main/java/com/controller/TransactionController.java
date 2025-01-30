@@ -22,7 +22,7 @@ public class TransactionController {
     @Autowired
     private TransactionService transactionService;
 
-    @GetMapping("/")
+    @GetMapping
     public ResponseEntity<List<Transaction>> getTransactions() {
         return new ResponseEntity<>(transactionService.getAllTransactions(), HttpStatus.OK);
     }

@@ -20,7 +20,7 @@ public class FinanceManagerController {
     @Autowired
     private FinanceManagerService financeManagerService;
 
-    @GetMapping("/")
+    @GetMapping
     public ResponseEntity<String> statusCheck() {
         return new ResponseEntity<>("Finance Manager is running", HttpStatus.OK);
     }

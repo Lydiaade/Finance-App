@@ -17,7 +17,7 @@ class AccountsPage extends Component {
     }
 
     getAccounts = () => {
-        fetch(`${BACKEND_URL}/accounts/`)
+        fetch(`${BACKEND_URL}/accounts`)
             .then((data) => data.json())
             .then((data) => this.setState({accounts: data}));
     }

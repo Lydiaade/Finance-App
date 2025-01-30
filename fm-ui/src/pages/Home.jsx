@@ -14,7 +14,7 @@ class HomePage extends Component {
     }
 
     getHome = () => {
-        fetch(`${BACKEND_URL}/home/`)
+        fetch(`${BACKEND_URL}/home`)
             .then((data) => data.text())
             .then((data) => this.setState({message: data}));
     }
