@@ -17,7 +17,7 @@ public class Segment {
             strategy = GenerationType.SEQUENCE,
             generator = "segment_id_sequence"
     )
-    private Integer id;
+    private int id;
 
     private String name;
 
@@ -29,11 +29,11 @@ public class Segment {
 
     }
 
-    public Integer getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(int id) {
         this.id = id;
     }
 

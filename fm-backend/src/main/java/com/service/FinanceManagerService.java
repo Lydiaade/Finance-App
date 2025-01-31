@@ -2,6 +2,7 @@ package com.service;
 
 import com.dto.Transaction;
 import com.repository.TransactionRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -11,11 +12,9 @@ import java.util.List;
 
 @Service
 public class FinanceManagerService {
-    private final TransactionRepository transactionRepository;
 
-    public FinanceManagerService(TransactionRepository transactionRepository) {
-        this.transactionRepository = transactionRepository;
-    }
+    @Autowired
+    private TransactionRepository transactionRepository;
 
     public Dictionary<String, BigDecimal> getAccountOverview() {
         Dictionary<String, BigDecimal> accountOverview = new Hashtable<>();

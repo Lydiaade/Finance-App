@@ -2,17 +2,16 @@ package com.service;
 
 import com.dto.Segment;
 import com.repository.SegmentRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
 public class SegmentService {
-    private final SegmentRepository segmentRepository;
 
-    public SegmentService(SegmentRepository segmentRepository) {
-        this.segmentRepository = segmentRepository;
-    }
+    @Autowired
+    private SegmentRepository segmentRepository;
 
     public List<Segment> getAllSegments() {
         return segmentRepository.findAll();

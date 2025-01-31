@@ -5,6 +5,8 @@ import com.dto.request.NewTransactionRequest;
 import com.dto.FileTransferObject;
 import com.dto.response.FileInfoResponse;
 import com.service.TransactionService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,13 +19,10 @@ import java.util.List;
 @RequestMapping("/transactions")
 public class TransactionController {
 
-    private final TransactionService transactionService;
+    @Autowired
+    private TransactionService transactionService;
 
-    public TransactionController(TransactionService transactionService) {
-        this.transactionService = transactionService;
-    }
-
-    @GetMapping("/")
+    @GetMapping
     public ResponseEntity<List<Transaction>> getTransactions() {
         return new ResponseEntity<>(transactionService.getAllTransactions(), HttpStatus.OK);
     }
