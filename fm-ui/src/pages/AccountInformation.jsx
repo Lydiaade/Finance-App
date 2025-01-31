@@ -21,7 +21,6 @@ function AccountInformation() {
   const { id } = useParams();
   useEffect(() => {
     async function fetchData() {
-      // You can await here
       await fetch(`${BACKEND_URL}/accounts/account/${id}`)
         .then((data) => data.json())
         .then((data) => {
@@ -61,7 +60,7 @@ function AccountInformation() {
                 ? "Hide All Transactions"
                 : "View All Transactions"}
             </button>
-            <TransactionContainer transactions={transactions} />
+            <TransactionContainer id={id} />
           </>
         )
       ) : (
