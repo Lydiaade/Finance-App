@@ -11,6 +11,7 @@ import AccountInformation from "./pages/AccountInformation";
 import CreateNewAccount from "./components/CreateNewBankAccount";
 import Segments from "./pages/Segments";
 import EditAccount from "./pages/EditAccount";
+import UploadHistory from "./pages/UploadHistory";
 
 class App extends Component {
     state = {}
@@ -25,15 +26,21 @@ class App extends Component {
                     <NavigationBar/>
                     <div className="container">
                         <Routes>
-                            <Route path="/" element={<HomePage/>}/>
-                            <Route path="/:id/transactions" element={<AccountInformation/>}/>
-                            <Route path="/transactions" element={<TransactionsPage/>}/>
-                            <Route path="/uploadTransactions" element={<UploadTransactionPage/>}/>
-                            <Route path="/accounts" element={<AccountsPage/>}/>
-                            <Route path="/account" element={<CreateNewAccount/>}/>
-                            <Route path="/segments" element={<Segments/>}/>
-                            <Route path="/:id/edit" element={<EditAccount/>}/>
-                        </Routes>
+                                      <Route path="/" element={<HomePage />} />
+                                      <Route
+                                        path="/:id/transactions"
+                                        element={<AccountInformation />}
+                                      />
+                                      <Route
+                                        path="/uploadTransactions"
+                                        element={<UploadTransactionPage />}
+                                      />
+                                      <Route path="/uploadHistory" element={<UploadHistory />} />
+                                      <Route path="/accounts" element={<AccountsPage />} />
+                                      <Route path="/account" element={<CreateNewAccount />} />
+                                      <Route path="/segments" element={<Segments />} />
+                                      <Route path="/:id/edit" element={<EditAccount />} />
+                                    </Routes>
                     </div>
                 </React.Fragment>
             </div>
