@@ -11,7 +11,29 @@ class UploadHistory extends Component {
     return (
       <div className="container">
         <h1 className="pageTitle">Upload History</h1>
-        <p>File Name, Upload Date, Bank Account, Number Of Transactions</p>
+        <table className="table container-fluid">
+          <thead>
+            <tr className="transaction-header">
+              <th scope="col" className="Name">
+                File Name
+              </th>
+              <th scope="col" className="Upload Date">
+                Upload Date
+              </th>
+              <th scope="col" className="Bank Account">
+                Bank Account
+              </th>
+              <th scope="col" className="transactions">
+                Number Of Transactions
+              </th>
+              <th scope="col" className="Actions">
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <p>NOTHING</p>
+          </tbody>
+        </table>
       </div>
     );
   }
