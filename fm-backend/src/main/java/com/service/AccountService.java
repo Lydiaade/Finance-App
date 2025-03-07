@@ -5,6 +5,10 @@ import com.dto.MonthlyTransactionTotal;
 import com.dto.Transaction;
 import com.repository.AccountRepository;
 import com.repository.TransactionRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.io.FileNotFoundException;
@@ -18,21 +22,21 @@ import java.util.Optional;
 
 @Service
 public class AccountService {
-    private final AccountRepository accountRepository;
-    private final TransactionRepository transactionRepository;
-    private final FinanceManagerService financeManagerService;
 
-    public AccountService(AccountRepository accountRepository, TransactionRepository transactionRepository, FinanceManagerService financeManagerService) {
-        this.accountRepository = accountRepository;
-        this.transactionRepository = transactionRepository;
-        this.financeManagerService = financeManagerService;
-    }
+    @Autowired
+    private AccountRepository accountRepository;
+
+    @Autowired
+    private TransactionRepository transactionRepository;
+
+    @Autowired
+    private FinanceManagerService financeManagerService;
 
     public List<BankAccount> getAllAccounts() {
         return accountRepository.findAll();
     }
 
-    public BankAccount getAccount(Integer id) throws FileNotFoundException {
+    public BankAccount getAccount(int id) throws FileNotFoundException {
         Optional<BankAccount> account = accountRepository.findById(id);
         if (account.isEmpty()) {
             throw new FileNotFoundException("This account does not exist");
@@ -40,11 +44,11 @@ public class AccountService {
         return account.get();
     }
 
-    public List<Transaction> getAccountTransactions(Integer id) {
+    public List<Transaction> getAccountTransactions(int id) {
         return transactionRepository.findAllByAccount_Id(id);
     }
 
-    public List<MonthlyTransactionTotal> getAccountAnnualMonthlyTransactions(Integer id) {
+    public List<MonthlyTransactionTotal> getAccountAnnualMonthlyTransactions(int id) {
         LocalDate yearPriorToToday = LocalDate.now().minusYears(1);
         System.out.println(yearPriorToToday);
         List<MonthlyTransactionTotal> annualMonthlyTransactions = new ArrayList<>();
@@ -64,11 +68,16 @@ public class AccountService {
         accountRepository.save(account);
     }
 
-    public void deleteAccount(Integer id){
+    public void deleteAccount(int id){
         List<Transaction> transactions = transactionRepository.findAllByAccount_Id(id);
         for (Transaction transaction: transactions) {
             transactionRepository.deleteById(transaction.getId());
         }
         accountRepository.deleteById(id);
+    }
+
+    public Page<Transaction> getPaginatedAccountTransactions(int id, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return transactionRepository.findAllByAccount_IdWithPagination(id, pageable);
     }
 }

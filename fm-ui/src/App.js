@@ -1,10 +1,9 @@
-import React, {Component} from "react";
-import './App.css';
+import React, { Component } from "react";
+import "./App.css";
 import NavigationBar from "./components/general/Navbar";
-import 'bootstrap/dist/css/bootstrap.min.css';
-import {Route, Routes} from "react-router-dom";
+import "bootstrap/dist/css/bootstrap.min.css";
+import { Route, Routes } from "react-router-dom";
 import HomePage from "./pages/Home";
-import TransactionsPage from "./pages/Transactions";
 import UploadTransactionPage from "./pages/UploadTransactions";
 import AccountsPage from "./pages/Accounts";
 import AccountInformation from "./pages/AccountInformation";
@@ -14,10 +13,9 @@ import EditAccount from "./pages/EditAccount";
 import UploadHistory from "./pages/UploadHistory";
 
 class App extends Component {
-    state = {}
+  state = {};
 
-    componentDidMount() {
-    }
+  componentDidMount() {}
 
     render() {
         return (

@@ -6,6 +6,8 @@ import com.dto.BankName;
 import com.dto.Transaction;
 import com.dto.request.NewBankAccountRequest;
 import com.service.AccountService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,24 +18,21 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
-
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/accounts")
 public class AccountController {
 
-    private final AccountService accountService;
+    @Autowired
+    private AccountService accountService;
 
-    public AccountController(AccountService accountService) {
-        this.accountService = accountService;
-    }
-
-    @GetMapping("/")
+    @GetMapping
     public ResponseEntity<List<BankAccount>> getAccounts() {
         return new ResponseEntity<>(accountService.getAllAccounts(), HttpStatus.OK);
     }
 
     @GetMapping("/account/{id}")
-    public Object getAccount(@PathVariable("id") Integer id) {
+    public Object getAccount(@PathVariable("id") int id) {
         try {
             return new ResponseEntity<>(accountService.getAccount(id), HttpStatus.OK);
         } catch (FileNotFoundException e) {
@@ -57,12 +56,15 @@ public class AccountController {
     }
 
     @GetMapping("/account/{id}/transactions")
-    public ResponseEntity<List<Transaction>> getAccountTransactions(@PathVariable("id") Integer id) {
-        return new ResponseEntity<>(accountService.getAccountTransactions(id), HttpStatus.OK);
+    public Page<Transaction> getAccountTransactions(
+            @PathVariable("id") int id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return accountService.getPaginatedAccountTransactions(id, page, size);
     }
 
     @GetMapping("/account/{id}/transactions/monthly")
-    public Object getAccountAnnualMonthlyTransactions(@PathVariable("id") Integer id) {
+    public Object getAccountAnnualMonthlyTransactions(@PathVariable("id") int id) {
         return new ResponseEntity<>(accountService.getAccountAnnualMonthlyTransactions(id), HttpStatus.OK);
     }
 
@@ -73,7 +75,7 @@ public class AccountController {
     }
 
     @DeleteMapping("/account/{id}")
-    public Object deleteAccount(@PathVariable("id") Integer id) {
+    public Object deleteAccount(@PathVariable("id") int id) {
         try {
             accountService.deleteAccount(id);
             return HttpStatus.NO_CONTENT;
