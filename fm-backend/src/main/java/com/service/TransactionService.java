@@ -1,14 +1,12 @@
 package com.service;
 
+import com.dto.FileUpload;
 import com.dto.Transaction;
-import com.dto.FileTransferObject;
 import com.dto.response.FileInfoResponse;
 import com.helper.CSVHelper;
+import com.repository.FileUploadRepository;
 import com.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,15 +19,19 @@ public class TransactionService {
     private TransactionRepository transactionRepository;
 
     @Autowired
+    private FileUploadRepository fileUploadRepository;
+
+    @Autowired
     private CSVHelper csvHelper;
 
 
     public FileInfoResponse saveFile(MultipartFile file) {
         try {
             System.out.println("About to save");
-            FileTransferObject response = csvHelper.csvToTransactions(file);
-            transactionRepository.saveAll(response.getTransactions());
-            return response.getFileInfo();
+            FileUpload fileUpload = csvHelper.csvToTransactions(file);
+            fileUploadRepository.save(fileUpload);
+            transactionRepository.saveAll(fileUpload.getTransactions());
+            return fileUpload.fileInfoResponseMapper();
         } catch (IOException e) {
             throw new RuntimeException("Fail to store csv data: " + e.getMessage());
         }

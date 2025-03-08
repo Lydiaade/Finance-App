@@ -1,17 +1,24 @@
 package com.dto.response;
 
-import com.dto.Transaction;
-
-import java.util.List;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class FileInfoResponse {
     private String fileName;
     private int successfulTransactions;
     private int failedTransactions;
+    private LocalDateTime creationDate;
 
     public FileInfoResponse(String fileName) {
         this.fileName = fileName;
+        this.creationDate = LocalDateTime.now();
+    }
+
+    public FileInfoResponse(String fileName, int successfulTransactions, int failedTransactions, LocalDateTime creationDate) {
+        this.fileName = fileName;
+        this.successfulTransactions = successfulTransactions;
+        this.failedTransactions = failedTransactions;
+        this.creationDate = creationDate;
     }
 
     public int getSuccessfulTransactions() {
@@ -32,6 +39,10 @@ public class FileInfoResponse {
 
     public String getFileName() {
         return fileName;
+    }
+
+    public LocalDateTime getCreationDate() {
+        return creationDate;
     }
 
     @Override

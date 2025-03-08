@@ -34,6 +34,10 @@ public class Transaction {
     private String memo;
     private String segment = "Undefined";
 
+    @ManyToOne
+    @JoinColumn(name = "file_upload_id", nullable = false)
+    private FileUpload fileUpload;
+
     public Transaction(String date, BankAccount account, BigDecimal amount, String category, String paid_to, String memo) {
         this.date = transformStringToDate(date);
         this.account = account;
@@ -43,7 +47,7 @@ public class Transaction {
         this.memo = memo;
     }
 
-    public Transaction(String date, BankAccount account, BigDecimal amount, String category, String paid_to, String memo, Segment segment) {
+    public Transaction(String date, BankAccount account, BigDecimal amount, String category, String paid_to, String memo, Segment segment, FileUpload fileUpload) {
         this.date = transformStringToDate(date);
         this.account = account;
         this.amount = amount;
@@ -130,6 +134,10 @@ public class Transaction {
 
     public void setMemo(String memo) {
         this.memo = memo;
+    }
+
+    public void setFileUpload(FileUpload fileUpload) {
+        this.fileUpload = fileUpload;
     }
 
     @Override
