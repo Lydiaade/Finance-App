@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import "../App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
+import UploadData from "../components/UploadData";
 
 class UploadHistory extends Component {
   state = {};
@@ -27,11 +28,12 @@ class UploadHistory extends Component {
                 Number Of Transactions
               </th>
               <th scope="col" className="Actions">
+                Actions
               </th>
             </tr>
           </thead>
           <tbody>
-            <p>NOTHING</p>
+            <UploadData />
           </tbody>
         </table>
       </div>
