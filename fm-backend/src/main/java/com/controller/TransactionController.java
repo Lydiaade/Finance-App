@@ -1,5 +1,6 @@
 package com.controller;
 
+import com.dto.FileUpload;
 import com.dto.Transaction;
 import com.dto.request.NewTransactionRequest;
 import com.dto.response.FileInfoResponse;
@@ -40,6 +41,11 @@ public class TransactionController {
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
         }
+    }
+
+    @GetMapping("/upload")
+    public ResponseEntity<List<FileUpload>> getUploads() {
+        return new ResponseEntity<>(transactionService.getAllUploads(), HttpStatus.OK);
     }
 
     @DeleteMapping("/transaction/{id}")

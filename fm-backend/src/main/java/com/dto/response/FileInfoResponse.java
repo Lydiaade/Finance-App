@@ -4,15 +4,10 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class FileInfoResponse {
-    private String fileName;
+    private final String fileName;
     private int successfulTransactions;
     private int failedTransactions;
-    private LocalDateTime creationDate;
-
-    public FileInfoResponse(String fileName) {
-        this.fileName = fileName;
-        this.creationDate = LocalDateTime.now();
-    }
+    private final LocalDateTime creationDate;
 
     public FileInfoResponse(String fileName, int successfulTransactions, int failedTransactions, LocalDateTime creationDate) {
         this.fileName = fileName;
