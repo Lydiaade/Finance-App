@@ -1,8 +1,8 @@
 package com.helper;
 
 import com.dto.BankAccount;
+import com.dto.FileUpload;
 import com.dto.Transaction;
-import com.dto.FileTransferObject;
 import com.exceptions.UnsuccessfulTransactionRetrieval;
 import com.repository.AccountRepository;
 import org.springframework.stereotype.Service;
@@ -23,14 +23,20 @@ public class CSVHelper {
         this.accountRepository = accRepository;
     }
 
-    public FileTransferObject csvToTransactions(MultipartFile file) throws IOException {
-        FileTransferObject file_info = new FileTransferObject(file.getOriginalFilename());
+    public FileUpload csvToTransactions(MultipartFile file) throws IOException {
+        FileUpload file_info = new FileUpload(file.getOriginalFilename());
         File transformedFile = multipartFileToFile(file);
         System.out.println("File ready to be processed");
-        return transformFileToTransactions(transformedFile, file_info);
+        FileUpload upload = transformFileToTransactions(transformedFile, file_info);
+        if (transformedFile.delete()) {
+            System.out.println("File deleted");
+        } else {
+            System.err.println("File failed to delete");
+        };
+        return upload;
     }
 
-    public FileTransferObject transformFileToTransactions(File file, FileTransferObject file_info) {
+    public FileUpload transformFileToTransactions(File file, FileUpload fileUpload) {
         List<Transaction> transactions = new ArrayList<>();
         System.out.println("About to transform file, " + file.getName());
         int failed_transactions = 0;
@@ -44,6 +50,7 @@ public class CSVHelper {
                 String nextLine = scanner.nextLine();
                 try {
                     Transaction transaction = transformSingleCSVTransaction(nextLine);
+                    transaction.setFileUpload(fileUpload);
                     transactions.add(transaction);
                 } catch (Exception e) {
                     failed_transactions++;
@@ -52,9 +59,9 @@ public class CSVHelper {
         } catch (FileNotFoundException e) {
             System.err.println("Error!!!");
         }
-        file_info.setTransactions(transactions);
-        file_info.setFailedTransactions(failed_transactions);
-        return file_info;
+        fileUpload.setTransactions(transactions);
+        fileUpload.setFailedTransactions(failed_transactions);
+        return fileUpload;
 
     }
 

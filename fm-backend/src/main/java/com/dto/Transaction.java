@@ -34,6 +34,11 @@ public class Transaction {
     private String memo;
     private String segment = "Undefined";
 
+    @ManyToOne
+    @JoinColumn(name = "file_upload_id", referencedColumnName = "id", nullable = false)
+    @JsonIgnore
+    private FileUpload fileUpload;
+
     public Transaction(String date, BankAccount account, BigDecimal amount, String category, String paid_to, String memo) {
         this.date = transformStringToDate(date);
         this.account = account;
@@ -52,6 +57,30 @@ public class Transaction {
         this.memo = memo;
         this.segment = segment.getName();
     }
+
+    public Transaction(int id, BankAccount account, LocalDate date, BigDecimal amount, String category, String paid_to, String memo, String segment, FileUpload fileUpload) {
+        this.id = id;
+        this.account = account;
+        this.date = date;
+        this.amount = amount;
+        this.category = category;
+        this.paid_to = paid_to;
+        this.memo = memo;
+        this.segment = segment;
+        this.fileUpload = fileUpload;
+    }
+
+    public Transaction(int id, BankAccount account, LocalDate date, BigDecimal amount, String category, String paid_to, String memo, FileUpload fileUpload) {
+        this.id = id;
+        this.account = account;
+        this.date = date;
+        this.amount = amount;
+        this.category = category;
+        this.paid_to = paid_to;
+        this.memo = memo;
+        this.fileUpload = fileUpload;
+    }
+
 
     public Transaction() {
     }
@@ -130,6 +159,14 @@ public class Transaction {
 
     public void setMemo(String memo) {
         this.memo = memo;
+    }
+
+    public void setFileUpload(FileUpload fileUpload) {
+        this.fileUpload = fileUpload;
+    }
+
+    public FileUpload getFileUpload() {
+        return fileUpload;
     }
 
     @Override

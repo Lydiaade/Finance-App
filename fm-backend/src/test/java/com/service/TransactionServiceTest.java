@@ -32,7 +32,7 @@ public class TransactionServiceTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        service = new TransactionService(repository, csvHelper);
+        service = new TransactionService();
     }
 
     @Test
