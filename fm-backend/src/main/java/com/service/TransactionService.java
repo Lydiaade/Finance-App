@@ -32,6 +32,7 @@ public class TransactionService {
             if (fileUpload.getSuccessfulTransactions() != 0) {
                 fileUploadRepository.save(fileUpload);
             }
+
             return fileUpload.fileInfoResponseMapper();
         } catch (IOException e) {
             throw new RuntimeException("Fail to store csv data: " + e.getMessage());

@@ -33,21 +33,6 @@ public class TransactionController {
         transactionService.addTransaction(transaction);
     }
 
-    @PostMapping("/upload/csv")
-    public ResponseEntity uploadTransactions(@RequestBody MultipartFile file) {
-        try {
-            FileInfoResponse response = transactionService.saveFile(file);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
-        }
-    }
-
-    @GetMapping("/upload")
-    public ResponseEntity<List<FileUpload>> getUploads() {
-        return new ResponseEntity<>(transactionService.getAllUploads(), HttpStatus.OK);
-    }
-
     @DeleteMapping("/transaction/{id}")
     public void deleteTransaction(@PathVariable("id") Integer id) {
         transactionService.deleteTransaction(id);

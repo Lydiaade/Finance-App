@@ -27,7 +27,13 @@ public class CSVHelper {
         FileUpload file_info = new FileUpload(file.getOriginalFilename());
         File transformedFile = multipartFileToFile(file);
         System.out.println("File ready to be processed");
-        return transformFileToTransactions(transformedFile, file_info);
+        FileUpload upload = transformFileToTransactions(transformedFile, file_info);
+        if (transformedFile.delete()) {
+            System.out.println("File deleted");
+        } else {
+            System.err.println("File failed to delete");
+        };
+        return upload;
     }
 
     public FileUpload transformFileToTransactions(File file, FileUpload fileUpload) {
