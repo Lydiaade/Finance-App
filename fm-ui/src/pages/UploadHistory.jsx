@@ -1,12 +1,21 @@
 import React, { Component } from "react";
 import "../App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { BACKEND_URL } from "../config";
 import UploadData from "../components/UploadData";
 
 class UploadHistory extends Component {
   state = {};
 
-  componentDidMount() {}
+  componentDidMount() {
+    this.getUploads();
+  }
+
+  getUploads = () => {
+    fetch(`${BACKEND_URL}/uploads`)
+      .then((data) => data.json())
+      .then((data) => this.setState({ uploads: data }));
+  };
 
   render() {
     return (
@@ -33,7 +42,8 @@ class UploadHistory extends Component {
             </tr>
           </thead>
           <tbody>
-            <UploadData />
+            {this.state.uploads &&
+              this.state.uploads.map((data) => <UploadData upload={data} />)}
           </tbody>
         </table>
       </div>
