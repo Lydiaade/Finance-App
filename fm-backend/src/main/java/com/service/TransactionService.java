@@ -18,31 +18,6 @@ public class TransactionService {
     @Autowired
     private TransactionRepository transactionRepository;
 
-    @Autowired
-    private FileUploadRepository fileUploadRepository;
-
-    @Autowired
-    private CSVHelper csvHelper;
-
-
-    public FileInfoResponse saveFile(MultipartFile file) {
-        try {
-            System.out.println("About to save");
-            FileUpload fileUpload = csvHelper.csvToTransactions(file);
-            if (fileUpload.getSuccessfulTransactions() != 0) {
-                fileUploadRepository.save(fileUpload);
-            }
-
-            return fileUpload.fileInfoResponseMapper();
-        } catch (IOException e) {
-            throw new RuntimeException("Fail to store csv data: " + e.getMessage());
-        }
-    }
-
-    public List<FileUpload> getAllUploads() {
-        return fileUploadRepository.findAll();
-    }
-
     public List<Transaction> getAllTransactions() {
         return transactionRepository.findAll();
     }
