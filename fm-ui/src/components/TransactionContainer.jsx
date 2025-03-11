@@ -35,9 +35,6 @@ const TransactionContainer = ({ id }) => {
       <table className="table container-fluid">
         <thead>
           <tr className="transaction-header">
-            <th scope="col" className="ID">
-              ID
-            </th>
             <th scope="col" className="Date">
               Date
             </th>
