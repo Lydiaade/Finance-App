@@ -17,7 +17,7 @@ class UploadFile extends Component {
 
     formData.append("file", this.state.selectedFile);
 
-    fetch(`${BACKEND_URL}/uploads/upload/csv`, {
+    fetch(`${BACKEND_URL}/uploads/upload`, {
       method: "POST",
       headers: {
         Accept: "application/json",

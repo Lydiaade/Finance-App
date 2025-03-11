@@ -43,7 +43,9 @@ class UploadHistory extends Component {
           </thead>
           <tbody>
             {this.state.uploads &&
-              this.state.uploads.map((data) => <UploadData upload={data} />)}
+              this.state.uploads.map((data) => (
+                <UploadData key={data.id} upload={data} />
+              ))}
           </tbody>
         </table>
       </div>
