@@ -8,8 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UploadService {
@@ -41,5 +43,13 @@ public class UploadService {
 
     public void deleteFile(long id) {
         fileUploadRepository.deleteById(id);
+    }
+
+    public FileUpload getFile(long id) throws FileNotFoundException {
+        Optional<FileUpload> upload = fileUploadRepository.findById(id);
+        if (upload.isEmpty()) {
+            throw new FileNotFoundException("This id does not exist");
+        }
+        return upload.get();
     }
 }

@@ -8,14 +8,14 @@ public class FileInfoResponse {
     private final String fileName;
     private int successfulTransactions;
     private int failedTransactions;
-    private final LocalDateTime creationDate;
+    private final LocalDateTime uploadedAt;
 
-    public FileInfoResponse(Long id, String fileName, int successfulTransactions, int failedTransactions, LocalDateTime creationDate) {
+    public FileInfoResponse(Long id, String fileName, int successfulTransactions, int failedTransactions, LocalDateTime uploadedAt) {
         this.id = id;
         this.fileName = fileName;
         this.successfulTransactions = successfulTransactions;
         this.failedTransactions = failedTransactions;
-        this.creationDate = creationDate;
+        this.uploadedAt = uploadedAt;
     }
 
     public Long getId() {
@@ -42,8 +42,8 @@ public class FileInfoResponse {
         return fileName;
     }
 
-    public LocalDateTime getCreationDate() {
-        return creationDate;
+    public LocalDateTime getUploadedAt() {
+        return uploadedAt;
     }
 
     @Override
