@@ -4,6 +4,8 @@ import "../App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { BACKEND_URL } from "../config";
 import TransactionTable from "../components/TransactionTable";
+import { convertDateTime } from "../helpers/utils";
+import { Container } from "react-bootstrap";
 
 class ViewUpload extends Component {
   constructor(props) {
@@ -25,13 +27,21 @@ class ViewUpload extends Component {
   };
 
   render() {
-    console.log(this.state.uploads);
+    console.log(this.state.data);
     if (this.state.isLoading) {
       return <p>Loading...</p>;
     } else {
       return (
         <div className="container">
           <h1 className="pageTitle">Upload Details</h1>
+          <Container>
+            <p>File Name: {this.state.data.fileName}</p>
+            <p>Upload Date: {convertDateTime(this.state.data.uploadedAt)}</p>
+            <p>
+              Successful Transactions: {this.state.data.successfulTransactions}
+            </p>
+            <p>Failed Transactions: {this.state.data.failedTransactions}</p>
+          </Container>
           <TransactionTable items={this.state.data.transactions} />
         </div>
       );

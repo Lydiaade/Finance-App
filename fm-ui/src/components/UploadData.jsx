@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import { BACKEND_URL } from "../config";
+import { convertDateTime } from "../helpers/utils";
 
 class UploadData extends Component {
   render() {
@@ -9,7 +10,7 @@ class UploadData extends Component {
     return (
       <tr className="uploadData">
         <td className="uploadDataFileName">{fileName}</td>
-        <td className="uploadDataDate">{this.convertDateTime(uploadedAt)}</td>
+        <td className="uploadDataDate">{convertDateTime(uploadedAt)}</td>
         <td className="uploadDataAccount"></td>
         <td className="uploadDataTransactions">{successfulTransactions}</td>
         <td className="uploadDataActions">
@@ -36,12 +37,6 @@ class UploadData extends Component {
       method: "DELETE",
     }).then((data) => console.log(data));
     window.location.reload();
-  };
-
-  convertDateTime = (date) => {
-    return `${new Date(date).toLocaleDateString()} ${new Date(
-      date
-    ).toLocaleTimeString()}`;
   };
 }
 

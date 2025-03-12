@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { BACKEND_URL } from "../config";
-import Transaction from "./Transaction";
 import { Pagination } from "react-bootstrap";
 import TransactionTable from "./TransactionTable";
 
