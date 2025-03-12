@@ -1,9 +1,6 @@
 package com.controller;
 
-import com.dto.BankAccount;
-import com.dto.BankAccountType;
-import com.dto.BankName;
-import com.dto.Transaction;
+import com.dto.*;
 import com.dto.request.NewBankAccountRequest;
 import com.service.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +29,7 @@ public class AccountController {
     }
 
     @GetMapping("/account/{id}")
-    public Object getAccount(@PathVariable("id") int id) {
+    public ResponseEntity<?> getAccount(@PathVariable("id") int id) {
         try {
             return new ResponseEntity<>(accountService.getAccount(id), HttpStatus.OK);
         } catch (FileNotFoundException e) {
@@ -64,21 +61,22 @@ public class AccountController {
     }
 
     @GetMapping("/account/{id}/transactions/monthly")
-    public Object getAccountAnnualMonthlyTransactions(@PathVariable("id") int id) {
+    public ResponseEntity<List<MonthlyTransactionTotal>> getAccountAnnualMonthlyTransactions(@PathVariable("id") int id) {
         return new ResponseEntity<>(accountService.getAccountAnnualMonthlyTransactions(id), HttpStatus.OK);
     }
 
     @PostMapping("/account")
-    public void addAccount(@RequestBody NewBankAccountRequest request) {
+    public ResponseEntity<HttpStatus> addAccount(@RequestBody NewBankAccountRequest request) {
         BankAccount account = new BankAccount(request.name(), request.sortCode(), request.accountNumber(), request.accountType(), request.accountBank(), request.currency(), request.currentBalance(), request.balanceDate());
         accountService.addAccount(account);
+        return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @DeleteMapping("/account/{id}")
-    public Object deleteAccount(@PathVariable("id") int id) {
+    public ResponseEntity<?> deleteAccount(@PathVariable("id") int id) {
         try {
             accountService.deleteAccount(id);
-            return HttpStatus.NO_CONTENT;
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
