@@ -34,8 +34,8 @@ public class UploadService {
         }
     }
 
-    public List<FileUpload> getAllUploads() {
-        return fileUploadRepository.findAll();
+    public List<FileInfoResponse> getAllUploads() {
+        return fileUploadRepository.getUploadCondensedData();
     }
 
 

@@ -21,7 +21,7 @@ public class UploadController {
     private UploadService uploadService;
 
     @GetMapping
-    public ResponseEntity<List<FileUpload>> getUploads() {
+    public ResponseEntity<List<FileInfoResponse>> getUploads() {
         return new ResponseEntity<>(uploadService.getAllUploads(), HttpStatus.OK);
     }
 

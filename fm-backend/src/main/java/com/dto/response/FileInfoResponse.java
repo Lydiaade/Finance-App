@@ -4,16 +4,22 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class FileInfoResponse {
+    private final Long id;
     private final String fileName;
     private int successfulTransactions;
     private int failedTransactions;
     private final LocalDateTime creationDate;
 
-    public FileInfoResponse(String fileName, int successfulTransactions, int failedTransactions, LocalDateTime creationDate) {
+    public FileInfoResponse(Long id, String fileName, int successfulTransactions, int failedTransactions, LocalDateTime creationDate) {
+        this.id = id;
         this.fileName = fileName;
         this.successfulTransactions = successfulTransactions;
         this.failedTransactions = failedTransactions;
         this.creationDate = creationDate;
+    }
+
+    public Long getId() {
+        return id;
     }
 
     public int getSuccessfulTransactions() {
