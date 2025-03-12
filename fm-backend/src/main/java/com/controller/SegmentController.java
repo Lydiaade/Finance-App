@@ -28,13 +28,15 @@ public class SegmentController {
     }
 
     @PostMapping("/segment")
-    public void addSegment(@RequestBody NewSegmentRequest request) {
+    public ResponseEntity<HttpStatus> addSegment(@RequestBody NewSegmentRequest request) {
         Segment segment = new Segment(request.name());
         segmentService.addSegment(segment);
+        return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @DeleteMapping("/segment/{id}")
-    public void deleteSegment(@PathVariable("id") Integer id) {
+    public ResponseEntity<HttpStatus> deleteSegment(@PathVariable("id") Integer id) {
         segmentService.deleteSegment(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

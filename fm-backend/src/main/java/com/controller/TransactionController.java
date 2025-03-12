@@ -27,14 +27,16 @@ public class TransactionController {
     }
 
     @PostMapping("/transaction")
-    public void addTransaction(@RequestBody NewTransactionRequest request) {
+    public ResponseEntity<HttpStatus> addTransaction(@RequestBody NewTransactionRequest request) {
         Transaction transaction = new Transaction(
                 request.date(), request.account(), request.amount(), request.category(), request.paid_to(), request.memo());
         transactionService.addTransaction(transaction);
+        return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @DeleteMapping("/transaction/{id}")
-    public void deleteTransaction(@PathVariable("id") Integer id) {
+    public ResponseEntity<HttpStatus> deleteTransaction(@PathVariable("id") Integer id) {
         transactionService.deleteTransaction(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

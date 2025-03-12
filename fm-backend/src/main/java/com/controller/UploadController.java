@@ -44,9 +44,9 @@ public class UploadController {
     }
 
     @DeleteMapping("/upload/{id}")
-    public HttpStatus deleteUpload(@PathVariable("id") long id) {
+    public ResponseEntity<HttpStatus> deleteUpload(@PathVariable("id") long id) {
         uploadService.deleteFile(id);
-        return HttpStatus.NO_CONTENT;
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
 }
