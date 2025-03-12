@@ -1,4 +1,4 @@
-import { Component, useRef } from "react";
+import { Component } from "react";
 import { BACKEND_URL } from "../config";
 
 class UploadFile extends Component {

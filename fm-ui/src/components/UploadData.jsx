@@ -8,14 +8,18 @@ class UploadData extends Component {
 
     return (
       <tr className="uploadData">
-        <td className="uploadDataFileName">
-          {fileName}
-        </td>
+        <td className="uploadDataFileName">{fileName}</td>
         <td className="uploadDataDate">{this.convertDateTime(uploadedAt)}</td>
         <td className="uploadDataAccount"></td>
         <td className="uploadDataTransactions">{successfulTransactions}</td>
         <td className="uploadDataActions">
-          <button className="btn btn-primary btn-sm">View</button>
+          <a
+            role="button"
+            className="btn btn-primary btn-sm"
+            href={`/uploadHistory/${id}`}
+          >
+            View
+          </a>
           <button
             className="btn btn-danger btn-sm"
             onClick={this.deleteUpload.bind(this, id)}
