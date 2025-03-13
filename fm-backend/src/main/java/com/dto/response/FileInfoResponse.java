@@ -1,8 +1,13 @@
 package com.dto.response;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+@Getter
+@Setter
 public class FileInfoResponse {
     private final Long id;
     private final String fileName;
@@ -18,33 +23,33 @@ public class FileInfoResponse {
         this.uploadedAt = uploadedAt;
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public int getSuccessfulTransactions() {
-        return successfulTransactions;
-    }
-
-    public void setSuccessfulTransactions(int successfulTransactions) {
-        this.successfulTransactions = successfulTransactions;
-    }
-
-    public int getFailedTransactions() {
-        return failedTransactions;
-    }
-
-    public void setFailedTransactions(int failedTransactions) {
-        this.failedTransactions = failedTransactions;
-    }
-
-    public String getFileName() {
-        return fileName;
-    }
-
-    public LocalDateTime getUploadedAt() {
-        return uploadedAt;
-    }
+//    public Long getId() {
+//        return id;
+//    }
+//
+//    public int getSuccessfulTransactions() {
+//        return successfulTransactions;
+//    }
+//
+//    public void setSuccessfulTransactions(int successfulTransactions) {
+//        this.successfulTransactions = successfulTransactions;
+//    }
+//
+//    public int getFailedTransactions() {
+//        return failedTransactions;
+//    }
+//
+//    public void setFailedTransactions(int failedTransactions) {
+//        this.failedTransactions = failedTransactions;
+//    }
+//
+//    public String getFileName() {
+//        return fileName;
+//    }
+//
+//    public LocalDateTime getUploadedAt() {
+//        return uploadedAt;
+//    }
 
     @Override
     public boolean equals(Object o) {

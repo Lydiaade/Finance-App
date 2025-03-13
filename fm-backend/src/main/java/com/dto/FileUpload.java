@@ -2,10 +2,15 @@ package com.dto;
 
 import com.dto.response.FileInfoResponse;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
+@Getter
+@Setter
 @Table(name = "file_uploads")
 public class FileUpload {
 
@@ -38,37 +43,9 @@ public class FileUpload {
         this.transactions = transactions;
     }
 
-    public void setTransactions(List<Transaction> transactions) {
+    public void saveTransactionSuccess(List<Transaction> transactions) {
         this.transactions = transactions;
         this.successfulTransactions = transactions.size();
-    }
-
-    public void setFailedTransactions(int failedTransactions) {
-        this.failedTransactions = failedTransactions;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getFileName() {
-        return fileName;
-    }
-
-    public int getSuccessfulTransactions() {
-        return successfulTransactions;
-    }
-
-    public int getFailedTransactions() {
-        return failedTransactions;
-    }
-
-    public LocalDateTime getUploadedAt() {
-        return uploadedAt;
-    }
-
-    public List<Transaction> getTransactions() {
-        return transactions;
     }
 
     public FileInfoResponse fileInfoResponseMapper() {

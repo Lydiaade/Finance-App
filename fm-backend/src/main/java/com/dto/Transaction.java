@@ -2,12 +2,16 @@ package com.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Objects;
 
 @Entity
+@Getter
+@Setter
 public class Transaction {
 
     @Id
@@ -55,7 +59,7 @@ public class Transaction {
         this.category = category;
         this.paid_to = paid_to;
         this.memo = memo;
-        this.segment = segment.getName();
+        this.segment = "Undefined";
     }
 
     public Transaction(int id, BankAccount account, LocalDate date, BigDecimal amount, String category, String paid_to, String memo, String segment, FileUpload fileUpload) {
@@ -81,7 +85,6 @@ public class Transaction {
         this.fileUpload = fileUpload;
     }
 
-
     public Transaction() {
     }
 
@@ -91,82 +94,6 @@ public class Transaction {
         int month = Integer.parseInt(dateList[1]);
         int year = Integer.parseInt(dateList[2]);
         return LocalDate.of(year, month, day);
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public LocalDate getDate() {
-        return date;
-    }
-
-    public void setDate(LocalDate date) {
-        this.date = date;
-    }
-
-    public BankAccount getAccount() {
-        return account;
-    }
-
-    public void setAccount(BankAccount account) {
-        this.account = account;
-    }
-
-    public String getSegment() {
-        return segment;
-    }
-
-    public void setSegment(Segment segment) {
-        this.segment = segment.getName();
-    }
-
-    public void setSegment(String segment) {
-        this.segment = segment;
-    }
-
-    public BigDecimal getAmount() {
-        return amount;
-    }
-
-    public void setAmount(BigDecimal amount) {
-        this.amount = amount;
-    }
-
-    public String getCategory() {
-        return category;
-    }
-
-    public void setCategory(String category) {
-        this.category = category;
-    }
-
-    public String getPaid_to() {
-        return paid_to;
-    }
-
-    public void setPaid_to(String paid_to) {
-        this.paid_to = paid_to;
-    }
-
-    public String getMemo() {
-        return memo;
-    }
-
-    public void setMemo(String memo) {
-        this.memo = memo;
-    }
-
-    public void setFileUpload(FileUpload fileUpload) {
-        this.fileUpload = fileUpload;
-    }
-
-    public FileUpload getFileUpload() {
-        return fileUpload;
     }
 
     @Override

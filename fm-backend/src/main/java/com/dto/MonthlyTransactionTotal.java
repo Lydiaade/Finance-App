@@ -1,31 +1,19 @@
 package com.dto;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.math.BigDecimal;
 import java.util.Objects;
 
+@Getter
+@Setter
 public class MonthlyTransactionTotal {
-
     private String name;
     private BigDecimal total;
 
     public MonthlyTransactionTotal(String name, BigDecimal total) {
         this.name = name;
-        this.total = total;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public BigDecimal getTotal() {
-        return total;
-    }
-
-    public void setTotal(BigDecimal total) {
         this.total = total;
     }
 

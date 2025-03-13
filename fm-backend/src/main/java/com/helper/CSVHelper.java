@@ -59,7 +59,7 @@ public class CSVHelper {
         } catch (FileNotFoundException e) {
             System.err.println("Error!!!");
         }
-        fileUpload.setTransactions(transactions);
+        fileUpload.saveTransactionSuccess(transactions);
         fileUpload.setFailedTransactions(failed_transactions);
         return fileUpload;
 
