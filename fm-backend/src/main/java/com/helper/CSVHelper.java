@@ -17,17 +17,12 @@ import java.util.*;
 
 @Service
 public class CSVHelper {
-    private final AccountRepository accountRepository;
 
-    public CSVHelper(AccountRepository accRepository) {
-        this.accountRepository = accRepository;
-    }
-
-    public FileUpload csvToTransactions(MultipartFile file) throws IOException {
-        FileUpload file_info = new FileUpload(file.getOriginalFilename());
+    public FileUpload csvToTransactions(MultipartFile file, BankAccount bankAccount) throws IOException {
+        FileUpload file_info = new FileUpload(file.getOriginalFilename(), bankAccount);
         File transformedFile = multipartFileToFile(file);
         System.out.println("File ready to be processed");
-        FileUpload upload = transformFileToTransactions(transformedFile, file_info);
+        FileUpload upload = transformFileToTransactions(transformedFile, file_info, bankAccount);
         if (transformedFile.delete()) {
             System.out.println("File deleted");
         } else {
@@ -36,7 +31,7 @@ public class CSVHelper {
         return upload;
     }
 
-    public FileUpload transformFileToTransactions(File file, FileUpload fileUpload) {
+    public FileUpload transformFileToTransactions(File file, FileUpload fileUpload, BankAccount bankAccount) {
         List<Transaction> transactions = new ArrayList<>();
         System.out.println("About to transform file, " + file.getName());
         int failed_transactions = 0;
@@ -49,7 +44,7 @@ public class CSVHelper {
             while (scanner.hasNext()) {
                 String nextLine = scanner.nextLine();
                 try {
-                    Transaction transaction = transformSingleCSVTransaction(nextLine);
+                    Transaction transaction = transformSingleCSVTransaction(nextLine, bankAccount);
                     transaction.setFileUpload(fileUpload);
                     transactions.add(transaction);
                 } catch (Exception e) {
@@ -73,12 +68,12 @@ public class CSVHelper {
         return convFile;
     }
 
-    private Transaction transformSingleCSVTransaction(String nextLine) throws Exception {
+    private Transaction transformSingleCSVTransaction(String nextLine, BankAccount bankAccount) throws IllegalArgumentException, UnsuccessfulTransactionRetrieval {
         try {
             System.out.println(nextLine);
             String[] transactionValues = nextLine.split(",");
             String date = transactionValues[1];
-            BankAccount account = retrieveAccountData(transactionValues[2]);
+            BankAccount account = verifyBankAccountData(transactionValues[2], bankAccount);
             BigDecimal amount = new BigDecimal(transactionValues[3]);
             String category = transactionValues[4];
             String[] splitDetails = transactionValues[5].replaceAll("\"", "").split("\t");
@@ -88,22 +83,15 @@ public class CSVHelper {
         } catch (ArrayIndexOutOfBoundsException e) {
             System.err.println("A row doesn't follow the structure required");
             throw new UnsuccessfulTransactionRetrieval("Unsuccessful Transaction");
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException(e.getMessage());
         }
     }
 
-    private BankAccount retrieveAccountData(String accountString) {
+    private BankAccount verifyBankAccountData(String accountString, BankAccount bankAccount){
         System.out.println(accountString);
-        String[] accountDetails = accountString.split("\s");
-        System.out.println(accountDetails[0]);
-        System.out.println(accountDetails[1]);
-        List<BankAccount> accounts = accountRepository.findBySortCodeAndAccountNumber(accountDetails[0], accountDetails[1]);
-
-        if (accounts.size() == 0) {
-            System.out.println("Account does not exist");
-            throw new IllegalArgumentException("An account needs to be created first for for the account provided.");
+        String[] accountDetails = accountString.split(" ");
+        if (!Objects.equals(accountDetails[0], bankAccount.getSortCode()) && !Objects.equals(accountDetails[1], bankAccount.getAccountNumber())){
+            throw new IllegalArgumentException("All transactions should be related to selected account");
         }
-        return accounts.get(0);
+        return bankAccount;
     }
 }

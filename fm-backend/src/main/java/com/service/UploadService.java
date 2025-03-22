@@ -1,8 +1,10 @@
 package com.service;
 
+import com.dto.BankAccount;
 import com.dto.FileUpload;
 import com.dto.response.FileInfoResponse;
 import com.helper.CSVHelper;
+import com.repository.AccountRepository;
 import com.repository.FileUploadRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,11 +23,18 @@ public class UploadService {
     @Autowired
     private CSVHelper csvHelper;
 
+    @Autowired
+    private AccountRepository accountRepository;
 
-    public FileInfoResponse saveFile(MultipartFile file) {
+
+    public FileInfoResponse saveFile(MultipartFile file, int bankAccountId) {
         try {
             System.out.println("About to save");
-            FileUpload fileUpload = csvHelper.csvToTransactions(file);
+            Optional<BankAccount> bankAccount = accountRepository.findById(bankAccountId);
+            if (bankAccount.isEmpty()) {
+                throw new FileNotFoundException("This bank account does not exist");
+            }
+            FileUpload fileUpload = csvHelper.csvToTransactions(file, bankAccount.get());
             if (fileUpload.getSuccessfulTransactions() != 0) {
                 fileUploadRepository.save(fileUpload);
             }
