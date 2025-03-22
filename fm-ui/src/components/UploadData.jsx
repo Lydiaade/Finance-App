@@ -4,31 +4,34 @@ import { convertDateTime } from "../helpers/utils";
 
 class UploadData extends Component {
   render() {
-    const { id, fileName, successfulTransactions, uploadedAt } =
+    const { id, fileName, successfulTransactions, uploadedAt, bankAccount } =
       this.props.upload;
 
     return (
-      <tr className="uploadData">
-        <td className="uploadDataFileName">{fileName}</td>
-        <td className="uploadDataDate">{convertDateTime(uploadedAt)}</td>
-        <td className="uploadDataAccount"></td>
-        <td className="uploadDataTransactions">{successfulTransactions}</td>
-        <td className="uploadDataActions">
-          <a
-            role="button"
-            className="btn btn-primary btn-sm"
-            href={`/uploadHistory/${id}`}
-          >
-            View
-          </a>
-          <button
-            className="btn btn-danger btn-sm"
-            onClick={this.deleteUpload.bind(this, id)}
-          >
-            Delete
-          </button>
-        </td>
-      </tr>
+      console.log(this.props.upload),
+      (
+        <tr className="uploadData">
+          <td className="uploadDataFileName">{fileName}</td>
+          <td className="uploadDataDate">{convertDateTime(uploadedAt)}</td>
+          <td className="uploadDataBankAccount">{bankAccount.name}</td>
+          <td className="uploadDataTransactions">{successfulTransactions}</td>
+          <td className="uploadDataActions">
+            <a
+              role="button"
+              className="btn btn-primary btn-sm"
+              href={`/uploadHistory/${id}`}
+            >
+              View
+            </a>
+            <button
+              className="btn btn-danger btn-sm"
+              onClick={this.deleteUpload.bind(this, id)}
+            >
+              Delete
+            </button>
+          </td>
+        </tr>
+      )
     );
   }
 

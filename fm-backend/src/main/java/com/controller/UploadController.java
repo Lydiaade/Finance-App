@@ -25,9 +25,9 @@ public class UploadController {
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<?> uploadTransactions(@RequestBody MultipartFile file) {
+    public ResponseEntity<?> uploadTransactions(@RequestParam("file") MultipartFile file, @RequestParam("bankAccount") int bankAccountId) {
         try {
-            FileInfoResponse response = uploadService.saveFile(file);
+            FileInfoResponse response = uploadService.saveFile(file, bankAccountId);
             return new ResponseEntity<>(response, HttpStatus.ACCEPTED);
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);

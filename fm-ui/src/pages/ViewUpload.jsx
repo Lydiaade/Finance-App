@@ -41,6 +41,7 @@ class ViewUpload extends Component {
               Successful Transactions: {this.state.data.successfulTransactions}
             </p>
             <p>Failed Transactions: {this.state.data.failedTransactions}</p>
+            <p>Bank Account: {this.state.data.bankAccount.name}</p>
           </Container>
           <TransactionTable items={this.state.data.transactions} />
         </div>
