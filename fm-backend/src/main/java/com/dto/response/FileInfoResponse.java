@@ -1,5 +1,7 @@
 package com.dto.response;
 
+import com.dto.BankAccount;
+
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -9,13 +11,15 @@ public class FileInfoResponse {
     private int successfulTransactions;
     private int failedTransactions;
     private final LocalDateTime uploadedAt;
+    private final BankAccount bankAccount;
 
-    public FileInfoResponse(Long id, String fileName, int successfulTransactions, int failedTransactions, LocalDateTime uploadedAt) {
+    public FileInfoResponse(Long id, String fileName, int successfulTransactions, int failedTransactions, LocalDateTime uploadedAt, BankAccount bankAccount) {
         this.id = id;
         this.fileName = fileName;
         this.successfulTransactions = successfulTransactions;
         this.failedTransactions = failedTransactions;
         this.uploadedAt = uploadedAt;
+        this.bankAccount = bankAccount;
     }
 
     public Long getId() {
@@ -44,6 +48,10 @@ public class FileInfoResponse {
 
     public LocalDateTime getUploadedAt() {
         return uploadedAt;
+    }
+
+    public BankAccount getBankAccount() {
+        return bankAccount;
     }
 
     @Override

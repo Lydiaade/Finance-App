@@ -84,6 +84,6 @@ public class FileUpload {
     }
 
     public FileInfoResponse fileInfoResponseMapper() {
-        return new FileInfoResponse(id, fileName, successfulTransactions, failedTransactions, uploadedAt);
+        return new FileInfoResponse(id, fileName, successfulTransactions, failedTransactions, uploadedAt, bankAccount);
     }
 }
