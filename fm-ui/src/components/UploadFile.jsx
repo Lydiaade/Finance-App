@@ -1,27 +1,53 @@
 import { Component } from "react";
 import { BACKEND_URL } from "../config";
+import { Button, Form } from "react-bootstrap";
 
 class UploadFile extends Component {
-  state = { fileName: null };
+  state = {
+    fileName: null,
+    bankAccount: "",
+    selectedFile: null,
+    isSuccess: false,
+    message: "",
+    errorMessage: "",
+    bankAccounts: [],
+  };
+
+  componentDidMount() {
+    this.getBankAccounts();
+  }
+
+  getBankAccounts = () => {
+    fetch(`${BACKEND_URL}/accounts`)
+      .then((data) => data.json())
+      .then((data) => this.setState({ bankAccounts: data }));
+  };
 
   onFileChange = (event) => {
     this.setState({ selectedFile: event.target.files[0] });
   };
 
-  onFileUpload = () => {
+  handleBankAccountChange = (event) => {
+    this.setState({ bankAccount: event.target.value }, () => {
+      console.log("Current value:" + this.state.bankAccount);
+    });
+  };
+
+  onSubmit = () => {
     const formData = new FormData();
-    if (!this.state.selectedFile) {
-      this.setState({ errorMessage: "Please select a csv file to upload" });
+    if (!this.state.selectedFile && !this.state.bankAccount) {
+      this.setState({
+        errorMessage:
+          "Please select a csv file to upload and the correspoinging bank account",
+      });
       return;
     }
 
     formData.append("file", this.state.selectedFile);
+    formData.append("bankAccount", this.state.bankAccount);
 
     fetch(`${BACKEND_URL}/uploads/upload`, {
       method: "POST",
-      headers: {
-        Accept: "application/json",
-      },
       body: formData,
     })
       .then((response) => {
@@ -32,9 +58,10 @@ class UploadFile extends Component {
           console.log(response.status);
         }
       })
-      .then((text) => this.setState({ message: text }));
-
-    this.setState({ fileName: null });
+      .then((text) => this.setState({ message: text }))
+      .finally(() => {
+        this.setState({ fileName: null, bankAccount: "", selectedFile: null });
+      });
   };
 
   render() {
@@ -48,25 +75,37 @@ class UploadFile extends Component {
         ) : (
           <div />
         )}
-        <fieldset>
-          <div className="mb-3">
-            <label htmlFor="formFile" className="form-label">
-              Upload transactions csv file
-            </label>
-            <input
-              className="form-control"
+        <Form>
+          <Form.Group className="mb-3" controlId="formBankAccount">
+            <Form.Label column sm={4}>
+              Bank Account:
+            </Form.Label>
+            <Form.Select
+              value={this.state.bankAccount}
+              onChange={this.handleBankAccountChange}
+              required
+            >
+              <option value="">Select Bank Account</option>
+              {this.state.bankAccounts.map((account) => (
+                <option value={account.id} key={account.id}>
+                  {account.name}
+                </option>
+              ))}
+            </Form.Select>
+          </Form.Group>
+          <Form.Group controlId="formFile" className="mb-3">
+            <Form.Label>Upload transactions csv file</Form.Label>
+            <Form.Control
               type="file"
               accept=".csv"
-              id="formFile"
-              onChange={this.onFileChange}
-              ref={this.state.fileName}
               required
+              onChange={this.onFileChange}
             />
-          </div>
-          <button onClick={this.onFileUpload} className="btn btn-primary">
-            Upload
-          </button>
-        </fieldset>
+          </Form.Group>
+          <Button variant="primary" type="submit" onClick={this.onSubmit}>
+            Submit
+          </Button>
+        </Form>
       </div>
     );
   }

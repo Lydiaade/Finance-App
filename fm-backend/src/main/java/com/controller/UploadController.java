@@ -25,7 +25,7 @@ public class UploadController {
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<?> uploadTransactions(@RequestBody MultipartFile file) {
+    public ResponseEntity<?> uploadTransactions(@RequestParam("file") MultipartFile file, @RequestParam("bankAccount") int bankAccount) {
         try {
             FileInfoResponse response = uploadService.saveFile(file);
             return new ResponseEntity<>(response, HttpStatus.ACCEPTED);
