@@ -22,9 +22,8 @@ public class FileUpload {
     @OneToMany(mappedBy = "fileUpload", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Transaction> transactions;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "account_id", referencedColumnName = "id")
-    @JsonIgnore
     private BankAccount bankAccount;
 
     public FileUpload() {
