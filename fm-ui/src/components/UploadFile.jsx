@@ -9,6 +9,7 @@ class UploadFile extends Component {
     selectedFile: null,
     bankAccounts: [],
     alert: null,
+    fieldErrors: {},
   };
 
   componentDidMount() {
@@ -21,12 +22,19 @@ class UploadFile extends Component {
       .then((data) => this.setState({ bankAccounts: data }));
   };
 
+  clearFieldError = (field) => {
+    const { [field]: _removed, ...rest } = this.state.fieldErrors;
+    this.setState({ fieldErrors: rest, alert: null });
+  };
+
   onFileChange = (event) => {
     this.setState({ selectedFile: event.target.files[0] });
+    this.clearFieldError("selectedFile");
   };
 
   handleBankAccountChange = (event) => {
     this.setState({ bankAccount: event.target.value });
+    this.clearFieldError("bankAccount");
   };
 
   buildUploadSummary = (info) => {
@@ -51,12 +59,17 @@ class UploadFile extends Component {
   onSubmit = async () => {
     const { selectedFile, bankAccount } = this.state;
 
-    if (!selectedFile || !bankAccount) {
+    const fieldErrors = {};
+    if (!bankAccount) fieldErrors.bankAccount = "Please select a bank account.";
+    if (!selectedFile) fieldErrors.selectedFile = "Please select a CSV file.";
+
+    if (Object.keys(fieldErrors).length > 0) {
       this.setState({
+        fieldErrors,
         alert: {
           type: "danger",
           title: "Missing details",
-          body: "Please select a CSV file and a corresponding bank account.",
+          body: Object.values(fieldErrors).join(" "),
         },
       });
       return;
@@ -85,6 +98,7 @@ class UploadFile extends Component {
           },
           bankAccount: "",
           selectedFile: null,
+          fieldErrors: {},
         });
         return;
       }
@@ -108,7 +122,7 @@ class UploadFile extends Component {
   };
 
   render() {
-    const { alert, bankAccount, bankAccounts } = this.state;
+    const { alert, bankAccount, bankAccounts, fieldErrors } = this.state;
 
     return (
       <div>
@@ -128,6 +142,7 @@ class UploadFile extends Component {
             <Form.Select
               value={bankAccount}
               onChange={this.handleBankAccountChange}
+              isInvalid={!!fieldErrors.bankAccount}
               required
             >
               <option value="">Select Bank Account</option>
@@ -137,6 +152,9 @@ class UploadFile extends Component {
                 </option>
               ))}
             </Form.Select>
+            <Form.Control.Feedback type="invalid">
+              {fieldErrors.bankAccount}
+            </Form.Control.Feedback>
           </Form.Group>
           <Form.Group controlId="formFile" className="mb-3">
             <Form.Label>Upload transactions csv file</Form.Label>
@@ -145,7 +163,11 @@ class UploadFile extends Component {
               accept=".csv"
               required
               onChange={this.onFileChange}
+              isInvalid={!!fieldErrors.selectedFile}
             />
+            <Form.Control.Feedback type="invalid">
+              {fieldErrors.selectedFile}
+            </Form.Control.Feedback>
           </Form.Group>
           <Button variant="primary" type="button" onClick={this.onSubmit}>
             Submit
