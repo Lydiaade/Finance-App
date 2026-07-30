@@ -2,6 +2,8 @@ package com.controller;
 
 import com.dto.response.FileInfoResponse;
 import com.service.UploadService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +17,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/uploads")
 public class UploadController {
+
+    private static final Logger log = LoggerFactory.getLogger(UploadController.class);
 
     @Autowired
     private UploadService uploadService;
@@ -30,7 +34,11 @@ public class UploadController {
             FileInfoResponse response = uploadService.saveFile(file, bankAccountId);
             return new ResponseEntity<>(response, HttpStatus.ACCEPTED);
         } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
+            log.warn("Upload rejected - account mismatch for accountId={}: {}", bankAccountId, e.getMessage());
+            return new ResponseEntity<>(HttpStatus.UNPROCESSABLE_ENTITY);
+        } catch (Exception e) {
+            log.error("Upload failed for accountId={}", bankAccountId, e);
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
 
