@@ -45,6 +45,60 @@ test("renders the add-transaction form when accounts exist", async () => {
   );
 });
 
+test("shows a loading indicator while GET /accounts is in flight", () => {
+  let resolveFetch;
+  global.fetch = jest.fn(
+    () =>
+      new Promise((resolve) => {
+        resolveFetch = resolve;
+      })
+  );
+
+  render(
+    <MemoryRouter>
+      <AddTransaction />
+    </MemoryRouter>
+  );
+
+  expect(screen.getByText("Loading...")).toBeInTheDocument();
+  expect(
+    screen.queryByRole("button", { name: "Add transaction" })
+  ).not.toBeInTheDocument();
+  expect(
+    screen.queryByText("Add a bank account first to add a transaction.")
+  ).not.toBeInTheDocument();
+
+  // Avoid an unresolved-promise/act warning leaking into other tests.
+  resolveFetch(jsonResponse(200, []));
+});
+
+test("GET /accounts rejecting shows a distinct load-failure message, not a permanently blank page", async () => {
+  global.fetch = jest.fn(() => Promise.reject(new Error("network down")));
+
+  render(
+    <MemoryRouter>
+      <AddTransaction />
+    </MemoryRouter>
+  );
+
+  await waitFor(() =>
+    expect(
+      screen.getByText(
+        "We couldn't load your accounts. Please check your connection and try again."
+      )
+    ).toBeInTheDocument()
+  );
+
+  // Must be distinguishable from the "zero accounts" empty state and must
+  // not silently render the form.
+  expect(
+    screen.queryByText("Add a bank account first to add a transaction.")
+  ).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole("button", { name: "Add transaction" })
+  ).not.toBeInTheDocument();
+});
+
 test("direct navigation to /addTransaction with zero accounts shows the explanatory message and no submittable form", async () => {
   mockAccountsAndSegments([]);
 

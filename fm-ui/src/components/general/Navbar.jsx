@@ -45,7 +45,11 @@ function NavigationBar() {
                     Add Transaction
                   </NavDropdown.Item>
                 ) : (
-                  <NavDropdown.Item disabled title={NO_ACCOUNTS_MESSAGE}>
+                  <NavDropdown.Item
+                    as="a"
+                    disabled
+                    title={NO_ACCOUNTS_MESSAGE}
+                  >
                     Add Transaction
                     <small className="text-muted d-block">
                       {NO_ACCOUNTS_MESSAGE}

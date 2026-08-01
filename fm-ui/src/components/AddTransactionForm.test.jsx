@@ -18,11 +18,20 @@ const segments = [
   { id: 11, name: "Bills" },
 ];
 
+function textFor(body) {
+  if (typeof body === "string") return body;
+  if (body && typeof body === "object" && Object.keys(body).length > 0) {
+    return JSON.stringify(body);
+  }
+  return "";
+}
+
 function jsonResponse(status, body) {
   return Promise.resolve({
     status,
     ok: status >= 200 && status < 300,
     json: () => Promise.resolve(body),
+    text: () => Promise.resolve(textFor(body)),
   });
 }
 
@@ -158,9 +167,11 @@ test("selecting money out sends a negative amount; money in sends a positive amo
 });
 
 test("successful submit shows the success view with correct details and both actions wired", async () => {
+  let lastBody = null;
   setupFetchMock({
-    onSubmit: () =>
-      jsonResponse(201, {
+    onSubmit: (options) => {
+      lastBody = JSON.parse(options.body);
+      return jsonResponse(201, {
         id: 42,
         date: "2020-01-15",
         account: { id: 1, name: "Current Account" },
@@ -168,7 +179,8 @@ test("successful submit shows the success view with correct details and both act
         category: "Groceries",
         paid_to: "Tesco",
         memo: "Weekly shop",
-      }),
+      });
+    },
   });
   render(<AddTransactionForm accounts={accounts} />);
   await waitFor(() => screen.getByRole("option", { name: "Groceries" }));
@@ -179,6 +191,8 @@ test("successful submit shows the success view with correct details and both act
   await userEvent.click(screen.getByRole("button", { name: "Add transaction" }));
 
   await waitFor(() => expect(screen.getByText("Transaction added")).toBeInTheDocument());
+  expect(lastBody).not.toBeNull();
+  expect(lastBody.amount).toBe(25.5);
   expect(screen.getByText(/Amount: \+25.50/)).toBeInTheDocument();
   expect(screen.getByText(/Account: Current Account/)).toBeInTheDocument();
   expect(screen.getByText(/Paid to: Tesco/)).toBeInTheDocument();
@@ -230,6 +244,28 @@ test("backend 400 shows the dedicated error view, distinct from inline field val
     expect(screen.getByText("Couldn't save transaction")).toBeInTheDocument()
   );
   expect(screen.getByRole("button", { name: "Back to form" })).toBeInTheDocument();
+});
+
+test("backend 400 with a specific reason surfaces that reason instead of the generic message", async () => {
+  setupFetchMock({
+    onSubmit: () =>
+      Promise.resolve({
+        status: 400,
+        ok: false,
+        json: () => Promise.resolve({}),
+        text: () => Promise.resolve("Amount cannot be zero"),
+      }),
+  });
+  render(<AddTransactionForm accounts={accounts} />);
+  await waitFor(() => screen.getByRole("option", { name: "Groceries" }));
+
+  await fillValidForm();
+  await userEvent.click(screen.getByRole("button", { name: "Add transaction" }));
+
+  await waitFor(() =>
+    expect(screen.getByText("Couldn't save transaction")).toBeInTheDocument()
+  );
+  expect(screen.getByText("Amount cannot be zero")).toBeInTheDocument();
 });
 
 test("network failure on submit shows the dedicated error view", async () => {

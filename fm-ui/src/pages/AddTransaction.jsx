@@ -8,6 +8,7 @@ import AddTransactionForm from "../components/AddTransactionForm";
 function AddTransaction() {
   const [accounts, setAccounts] = useState([]);
   const [accountsLoaded, setAccountsLoaded] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     fetch(`${BACKEND_URL}/accounts`)
@@ -15,20 +16,31 @@ function AddTransaction() {
       .then((data) => {
         setAccounts(data);
         setAccountsLoaded(true);
+      })
+      .catch(() => {
+        setLoadError(true);
+        setAccountsLoaded(true);
       });
   }, []);
 
-  const noAccounts = accountsLoaded && accounts.length === 0;
+  const noAccounts = accountsLoaded && !loadError && accounts.length === 0;
 
   return (
     <div className="container">
       <h1 className="pageTitle">Add Transaction</h1>
+      {!accountsLoaded && <p>Loading...</p>}
+      {loadError && (
+        <Alert variant="danger">
+          We couldn't load your accounts. Please check your connection and
+          try again.
+        </Alert>
+      )}
       {noAccounts && (
         <Alert variant="warning">
           Add a bank account first to add a transaction.
         </Alert>
       )}
-      {accountsLoaded && !noAccounts && (
+      {accountsLoaded && !loadError && !noAccounts && (
         <AddTransactionForm accounts={accounts} />
       )}
     </div>

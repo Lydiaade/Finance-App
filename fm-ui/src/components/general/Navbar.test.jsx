@@ -26,6 +26,7 @@ test("zero accounts: nav entry point renders disabled with explanatory text", as
   await waitFor(() => {
     const link = screen.getByText("Add Transaction").closest("a");
     expect(link).toHaveClass("disabled");
+    expect(link).toHaveAttribute("aria-disabled", "true");
   });
   expect(
     screen.getByText("Add a bank account first to add a transaction")

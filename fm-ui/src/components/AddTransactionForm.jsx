@@ -123,9 +123,15 @@ function AddTransactionForm({ accounts }) {
         return;
       }
 
-      setErrorMessage(
-        "We couldn't save this transaction. Please check the details and try again."
-      );
+      const genericMessage =
+        "We couldn't save this transaction. Please check the details and try again.";
+      let reason = "";
+      try {
+        reason = (await response.text()).trim();
+      } catch (readError) {
+        reason = "";
+      }
+      setErrorMessage(reason || genericMessage);
       setView("error");
     } catch (error) {
       setErrorMessage(
@@ -200,8 +206,14 @@ function AddTransactionForm({ accounts }) {
         </Form.Control.Feedback>
       </Form.Group>
 
-      <Form.Group className="mb-3" controlId="formDirection">
-        <Form.Label>Money in or out</Form.Label>
+      <Form.Group
+        className="mb-3"
+        as="fieldset"
+        aria-describedby={
+          fieldErrors.direction ? "direction-error" : undefined
+        }
+      >
+        <Form.Label as="legend">Money in or out</Form.Label>
         <div>
           <Form.Check
             inline
@@ -225,7 +237,7 @@ function AddTransactionForm({ accounts }) {
           />
         </div>
         {fieldErrors.direction && (
-          <div className="invalid-feedback d-block">
+          <div className="invalid-feedback d-block" id="direction-error">
             {fieldErrors.direction}
           </div>
         )}
