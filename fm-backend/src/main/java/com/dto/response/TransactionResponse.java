@@ -19,6 +19,9 @@ public record TransactionResponse(
 ) {
 
     public static TransactionResponse from(Transaction transaction) {
+        // transaction.getAccount() is assumed non-null here: every caller (TransactionService)
+        // validates the account exists before constructing/saving the Transaction, so this is
+        // safe today but relies on that invariant holding at every call site.
         AccountSummary account = new AccountSummary(
                 transaction.getAccount().getId(), transaction.getAccount().getName());
         return new TransactionResponse(

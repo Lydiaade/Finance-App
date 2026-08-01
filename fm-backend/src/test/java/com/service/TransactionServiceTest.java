@@ -125,9 +125,7 @@ public class TransactionServiceTest {
         verify(repository, never()).save(any());
     }
 
-    // AC §8 backend #4/#7 - accountId not matching any existing BankAccount -> 400.
-    // This also covers "missing accountId": a JSON payload with no accountId deserializes the
-    // primitive int field to 0, which will never match a real (sequence-generated, 1-based) id.
+    // AC §8 backend #7 - accountId not matching any existing BankAccount -> 400.
     @Test
     public void nonExistentAccountIdIsRejected() {
         when(accountRepository.findById(999)).thenReturn(Optional.empty());
@@ -135,6 +133,18 @@ public class TransactionServiceTest {
 
         assertThrows(IllegalArgumentException.class, () -> service.addManualTransaction(request));
         verify(repository, never()).save(any());
+    }
+
+    // AC §8 backend #4 - missing accountId (null, e.g. JSON payload omits the key entirely) -> 400,
+    // handled by its own explicit check rather than accidentally falling through to
+    // accountRepository.findById(null)/"account does not exist".
+    @Test
+    public void missingAccountIdIsRejected() {
+        NewTransactionRequest request = new NewTransactionRequest(LocalDate.now(), null, BigDecimal.TEN, "Groceries", "Tesco", null);
+
+        assertThrows(IllegalArgumentException.class, () -> service.addManualTransaction(request));
+        verify(repository, never()).save(any());
+        verify(accountRepository, never()).findById(any());
     }
 
     // AC §8 backend #5 - amount == 0 -> 400.

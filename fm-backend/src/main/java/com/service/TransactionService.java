@@ -25,10 +25,6 @@ public class TransactionService {
         return transactionRepository.findAll();
     }
 
-    public void addTransaction(Transaction transaction) {
-        transactionRepository.save(transaction);
-    }
-
     // FM-23: manual "add transaction" entry point. Validation lives here (not the controller)
     // per CLAUDE.md layering - the frontend also validates, but there is no auth, so anything
     // hitting this endpoint directly must still be checked server-side.
@@ -49,6 +45,9 @@ public class TransactionService {
             throw new IllegalArgumentException("Date cannot be in the future");
         }
 
+        if (request.accountId() == null) {
+            throw new IllegalArgumentException("Account is required");
+        }
         BankAccount account = accountRepository.findById(request.accountId())
                 .orElseThrow(() -> new IllegalArgumentException("Account does not exist"));
 
