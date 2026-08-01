@@ -26,19 +26,18 @@ public class CSVHelper {
         if (transformedFile.delete()) {
             System.out.println("File deleted");
         } else {
-            System.err.println("File failed to delete");
+            System.err.println("Failed to delete file");
         };
         return upload;
     }
 
-    public FileUpload transformFileToTransactions(File file, FileUpload fileUpload, BankAccount bankAccount) {
+    public FileUpload transformFileToTransactions(File file, FileUpload fileUpload, BankAccount bankAccount) throws IllegalArgumentException {
         List<Transaction> transactions = new ArrayList<>();
         System.out.println("About to transform file, " + file.getName());
         int failed_transactions = 0;
         try {
             Scanner scanner = new Scanner(file);
             if (scanner.hasNext()) {
-                // skip header line
                 scanner.nextLine();
             }
             while (scanner.hasNext()) {
@@ -47,17 +46,16 @@ public class CSVHelper {
                     Transaction transaction = transformSingleCSVTransaction(nextLine, bankAccount);
                     transaction.setFileUpload(fileUpload);
                     transactions.add(transaction);
-                } catch (Exception e) {
+                } catch (UnsuccessfulTransactionRetrieval e) {
                     failed_transactions++;
                 }
             }
         } catch (FileNotFoundException e) {
-            System.err.println("Error!!!");
+            throw new RuntimeException(e);
         }
         fileUpload.setTransactions(transactions);
         fileUpload.setFailedTransactions(failed_transactions);
         return fileUpload;
-
     }
 
     private File multipartFileToFile(MultipartFile file) throws IOException {
@@ -82,7 +80,7 @@ public class CSVHelper {
             return new Transaction(date, account, amount, category, paid_to, memo);
         } catch (ArrayIndexOutOfBoundsException e) {
             System.err.println("A row doesn't follow the structure required");
-            throw new UnsuccessfulTransactionRetrieval("Unsuccessful Transaction");
+            throw new UnsuccessfulTransactionRetrieval("Unsuccessful transaction transformation");
         }
     }
 
