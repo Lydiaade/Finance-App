@@ -6,6 +6,7 @@ import com.repository.TransactionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -18,11 +19,17 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
+// Note: this test previously called `new AccountService(accountRepository, transactionRepository,
+// financeManagerService)`, but AccountService only has a no-arg constructor (it uses field
+// injection) - that call never compiled. Pre-existing breakage found on this branch while working
+// FM-23, unrelated to FM-23 itself; fixed here (switched to @InjectMocks, the idiomatic Mockito
+// equivalent of the field-injection wiring AccountService already uses) only so the module's test
+// suite compiles and can actually be run.
 @ExtendWith(MockitoExtension.class)
 public class AccountServiceTest {
 
+    @InjectMocks
     private AccountService service;
-    private FinanceManagerService financeManagerService;
 
     @Mock
     private AccountRepository accountRepository;
@@ -30,11 +37,12 @@ public class AccountServiceTest {
     @Mock
     private TransactionRepository transactionRepository;
 
+    @Mock
+    private FinanceManagerService financeManagerService;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        service = new AccountService(accountRepository, transactionRepository, financeManagerService);
     }
 
     @Test

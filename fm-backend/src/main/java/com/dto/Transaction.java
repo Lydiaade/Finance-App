@@ -34,13 +34,28 @@ public class Transaction {
     private String memo;
     private String segment = "Undefined";
 
+    // FM-23: nullable so manually-added transactions (no CSV upload behind them) can persist with
+    // fileUpload = null. CSV-imported transactions are unaffected - CSVHelper always assigns a
+    // FileUpload before save, that behavior is unchanged; this only relaxes the DB constraint.
     @ManyToOne
-    @JoinColumn(name = "file_upload_id", referencedColumnName = "id", nullable = false)
+    @JoinColumn(name = "file_upload_id", referencedColumnName = "id", nullable = true)
     @JsonIgnore
     private FileUpload fileUpload;
 
     public Transaction(String date, BankAccount account, BigDecimal amount, String category, String paid_to, String memo) {
         this.date = transformStringToDate(date);
+        this.account = account;
+        this.amount = amount;
+        this.category = category;
+        this.paid_to = paid_to;
+        this.memo = memo;
+    }
+
+    // FM-23: used by the manual "add transaction" path, which already has a real LocalDate
+    // (parsed by Jackson's jsr310 module from ISO yyyy-MM-dd) and must not go through
+    // transformStringToDate - that parser expects d/M/yyyy (CSV format) and would throw on ISO input.
+    public Transaction(LocalDate date, BankAccount account, BigDecimal amount, String category, String paid_to, String memo) {
+        this.date = date;
         this.account = account;
         this.amount = amount;
         this.category = category;
