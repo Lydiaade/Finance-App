@@ -93,9 +93,12 @@ public class TransactionServiceTest {
         assertEquals(account.getId(), response.account().id());
         assertEquals(account.getName(), response.account().name());
         assertEquals(BigDecimal.valueOf(-25.50), response.amount());
-        assertEquals("Groceries", response.category());
+        assertEquals("Groceries", response.segment());
         assertEquals("Tesco", response.paid_to());
         assertEquals("Weekly shop", response.memo());
+        // category is a bank-provided descriptor populated only by CSV import - manual entries
+        // must never populate it, regardless of what the segment dropdown was set to.
+        assertNull(captor.getValue().getCategory());
     }
 
     // AC §8 backend #4 - missing/blank amount -> 400 (IllegalArgumentException from the service).
@@ -165,9 +168,9 @@ public class TransactionServiceTest {
         verify(repository, never()).save(any());
     }
 
-    // AC §8 backend #8 - segment selected -> category = segment name, segment column unaffected ("Undefined").
+    // AC §8 backend #8 - segment selected -> Transaction.segment = selected value, category stays null.
     @Test
-    public void categoryIsSetFromSelectedSegmentAndSegmentColumnStaysUndefined() {
+    public void selectedSegmentIsWrittenToSegmentFieldAndCategoryStaysNull() {
         BankAccount account = accountWithId(1);
         when(accountRepository.findById(1)).thenReturn(Optional.of(account));
         when(repository.save(any(Transaction.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -177,13 +180,14 @@ public class TransactionServiceTest {
 
         ArgumentCaptor<Transaction> captor = ArgumentCaptor.forClass(Transaction.class);
         verify(repository).save(captor.capture());
-        assertEquals("Groceries", response.category());
-        assertEquals("Undefined", captor.getValue().getSegment());
+        assertEquals("Groceries", response.segment());
+        assertEquals("Groceries", captor.getValue().getSegment());
+        assertNull(captor.getValue().getCategory());
     }
 
-    // AC §8 backend #9 - no segment selected -> category null/blank, segment column unaffected.
+    // AC §8 backend #9 - no segment selected -> Transaction.segment defaults to "Undefined", category stays null.
     @Test
-    public void noSegmentSelectedLeavesCategoryNullAndSegmentUndefined() {
+    public void noSegmentSelectedLeavesSegmentUndefinedAndCategoryNull() {
         BankAccount account = accountWithId(1);
         when(accountRepository.findById(1)).thenReturn(Optional.of(account));
         when(repository.save(any(Transaction.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -193,8 +197,9 @@ public class TransactionServiceTest {
 
         ArgumentCaptor<Transaction> captor = ArgumentCaptor.forClass(Transaction.class);
         verify(repository).save(captor.capture());
-        assertNull(response.category());
+        assertEquals("Undefined", response.segment());
         assertEquals("Undefined", captor.getValue().getSegment());
+        assertNull(captor.getValue().getCategory());
     }
 
     // AC §8 backend #10 - memo omitted -> saves without error.
