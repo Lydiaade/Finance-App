@@ -1,9 +1,26 @@
+import { useEffect, useState } from "react";
 import Container from "react-bootstrap/Container";
 import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
 import { NavDropdown } from "react-bootstrap";
+import { BACKEND_URL } from "../../config";
+
+const NO_ACCOUNTS_MESSAGE = "Add a bank account first to add a transaction";
 
 function NavigationBar() {
+  // Assume accounts exist until proven otherwise, so the link doesn't
+  // flash disabled on every page load while the accounts fetch is in
+  // flight. The page itself (§5) independently re-enforces this gate,
+  // so a click during that brief window is still safe.
+  const [hasAccounts, setHasAccounts] = useState(true);
+
+  useEffect(() => {
+    fetch(`${BACKEND_URL}/accounts`)
+      .then((response) => response.json())
+      .then((data) => setHasAccounts(Array.isArray(data) && data.length > 0))
+      .catch(() => setHasAccounts(true));
+  }, []);
+
   return (
     <>
       <Navbar expand="lg" bg="dark" variant="dark">
@@ -22,6 +39,23 @@ function NavigationBar() {
                 <NavDropdown.Item href="/uploadTransactions">
                   Upload Transactions
                 </NavDropdown.Item>
+                <NavDropdown.Divider />
+                {hasAccounts ? (
+                  <NavDropdown.Item href="/addTransaction">
+                    Add Transaction
+                  </NavDropdown.Item>
+                ) : (
+                  <NavDropdown.Item
+                    as="a"
+                    disabled
+                    title={NO_ACCOUNTS_MESSAGE}
+                  >
+                    Add Transaction
+                    <small className="text-muted d-block">
+                      {NO_ACCOUNTS_MESSAGE}
+                    </small>
+                  </NavDropdown.Item>
+                )}
               </NavDropdown>
               <Nav.Link href="/segments">Segments</Nav.Link>
             </Nav>

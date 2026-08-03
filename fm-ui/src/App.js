@@ -12,6 +12,7 @@ import Segments from "./pages/Segments";
 import EditAccount from "./pages/EditAccount";
 import UploadHistory from "./pages/UploadHistory";
 import ViewUpload from "./pages/ViewUpload";
+import AddTransaction from "./pages/AddTransaction";
 
 class App extends Component {
   state = {};
@@ -36,6 +37,7 @@ class App extends Component {
               />
               <Route path="/uploadHistory" element={<UploadHistory />} />
               <Route path="/uploadHistory/:id" element={<ViewUpload />} />
+              <Route path="/addTransaction" element={<AddTransaction />} />
               <Route path="/accounts" element={<AccountsPage />} />
               <Route path="/account" element={<CreateNewAccount />} />
               <Route path="/segments" element={<Segments />} />
