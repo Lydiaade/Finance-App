@@ -88,7 +88,7 @@ function AddTransactionForm({ accounts }) {
       date: form.date,
       accountId: parseInt(form.accountId, 10),
       amount: signedAmount,
-      category: form.segment || null,
+      segment: form.segment || null,
       paid_to: form.paidTo.trim(),
       memo: form.memo.trim() || null,
     };
@@ -157,7 +157,7 @@ function AddTransactionForm({ accounts }) {
           <p className="mb-1">Account: {accountName}</p>
           <p className="mb-1">Paid to: {savedTransaction.paid_to}</p>
           <p className="mb-1">
-            Segment: {savedTransaction.category || "None"}
+            Segment: {savedTransaction.segment || "None"}
           </p>
           <p className="mb-1">
             Date: {formatIsoDateForDisplay(savedTransaction.date)}
