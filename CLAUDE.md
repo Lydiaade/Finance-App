@@ -87,6 +87,8 @@ Whatever approach is chosen:
 - The hardcoded backend URL in `fm-ui/src/config.js` should move to environment-based config when deployment work starts — flag it rather than silently working around it.
 - No auth exists yet — don't assume authenticated requests, tokens, or user context exist in either the frontend or backend unless a task is specifically building that.
 - `fm-backend/pom.xml` declares `<java.version>21</java.version>` but the `maven-compiler-plugin` overrides `<source>`/`<target>` to `16` — the project actually compiles to Java 16 bytecode regardless of the runtime. Don't assume Java 17-21-only language features will compile; flag this mismatch rather than "fixing" one side of it unprompted.
+- **`Transaction.category` and `Transaction.segment` are different concepts, don't conflate them.** `category` is populated only by CSV import (`CSVHelper`, from the CSV's "Subcategory" column) with bank-provided transaction-type text like "Debit"/"Bill Payment" — it has nothing to do with user-facing budget categorization. `segment` (default `"Undefined"`) is the actual budget-categorization field, meant to be populated from the `Segment` lookup table. This was mixed up during FM-23 (a form field meant for "segment" was wired to write into `category` to save backend work) and had to be corrected after the PR was already open — don't repeat that shortcut.
+- **Running `mvn`/`./mvnw` locally can regenerate or revert `fm-backend/.mvn/wrapper/`, `mvnw`, and `mvnw.cmd` as a side effect** (observed during FM-23 — an agent's local Maven run silently deleted a just-applied wrapper fix). If your task isn't specifically about the Maven wrapper, leave those files alone and don't stage/commit changes to them as part of an unrelated commit. If `./mvnw` is broken (missing `.mvn/wrapper/maven-wrapper.properties`), regenerate it with `mvn -N wrapper:wrapper -Dmaven=3.9.6` from `fm-backend/`.
 - *(This section is intentionally light — update it as specific "Claude got this wrong" moments come up, so guardrails stay grounded in real mistakes rather than speculative ones.)*
 
 ## Current Focus
@@ -116,16 +118,25 @@ Both Senior Developers are equally capable, full backend seniors, and both Senio
 
 **Folder boundaries are a convention, not an enforced restriction.** Senior Developers 1/2 work in `fm-backend/`, Senior UI Developers 1/2 work in `fm-ui/`, by default — but none of them are tool-restricted to their folder. If a ticket genuinely needs someone to touch the other side (e.g. a Senior Developer adjusting `config.js` for a new endpoint), that's fine — just flag it as a deliberate exception rather than a habit.
 
+### Scaling the process to ticket size
+
+The full process below (Amigos → 2 implementers → cross-review → contract cross-check → QA → sign-off) is the default, not a fixed cost every ticket must pay in full. A single CRUD endpoint + one form does not need the same weight as a schema migration or an auth rewrite. After the Amigos round, size the ticket and scale accordingly:
+
+- **Small/contained** (one endpoint, one form, no schema change beyond something already flagged): critique-loop reviewers can fold the API-contract cross-check into their own review instead of a separate dedicated pass; QA's job can lean on the implementers' and reviewers' own test runs rather than fully re-deriving coverage from scratch, provided it still independently executes the full suite.
+- **Large/high-risk** (schema/migration changes, auth, cross-cutting refactors, anything touching the guardrails in Known Gotchas): keep the full heavy process — every step below, no shortcuts.
+
+Independent of size, **default every agent's verification to reading code and running the existing test suite.** Reserve expensive hands-on verification — standing up a throwaway database, checking out a separate git worktree, reproducing a full local environment — for a claim that is genuinely high-risk (e.g. an actual DDL/schema-behavior question) or actively disputed between two agents. Don't reproduce infrastructure conditions "just to be thorough" by default — it's expensive and rarely changes the verdict; a second agent independently redoing the same hands-on reproduction another agent already did is a signal the process ran heavier than it needed to.
+
 ### The Process
 
 1. **Ticket intake** — Project lead provides a ticket (ideally with an `[FM-##]` number).
 2. **Three Amigos session (once, upfront)** — Business Analyst leads. All agents contribute clarifying questions from their own lens — feasibility/data-model questions from the Senior Developers, UX/edge-case questions from the Senior UI Developers, testability/acceptance-criteria questions from QA. **These are batched into a single round of questions to the project lead.** After this, no further questions are expected until the PR is ready — see Escalation below for the one exception.
 3. **Acceptance criteria & branch creation** — Business Analyst turns the clarified ticket into explicit, testable acceptance criteria the rest of the team builds and tests against. A feature branch is created off `main`: `feature/FM-##-short-description`.
 4. **Implementation** — Senior Developers split or pair on backend work (whichever fits the ticket); Senior UI Developers split or pair on frontend work the same way, building against the same acceptance criteria and the backend API contract. Tests are written **alongside** implementation, not after — see Testing Expectations above. Each implementing agent runs their own tests locally before handing anything off for review, and commits their own work onto the feature branch using the `[FM-##] Description` format; "I wrote tests" isn't done until "I ran them and they pass."
-5. **Critique loop** — nobody's work is accepted at face value:
+5. **Critique loop** — nobody's work is accepted at face value, but see "Scaling the process to ticket size" above for how heavy this needs to be:
    - Senior Developer 1 and 2 review each other's backend work with real scrutiny — does this match the acceptance criteria, is this the right approach, what breaks it — not a rubber stamp.
    - Senior UI Developer 1 and 2 review each other's frontend work the same way — one checking UX/acceptance-criteria fit, the other checking architecture, accessibility, and edge cases (loading/error/empty states).
-   - A Senior Developer and a Senior UI Developer cross-check that the API contract actually matches what the frontend needs (either UI dev — whichever is doing the integration work at the time).
+   - The API contract needs to actually match what the frontend needs — for a small/contained ticket this can be folded into one of the existing reviews rather than a separate dedicated agent call; for a larger/riskier ticket, a standalone cross-check pass is worth the extra cost.
    - Reviewers check the tests themselves, not just the implementation — do the tests actually assert the right thing, or do they just exercise the code without checking behavior?
    - Disagreements are resolved with evidence (re-reading the ticket, running the code, checking acceptance criteria) — not by seniority or deference. A disagreement the team can't resolve is an Escalation, not a coin flip.
 6. **Testing gate (QA Analyst)** — this is a distinct, non-skippable step, not a footnote inside sign-off:
