@@ -24,4 +24,15 @@ public class SegmentService {
     public void deleteSegment(int segmentId) {
         segmentRepository.deleteById(segmentId);
     }
+
+    // FM-19: backs the two new "create inline" affordances (inline segment edit,
+    // AddTransactionForm's "+ Add new segment") - deliberately NOT wired into addSegment()/the
+    // existing POST /segments/segment flow, which stays a bare save with zero dedup
+    // (SegmentContainer.jsx's existing add-flow is unchanged by this ticket - AC-12/Flag F4).
+    // Case-insensitive: typing "groceries" when "Groceries" already exists reuses the existing
+    // row (and its stored casing) rather than creating a duplicate.
+    public Segment getOrCreateSegment(String name) {
+        return segmentRepository.findByNameIgnoreCase(name)
+                .orElseGet(() -> segmentRepository.save(new Segment(name)));
+    }
 }
