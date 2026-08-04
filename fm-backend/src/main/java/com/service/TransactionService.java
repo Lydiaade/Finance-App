@@ -52,8 +52,15 @@ public class TransactionService {
                 .orElseThrow(() -> new IllegalArgumentException("Account does not exist"));
 
         // fileUpload intentionally left null - this transaction was not created via CSV import.
+        // category is left null (not populated from the request) - it is a bank-provided
+        // transaction-type descriptor (e.g. "Debit"/"Bill Payment") assigned only by CSVHelper on
+        // CSV import, and is conceptually unrelated to the user-facing segment dropdown.
         Transaction transaction = new Transaction(
-                request.date(), account, request.amount(), request.category(), request.paid_to(), request.memo());
+                request.date(), account, request.amount(), null, request.paid_to(), request.memo());
+        if (request.segment() != null && !request.segment().isBlank()) {
+            transaction.setSegment(request.segment());
+        }
+        // else: leave the entity's "Undefined" default in place rather than overwriting it with null.
         Transaction saved = transactionRepository.save(transaction);
         return TransactionResponse.from(saved);
     }

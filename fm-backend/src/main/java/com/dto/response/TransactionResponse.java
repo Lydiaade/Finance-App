@@ -8,12 +8,16 @@ import java.time.LocalDate;
 // FM-23: response body for POST /transactions/transaction. Represents the persisted transaction
 // (backend is the source of truth for the save, including the generated id) rather than just
 // echoing back the client's submitted form values.
+// segment (not category) is exposed here - it is the user-facing budget category the segment
+// dropdown represents (real selected value, e.g. "Groceries", or the entity's "Undefined"
+// default). category is intentionally omitted: it is a bank-provided transaction-type descriptor
+// populated only by CSV import and is always null for manually-added transactions.
 public record TransactionResponse(
         int id,
         LocalDate date,
         AccountSummary account,
         BigDecimal amount,
-        String category,
+        String segment,
         String paid_to,
         String memo
 ) {
@@ -29,7 +33,7 @@ public record TransactionResponse(
                 transaction.getDate(),
                 account,
                 transaction.getAmount(),
-                transaction.getCategory(),
+                transaction.getSegment(),
                 transaction.getPaid_to(),
                 transaction.getMemo()
         );

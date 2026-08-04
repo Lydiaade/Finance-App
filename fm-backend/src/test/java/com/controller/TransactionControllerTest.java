@@ -44,7 +44,7 @@ class TransactionControllerTest {
                 "date": "2024-01-15",
                 "accountId": 1,
                 "amount": -25.50,
-                "category": "Groceries",
+                "segment": "Groceries",
                 "paid_to": "Tesco",
                 "memo": "Weekly shop"
             }
@@ -78,7 +78,7 @@ class TransactionControllerTest {
                 .andExpect(jsonPath("$.account.id").value(1))
                 .andExpect(jsonPath("$.account.name").value("Current Account"))
                 .andExpect(jsonPath("$.amount").value(-25.50))
-                .andExpect(jsonPath("$.category").value("Groceries"))
+                .andExpect(jsonPath("$.segment").value("Groceries"))
                 .andExpect(jsonPath("$.paid_to").value("Tesco"))
                 .andExpect(jsonPath("$.memo").value("Weekly shop"));
 
@@ -117,7 +117,7 @@ class TransactionControllerTest {
                 {
                     "date": "2024-01-15",
                     "amount": -25.50,
-                    "category": "Groceries",
+                    "segment": "Groceries",
                     "paid_to": "Tesco",
                     "memo": "Weekly shop"
                 }
