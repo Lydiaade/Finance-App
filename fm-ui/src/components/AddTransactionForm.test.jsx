@@ -431,3 +431,41 @@ test("choosing '+ Add new segment' then leaving the name blank is blocked with i
     expect.anything()
   );
 });
+
+// AC-11 (QA gap fill): the ticket requires a segment created inline to be
+// "immediately usable... in the same interaction (no page reload required)".
+// The existing "+ Add new segment" tests only assert the create/submit
+// behaviour up to the success view - none of them ever reopen the segment
+// dropdown afterwards to confirm the newly created name is actually listed.
+// This is the one path (unlike Transaction/TransactionTable's cross-row
+// propagation test) where that "usable in the same session" claim for
+// AddTransactionForm specifically went unverified.
+test("a segment created via '+ Add new segment' is listed as a selectable option after 'Add another transaction' (AC-11, same session, no reload)", async () => {
+  setupFetchMock({
+    onSubmit: () =>
+      jsonResponse(201, {
+        id: 99,
+        date: "2020-01-15",
+        account: { id: 1, name: "Current Account" },
+        amount: 25.5,
+        segment: "Entertainment",
+        paid_to: "Tesco",
+        memo: null,
+      }),
+  });
+  render(<AddTransactionForm accounts={accounts} />);
+  await waitFor(() => screen.getByRole("option", { name: "Groceries" }));
+
+  await fillValidForm();
+  await userEvent.selectOptions(screen.getByLabelText("Segment"), "+ Add new segment");
+  await userEvent.type(screen.getByLabelText("New segment name"), "Entertainment");
+  await userEvent.click(screen.getByRole("button", { name: "Add transaction" }));
+  await waitFor(() => expect(screen.getByText("Transaction added")).toBeInTheDocument());
+
+  await userEvent.click(screen.getByRole("button", { name: "Add another transaction" }));
+
+  // The reset form's segment dropdown must list "Entertainment" without any
+  // further GET /segments call being needed - proving it came from local
+  // state merged in onSubmit, not a page/component reload.
+  expect(screen.getByRole("option", { name: "Entertainment" })).toBeInTheDocument();
+});
