@@ -79,6 +79,26 @@ test("populates account dropdown from props and segment dropdown from GET /segme
   expect(screen.getByRole("option", { name: "No segment" })).toBeInTheDocument();
 });
 
+test("a failed GET /segments surfaces a visible warning, distinct from a genuine empty-segments state", async () => {
+  global.fetch = jest.fn((url, options) => {
+    if (url.endsWith("/segments") && !options) {
+      return Promise.reject(new Error("network down"));
+    }
+    return jsonResponse(200, []);
+  });
+  render(<AddTransactionForm accounts={accounts} />);
+
+  await waitFor(() =>
+    expect(screen.getByText(/Couldn't load segments/)).toBeInTheDocument()
+  );
+  // The dropdown itself is still usable - "No segment" and "+ Add new
+  // segment" are still present even though no real segments loaded.
+  expect(screen.getByRole("option", { name: "No segment" })).toBeInTheDocument();
+  expect(
+    screen.getByRole("option", { name: "+ Add new segment" })
+  ).toBeInTheDocument();
+});
+
 test("submitting with each required field missing shows inline validation only for that field, no error view", async () => {
   setupFetchMock();
   render(<AddTransactionForm accounts={accounts} />);

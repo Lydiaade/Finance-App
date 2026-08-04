@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Alert } from "react-bootstrap";
 import { BACKEND_URL } from "../config";
 import Transaction from "./Transaction";
 import { mergeSegmentByName } from "../helpers/segments";
@@ -10,6 +11,10 @@ const TransactionTable = ({ items }) => {
   // editing. Stays in sync whenever the parent re-fetches/paginates.
   const [rows, setRows] = useState(items);
   const [segments, setSegments] = useState([]);
+  // Distinct from "loaded, zero segments" - lets us surface a visible error
+  // instead of silently rendering a segment dropdown that looks like a
+  // genuine empty-segments state when the GET actually failed.
+  const [segmentsLoadFailed, setSegmentsLoadFailed] = useState(false);
 
   useEffect(() => {
     setRows(items);
@@ -20,10 +25,16 @@ const TransactionTable = ({ items }) => {
     fetch(`${BACKEND_URL}/segments`)
       .then((response) => response.json())
       .then((data) => {
-        if (!ignore) setSegments(data);
+        if (!ignore) {
+          setSegments(data);
+          setSegmentsLoadFailed(false);
+        }
       })
       .catch(() => {
-        if (!ignore) setSegments([]);
+        if (!ignore) {
+          setSegments([]);
+          setSegmentsLoadFailed(true);
+        }
       });
     return () => {
       ignore = true;
@@ -48,6 +59,12 @@ const TransactionTable = ({ items }) => {
 
   return (
     <div>
+      {segmentsLoadFailed && (
+        <Alert variant="warning" className="py-1 px-2">
+          Couldn't load segments. You may not see all available options in the
+          segment dropdowns below.
+        </Alert>
+      )}
       <table className="table container-fluid">
         <thead>
           <tr className="transaction-header">

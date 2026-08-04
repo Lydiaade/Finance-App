@@ -185,7 +185,7 @@ test("dismissing the popup without an explicit click (Escape) is treated as decl
       return updateSuccessResponse("Groceries", 0);
     },
   });
-  renderTransaction();
+  const { onSegmentUpdated } = renderTransaction();
 
   await userEvent.selectOptions(segmentSelect(), "Groceries");
   await waitFor(() => screen.getByRole("button", { name: "Confirm" }));
@@ -194,9 +194,8 @@ test("dismissing the popup without an explicit click (Escape) is treated as decl
   // listener that checks `keyCode` (legacy API), not the modern `key` field.
   fireEvent.keyDown(document, { key: "Escape", code: "Escape", keyCode: 27, which: 27 });
 
-  await waitFor(() =>
-    expect(updateBody).toEqual({ segment: "Groceries", applyToExisting: false })
-  );
+  await waitFor(() => expect(onSegmentUpdated).toHaveBeenCalledWith(1, "Groceries"));
+  expect(updateBody).toEqual({ segment: "Groceries", applyToExisting: false });
 });
 
 test("typing a brand-new segment name saves it via the update call (no separate segment-creation call) and it's usable immediately", async () => {

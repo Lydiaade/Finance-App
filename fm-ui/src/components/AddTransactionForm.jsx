@@ -25,12 +25,22 @@ function AddTransactionForm({ accounts }) {
   const [errorMessage, setErrorMessage] = useState("");
   const [showNewSegmentInput, setShowNewSegmentInput] = useState(false);
   const [newSegmentDraft, setNewSegmentDraft] = useState("");
+  // Distinct from "loaded, zero segments" - lets us surface a visible error
+  // instead of silently rendering a segment dropdown that looks like a
+  // genuine empty-segments state when the GET actually failed.
+  const [segmentsLoadFailed, setSegmentsLoadFailed] = useState(false);
 
   useEffect(() => {
     fetch(`${BACKEND_URL}/segments`)
       .then((response) => response.json())
-      .then((data) => setSegments(data))
-      .catch(() => setSegments([]));
+      .then((data) => {
+        setSegments(data);
+        setSegmentsLoadFailed(false);
+      })
+      .catch(() => {
+        setSegments([]);
+        setSegmentsLoadFailed(true);
+      });
   }, []);
 
   const clearFieldError = (field) => {
@@ -317,6 +327,12 @@ function AddTransactionForm({ accounts }) {
 
       <Form.Group className="mb-3" controlId="formSegment">
         <Form.Label>Segment</Form.Label>
+        {segmentsLoadFailed && (
+          <Alert variant="warning" className="py-1 px-2">
+            Couldn't load segments. You can still add a transaction without
+            selecting one, or type a new segment name below.
+          </Alert>
+        )}
         <Form.Select
           value={showNewSegmentInput ? ADD_NEW_SEGMENT_OPTION : form.segment}
           onChange={handleSegmentChange}

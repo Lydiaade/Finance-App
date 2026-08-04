@@ -79,6 +79,64 @@ test("renders each transaction row with an editable segment dropdown populated f
   expect(within(row1Select()).getByText("+ Add new segment")).toBeInTheDocument();
 });
 
+test("a failed GET /segments surfaces a visible warning, distinct from a genuine empty-segments state", async () => {
+  global.fetch = jest.fn((url, options) => {
+    if (url.endsWith("/segments") && !options) {
+      return Promise.reject(new Error("network down"));
+    }
+    return jsonResponse(200, []);
+  });
+  render(<TransactionTable items={items} />);
+
+  await waitFor(() =>
+    expect(screen.getByText(/Couldn't load segments/)).toBeInTheDocument()
+  );
+  // The row's own current value is still shown - the failure doesn't blank
+  // out the dropdown, it just means no other options loaded.
+  expect(row1Select()).toHaveValue("Undefined");
+});
+
+test("creating a new segment inline in one row makes it immediately selectable in a different row (AC-11 cross-row propagation)", async () => {
+  setupFetchMock({
+    preview: () => jsonResponse(200, { matchingTransactionCount: 0 }),
+    update: () =>
+      jsonResponse(200, {
+        transaction: {
+          id: 1,
+          date: "2020-01-15",
+          account: { id: 1, name: "Current Account" },
+          amount: 25.5,
+          segment: "Entertainment",
+          paid_to: "Tesco",
+          memo: "",
+        },
+        updatedTransactionCount: 0,
+      }),
+  });
+  render(<TransactionTable items={items} />);
+
+  await waitFor(() =>
+    expect(within(row1Select()).getByText("Groceries")).toBeInTheDocument()
+  );
+
+  // Row 2 doesn't have "Entertainment" as an option yet.
+  expect(within(row2Select()).queryByText("Entertainment")).not.toBeInTheDocument();
+
+  await userEvent.selectOptions(row1Select(), "+ Add new segment");
+  await userEvent.type(
+    screen.getByLabelText("New segment name for transaction 1"),
+    "Entertainment"
+  );
+  await userEvent.click(screen.getByRole("button", { name: "Add" }));
+
+  await waitFor(() => expect(row1Select()).toHaveValue("Entertainment"));
+
+  // Row 2's own dropdown now lists the segment created via row 1's inline
+  // edit, without a page reload - proving the cross-row propagation the
+  // table-level `segments` state is built for.
+  expect(within(row2Select()).getByText("Entertainment")).toBeInTheDocument();
+});
+
 test("after a successful inline segment update, the visible list reflects the change without a manual refresh, other rows unaffected (AC-18)", async () => {
   setupFetchMock({
     preview: () => jsonResponse(200, { matchingTransactionCount: 0 }),

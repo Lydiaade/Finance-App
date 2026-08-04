@@ -196,9 +196,15 @@ function Transaction({ transaction, segments, onSegmentAdded, onSegmentUpdated }
       <td className="transactionMemo">{memo}</td>
 
       {modal && (
-        <Modal show onHide={handleModalHide}>
+        <Modal
+          show
+          onHide={handleModalHide}
+          aria-labelledby={`segment-update-modal-title-${id}`}
+        >
           <Modal.Header closeButton>
-            <Modal.Title>Update other transactions?</Modal.Title>
+            <Modal.Title id={`segment-update-modal-title-${id}`}>
+              Update other transactions?
+            </Modal.Title>
           </Modal.Header>
           <Modal.Body>
             {modal.count} other transaction{modal.count === 1 ? "" : "s"} from {paid_to} will
