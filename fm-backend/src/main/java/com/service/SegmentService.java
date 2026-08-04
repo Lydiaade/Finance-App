@@ -32,7 +32,10 @@ public class SegmentService {
     // Case-insensitive: typing "groceries" when "Groceries" already exists reuses the existing
     // row (and its stored casing) rather than creating a duplicate.
     public Segment getOrCreateSegment(String name) {
-        return segmentRepository.findByNameIgnoreCase(name)
-                .orElseGet(() -> segmentRepository.save(new Segment(name)));
+        // FM-19 review follow-up: trim before the dedup lookup/save so "Groceries " (trailing
+        // whitespace) matches an existing "Groceries" row instead of creating a near-duplicate.
+        String trimmedName = name.trim();
+        return segmentRepository.findByNameIgnoreCase(trimmedName)
+                .orElseGet(() -> segmentRepository.save(new Segment(trimmedName)));
     }
 }

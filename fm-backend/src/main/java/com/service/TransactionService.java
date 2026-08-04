@@ -14,6 +14,7 @@ import com.repository.PayeeSegmentRuleRepository;
 import com.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.FileNotFoundException;
 import java.math.BigDecimal;
@@ -42,6 +43,11 @@ public class TransactionService {
     // FM-23: manual "add transaction" entry point. Validation lives here (not the controller)
     // per CLAUDE.md layering - the frontend also validates, but there is no auth, so anything
     // hitting this endpoint directly must still be checked server-side.
+    // @Transactional: when request.segment() names a brand-new segment, getOrCreateSegment(...)
+    // below performs its own write (a new Segment row) before the transaction itself is saved -
+    // two independent writes, same reasoning as updateTransactionSegment above, just lower blast
+    // radius (a stray unused Segment row rather than a missed rule/bulk-rename).
+    @Transactional
     public TransactionResponse addManualTransaction(NewTransactionRequest request) {
         if (request.amount() == null) {
             throw new IllegalArgumentException("Amount is required");
@@ -109,6 +115,14 @@ public class TransactionService {
     //      applyToExisting - this is the ticket's actual point (ongoing classification), not an
     //      optional side-effect of the bulk-rename popup (Flag F2, flagged at PR time)
     //   3. only if applyToExisting is true, all other matching transactions are also renamed
+    // @Transactional: the three writes below (own-transaction save, rule upsert, bulk-rename
+    // saveAll) must commit or roll back together - without this, each Spring Data call commits in
+    // its own separate transaction, so a failure partway through (e.g. the rule save throwing
+    // after the transaction save already succeeded, or saveAll failing partway through an
+    // unbounded bulk-rename per AC-7) would leave the system in a partially-applied state that
+    // silently violates AC-6's "rule is always created" guarantee and AC-5's "commits the actual
+    // change in one call" framing.
+    @Transactional
     public UpdateTransactionSegmentResponse updateTransactionSegment(int transactionId, UpdateTransactionSegmentRequest request) throws FileNotFoundException {
         if (request.segment() == null || request.segment().isBlank()) {
             throw new IllegalArgumentException("Segment is required");

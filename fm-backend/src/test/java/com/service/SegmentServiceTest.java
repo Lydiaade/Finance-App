@@ -5,6 +5,7 @@ import com.repository.SegmentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -61,5 +62,34 @@ class SegmentServiceTest {
         assertEquals(7, result.getId());
         assertEquals("Groceries", result.getName());
         verify(segmentRepository, never()).save(any(Segment.class));
+    }
+
+    // Review follow-up - trailing/leading whitespace must not defeat the case-insensitive dedup:
+    // "Groceries " should still match and reuse the existing "Groceries" row.
+    @Test
+    void trimsWhitespaceBeforeDedupLookupSoItStillMatchesAnExistingSegment() {
+        Segment existing = new Segment("Groceries");
+        existing.setId(7);
+        when(segmentRepository.findByNameIgnoreCase("Groceries")).thenReturn(Optional.of(existing));
+
+        Segment result = segmentService.getOrCreateSegment("Groceries ");
+
+        assertEquals(7, result.getId());
+        assertEquals("Groceries", result.getName());
+        verify(segmentRepository, never()).save(any(Segment.class));
+    }
+
+    // Review follow-up - a brand-new name with surrounding whitespace is created trimmed, not
+    // with the whitespace baked into the stored segment name.
+    @Test
+    void trimsWhitespaceBeforeCreatingANewSegment() {
+        when(segmentRepository.findByNameIgnoreCase("Groceries")).thenReturn(Optional.empty());
+        ArgumentCaptor<Segment> captor = ArgumentCaptor.forClass(Segment.class);
+        when(segmentRepository.save(captor.capture())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Segment result = segmentService.getOrCreateSegment("  Groceries  ");
+
+        assertEquals("Groceries", result.getName());
+        assertEquals("Groceries", captor.getValue().getName());
     }
 }

@@ -220,6 +220,9 @@ public class TransactionServiceTest {
         BankAccount account = accountWithId(1);
         when(accountRepository.findById(1)).thenReturn(Optional.of(account));
         when(repository.save(any(Transaction.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        // Explicit stub (rather than relying on Mockito's implicit Optional.empty() default for an
+        // unstubbed call) - makes clear this test's "no matching rule" premise is deliberate.
+        when(payeeSegmentRuleRepository.findByPaidTo("Tesco")).thenReturn(Optional.empty());
 
         NewTransactionRequest request = new NewTransactionRequest(LocalDate.now(), 1, BigDecimal.TEN, null, "Tesco", null);
         TransactionResponse response = service.addManualTransaction(request);
@@ -388,6 +391,7 @@ public class TransactionServiceTest {
         UpdateTransactionSegmentResponse response = service.updateTransactionSegment(
                 10, new UpdateTransactionSegmentRequest("Groceries", true));
 
+        assertEquals("Groceries", response.transaction().segment());
         assertEquals(0, response.updatedTransactionCount());
         ArgumentCaptor<PayeeSegmentRule> ruleCaptor = ArgumentCaptor.forClass(PayeeSegmentRule.class);
         verify(payeeSegmentRuleRepository).save(ruleCaptor.capture());
@@ -432,6 +436,7 @@ public class TransactionServiceTest {
         UpdateTransactionSegmentResponse response = service.updateTransactionSegment(
                 10, new UpdateTransactionSegmentRequest("Groceries", true));
 
+        assertEquals("Groceries", response.transaction().segment());
         assertEquals(2, response.updatedTransactionCount());
         assertEquals("Groceries", other1.getSegment());
         assertEquals("Groceries", other2.getSegment());
