@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Alert, Button, Form } from "react-bootstrap";
 import { BACKEND_URL } from "../config";
 import { formatIsoDateForDisplay, getTodayIsoDate } from "../helpers/utils";
+import { ADD_NEW_SEGMENT_OPTION, mergeSegmentByName } from "../helpers/segments";
 
 const BLANK_FORM = {
   date: "",
@@ -22,6 +23,8 @@ function AddTransactionForm({ accounts }) {
   const [view, setView] = useState("form"); // "form" | "success" | "error"
   const [savedTransaction, setSavedTransaction] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [showNewSegmentInput, setShowNewSegmentInput] = useState(false);
+  const [newSegmentDraft, setNewSegmentDraft] = useState("");
 
   useEffect(() => {
     fetch(`${BACKEND_URL}/segments`)
@@ -45,6 +48,19 @@ function AddTransactionForm({ accounts }) {
   const handleDirectionChange = (direction) => {
     setForm((previous) => ({ ...previous, direction }));
     clearFieldError("direction");
+  };
+
+  const handleSegmentChange = (event) => {
+    const value = event.target.value;
+    if (value === ADD_NEW_SEGMENT_OPTION) {
+      setShowNewSegmentInput(true);
+      setForm((previous) => ({ ...previous, segment: "" }));
+      return;
+    }
+    setShowNewSegmentInput(false);
+    setNewSegmentDraft("");
+    setForm((previous) => ({ ...previous, segment: value }));
+    clearFieldError("segment");
   };
 
   const validate = () => {
@@ -71,6 +87,11 @@ function AddTransactionForm({ accounts }) {
       errors.direction = "Select whether money came in or went out.";
     }
 
+    if (showNewSegmentInput && !newSegmentDraft.trim()) {
+      errors.segment =
+        "Enter a name for the new segment, or choose an existing one from the list.";
+    }
+
     if (!form.date) {
       errors.date = "Enter a date.";
     } else if (form.date > getTodayIsoDate()) {
@@ -80,7 +101,7 @@ function AddTransactionForm({ accounts }) {
     return errors;
   };
 
-  const buildPayload = () => {
+  const buildPayload = (segmentOverride) => {
     const magnitude = Math.abs(parseFloat(form.amount));
     const signedAmount = form.direction === "out" ? -magnitude : magnitude;
 
@@ -88,7 +109,7 @@ function AddTransactionForm({ accounts }) {
       date: form.date,
       accountId: parseInt(form.accountId, 10),
       amount: signedAmount,
-      segment: form.segment || null,
+      segment: segmentOverride !== undefined ? segmentOverride : form.segment || null,
       paid_to: form.paidTo.trim(),
       memo: form.memo.trim() || null,
     };
@@ -99,6 +120,8 @@ function AddTransactionForm({ accounts }) {
     setFieldErrors({});
     setSavedTransaction(null);
     setErrorMessage("");
+    setShowNewSegmentInput(false);
+    setNewSegmentDraft("");
     setView("form");
   };
 
@@ -109,16 +132,33 @@ function AddTransactionForm({ accounts }) {
       return;
     }
 
+    // AC-21: a segment typed into the "+ Add new segment" input didn't exist
+    // in the dropdown's options at load time. Creation and case-insensitive
+    // dedup (AC-11/AC-12) happen server-side inside addManualTransaction
+    // (SegmentService.getOrCreateSegment) - submit the typed name as-is
+    // rather than pre-creating it via a separate POST /segments/segment
+    // call (that endpoint is the older bare add-flow with no dedup).
+    const segmentToSubmit = showNewSegmentInput
+      ? newSegmentDraft.trim() || null
+      : form.segment || null;
+
     try {
       const response = await fetch(`${BACKEND_URL}/transactions/transaction`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(buildPayload()),
+        body: JSON.stringify(buildPayload(segmentToSubmit)),
       });
 
       if (response.status === 201) {
         const data = await response.json();
         setSavedTransaction(data);
+        // Makes a brand-new segment immediately selectable if the user adds
+        // another transaction in the same session (AC-11), using the
+        // canonical name the backend actually saved rather than assuming
+        // the typed value was used verbatim.
+        if (showNewSegmentInput) {
+          setSegments((previous) => mergeSegmentByName(previous, data.segment));
+        }
         setView("success");
         return;
       }
@@ -277,14 +317,36 @@ function AddTransactionForm({ accounts }) {
 
       <Form.Group className="mb-3" controlId="formSegment">
         <Form.Label>Segment</Form.Label>
-        <Form.Select value={form.segment} onChange={updateField("segment")}>
+        <Form.Select
+          value={showNewSegmentInput ? ADD_NEW_SEGMENT_OPTION : form.segment}
+          onChange={handleSegmentChange}
+          isInvalid={!!fieldErrors.segment}
+        >
           <option value="">No segment</option>
           {segments.map((segment) => (
             <option value={segment.name} key={segment.id}>
               {segment.name}
             </option>
           ))}
+          <option value={ADD_NEW_SEGMENT_OPTION}>+ Add new segment</option>
         </Form.Select>
+        {showNewSegmentInput && (
+          <Form.Control
+            className="mt-2"
+            type="text"
+            placeholder="New segment name"
+            aria-label="New segment name"
+            value={newSegmentDraft}
+            onChange={(event) => {
+              setNewSegmentDraft(event.target.value);
+              clearFieldError("segment");
+            }}
+            isInvalid={!!fieldErrors.segment}
+          />
+        )}
+        <Form.Control.Feedback type="invalid">
+          {fieldErrors.segment}
+        </Form.Control.Feedback>
       </Form.Group>
 
       <Form.Group className="mb-3" controlId="formDate">
