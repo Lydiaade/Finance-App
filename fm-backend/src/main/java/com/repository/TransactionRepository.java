@@ -35,4 +35,13 @@ public interface TransactionRepository extends JpaRepository<Transaction, Intege
 
     @Query("SELECT t FROM Transaction t WHERE t.paid_to = :paidTo AND t.id <> :excludeId")
     List<Transaction> findAllByPaidToExcludingId(@Param("paidTo") String paidTo, @Param("excludeId") int excludeId);
+
+    // FM-19 follow-up: backs GET /segments/segment/{id}/usage - "segment" has no underscore, so a
+    // plain derived query is unambiguous here (same reasoning as SegmentRepository.findByNameIgnoreCase).
+    long countBySegment(String segment);
+
+    // FM-19 follow-up: backs both the cascading rename (SegmentService.renameSegment) and the
+    // reset-to-Undefined step of segment delete (SegmentService.deleteSegment) - every transaction
+    // currently carrying this exact segment name.
+    List<Transaction> findAllBySegment(String segment);
 }

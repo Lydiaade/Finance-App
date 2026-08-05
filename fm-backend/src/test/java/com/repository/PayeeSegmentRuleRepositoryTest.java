@@ -53,4 +53,52 @@ class PayeeSegmentRuleRepositoryTest {
         assertEquals("Household", all.get(0).getSegment());
         assertEquals("Household", repository.findByPaidTo("Tesco").orElseThrow().getSegment());
     }
+
+    // ---- FM-19 follow-up: real-database coverage for findAllBySegment/deleteAllBySegment,
+    // backing the cascading rename and segment-delete rule cleanup in SegmentService. ----
+
+    @Test
+    void findAllBySegmentReturnsEveryRuleMatchingThatExactSegmentName() {
+        repository.save(new PayeeSegmentRule("Tesco", "Groceries"));
+        repository.save(new PayeeSegmentRule("Sainsburys", "Groceries"));
+        repository.save(new PayeeSegmentRule("Netflix", "Entertainment"));
+
+        List<PayeeSegmentRule> matches = repository.findAllBySegment("Groceries");
+
+        assertEquals(2, matches.size());
+        assertTrue(matches.stream().allMatch(r -> r.getSegment().equals("Groceries")));
+    }
+
+    @Test
+    void findAllBySegmentReturnsEmptyWhenNoRuleUsesThatSegment() {
+        repository.save(new PayeeSegmentRule("Netflix", "Entertainment"));
+
+        List<PayeeSegmentRule> matches = repository.findAllBySegment("Groceries");
+
+        assertTrue(matches.isEmpty());
+    }
+
+    @Test
+    void deleteAllBySegmentRemovesOnlyMatchingRulesAndLeavesOthersIntact() {
+        repository.save(new PayeeSegmentRule("Tesco", "Groceries"));
+        repository.save(new PayeeSegmentRule("Sainsburys", "Groceries"));
+        repository.save(new PayeeSegmentRule("Netflix", "Entertainment"));
+
+        long deletedCount = repository.deleteAllBySegment("Groceries");
+
+        assertEquals(2, deletedCount);
+        List<PayeeSegmentRule> remaining = repository.findAll();
+        assertEquals(1, remaining.size());
+        assertEquals("Entertainment", remaining.get(0).getSegment());
+    }
+
+    @Test
+    void deleteAllBySegmentIsANoOpWhenNoRuleMatchesThatSegment() {
+        repository.save(new PayeeSegmentRule("Netflix", "Entertainment"));
+
+        long deletedCount = repository.deleteAllBySegment("Groceries");
+
+        assertEquals(0, deletedCount);
+        assertEquals(1, repository.findAll().size());
+    }
 }
