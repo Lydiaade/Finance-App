@@ -41,6 +41,15 @@ const baseTransaction = {
   segment: "Undefined",
 };
 
+// FM-19 review follow-up: a transaction that's already been explicitly
+// classified (segment isn't the default "Undefined"). These rows should no
+// longer show an always-open inline <Form.Select> - only plain text plus an
+// Edit affordance that opens a "Change Segment" modal.
+const classifiedTransaction = {
+  ...baseTransaction,
+  segment: "Bills",
+};
+
 const baseSegments = [
   { id: 10, name: "Groceries" },
   { id: 11, name: "Bills" },
@@ -300,4 +309,107 @@ test("update call failure surfaces an error, leaves the row editable, and Retry 
 
   await waitFor(() => expect(onSegmentUpdated).toHaveBeenCalledWith(1, "Groceries"));
   expect(updateCallCount).toBe(2);
+});
+
+// --- FM-19 review follow-up: classified rows show plain text + a "Change
+// Segment" modal instead of an always-open inline select. ---
+
+function editButton() {
+  return screen.getByRole("button", { name: "Change segment for transaction 1" });
+}
+
+test("a transaction still set to \"Undefined\" keeps rendering the always-visible inline select (regression)", () => {
+  renderTransaction({ transaction: baseTransaction });
+
+  expect(segmentSelect()).toHaveValue("Undefined");
+  expect(
+    screen.queryByRole("button", { name: "Change segment for transaction 1" })
+  ).not.toBeInTheDocument();
+});
+
+test("a transaction already set to a real segment renders as plain text with no inline select", () => {
+  renderTransaction({ transaction: classifiedTransaction });
+
+  expect(screen.getByText("Bills")).toBeInTheDocument();
+  expect(
+    screen.queryByRole("combobox", { name: "Segment for transaction 1" })
+  ).not.toBeInTheDocument();
+  expect(editButton()).toBeInTheDocument();
+});
+
+test("clicking the edit affordance on a classified row opens a \"Change Segment\" modal with the same picker options", async () => {
+  setupFetchMock();
+  renderTransaction({ transaction: classifiedTransaction });
+
+  await userEvent.click(editButton());
+
+  expect(await screen.findByText("Change Segment")).toBeInTheDocument();
+  const select = segmentSelect();
+  expect(select).toHaveValue("Bills");
+  expect(screen.getByRole("option", { name: "Groceries" })).toBeInTheDocument();
+  expect(screen.getByRole("option", { name: "+ Add new segment" })).toBeInTheDocument();
+});
+
+test("dismissing the Change Segment modal without picking anything is a no-op cancel - no preview/update call is made", async () => {
+  setupFetchMock();
+  renderTransaction({ transaction: classifiedTransaction });
+
+  await userEvent.click(editButton());
+  await screen.findByText("Change Segment");
+
+  fireEvent.keyDown(document, { key: "Escape", code: "Escape", keyCode: 27, which: 27 });
+
+  await waitFor(() => expect(screen.queryByText("Change Segment")).not.toBeInTheDocument());
+  expect(global.fetch).not.toHaveBeenCalled();
+});
+
+test("picking a new segment in the Change Segment modal with 0 other matches saves directly, closes the modal, no confirmation popup", async () => {
+  let updateBody = null;
+  setupFetchMock({
+    preview: () => jsonResponse(200, { matchingTransactionCount: 0 }),
+    update: (options) => {
+      updateBody = JSON.parse(options.body);
+      return updateSuccessResponse("Groceries");
+    },
+  });
+  const { onSegmentUpdated } = renderTransaction({ transaction: classifiedTransaction });
+
+  await userEvent.click(editButton());
+  await screen.findByText("Change Segment");
+
+  await userEvent.selectOptions(segmentSelect(), "Groceries");
+
+  await waitFor(() => expect(onSegmentUpdated).toHaveBeenCalledWith(1, "Groceries"));
+  expect(updateBody).toEqual({ segment: "Groceries", applyToExisting: false });
+  expect(screen.queryByText("Change Segment")).not.toBeInTheDocument();
+  expect(screen.queryByText(/will also be updated/)).not.toBeInTheDocument();
+});
+
+test("picking a new segment in the Change Segment modal with >0 other matches shows the same confirmation popup, and confirming saves and closes both modals", async () => {
+  let updateBody = null;
+  setupFetchMock({
+    preview: () => jsonResponse(200, { matchingTransactionCount: 5 }),
+    update: (options) => {
+      updateBody = JSON.parse(options.body);
+      return updateSuccessResponse("Groceries", 5);
+    },
+  });
+  const { onSegmentUpdated } = renderTransaction({ transaction: classifiedTransaction });
+
+  await userEvent.click(editButton());
+  await screen.findByText("Change Segment");
+
+  await userEvent.selectOptions(segmentSelect(), "Groceries");
+
+  await waitFor(() =>
+    expect(
+      screen.getByText('5 other transactions from Tesco will also be updated to "Groceries".')
+    ).toBeInTheDocument()
+  );
+  await userEvent.click(screen.getByRole("button", { name: "Confirm" }));
+
+  await waitFor(() => expect(onSegmentUpdated).toHaveBeenCalledWith(1, "Groceries"));
+  expect(updateBody).toEqual({ segment: "Groceries", applyToExisting: true });
+  expect(screen.queryByText("Change Segment")).not.toBeInTheDocument();
+  expect(screen.queryByText(/will also be updated/)).not.toBeInTheDocument();
 });

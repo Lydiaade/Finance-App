@@ -19,6 +19,15 @@ function Transaction({ transaction, segments, onSegmentAdded, onSegmentUpdated }
   const [error, setError] = useState("");
   const [modal, setModal] = useState(null); // null | { count, segmentName }
   const [retryHandler, setRetryHandler] = useState(null);
+  // FM-19 review follow-up: once a transaction's segment has been explicitly
+  // set (i.e. it's no longer the default "Undefined"), the row no longer
+  // shows an always-open <Form.Select> - it's treated as "classified" and
+  // shown as plain text. Changing it after that point requires opening this
+  // "Change Segment" modal, which reuses the exact same picker UI/preview/
+  // persist flow, just entered from a click instead of always being visible.
+  const [showChangeModal, setShowChangeModal] = useState(false);
+
+  const isUndefined = segment === "Undefined";
 
   const optionNames = segments.map((option) => option.name);
   // Guarantees the current value is always a valid, pre-selected <option>,
@@ -50,6 +59,7 @@ function Transaction({ transaction, segments, onSegmentAdded, onSegmentUpdated }
       setShowAddInput(false);
       setNewSegmentDraft("");
       setModal(null);
+      setShowChangeModal(false);
       setRetryHandler(null);
       setStatus("idle");
     } catch (err) {
@@ -120,9 +130,98 @@ function Transaction({ transaction, segments, onSegmentAdded, onSegmentUpdated }
     handleModalDecline();
   };
 
+  const openChangeModal = () => {
+    setError("");
+    setShowChangeModal(true);
+  };
+
+  // Unlike the confirmation popup's AC-17 behaviour, nothing has been
+  // committed yet when this modal is open on its own (no pick has been made,
+  // or the preview call hasn't resolved) - dismissing it (Escape, backdrop,
+  // header close button, or its own Cancel button) is a true no-op cancel,
+  // not an implicit save. Ignored entirely while a preview/save is in
+  // flight so an in-progress request can't be abandoned mid-air.
+  const handleChangeModalHide = () => {
+    if (busy) return;
+    setShowChangeModal(false);
+    setShowAddInput(false);
+    setNewSegmentDraft("");
+    setError("");
+  };
+
   const retry = () => {
     if (retryHandler) retryHandler();
   };
+
+  // Shared picker UI - the same <Form.Select> (+ "add new segment" input,
+  // busy spinner, and inline error/retry) used for both entry points:
+  // always-visible inline (still-"Undefined" rows) and inside the "Change
+  // Segment" modal (already-classified rows). The preview -> direct-save-or-
+  // confirmation-popup logic behind it (handleSelectChange/persist) is
+  // identical either way - only where this markup is mounted differs.
+  const renderPicker = () => (
+    <>
+      {showAddInput ? (
+        <div className="d-flex gap-1 align-items-center flex-wrap">
+          <Form.Control
+            size="sm"
+            type="text"
+            aria-label={`New segment name for transaction ${id}`}
+            placeholder="New segment name"
+            value={newSegmentDraft}
+            onChange={(event) => setNewSegmentDraft(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                handleAddNewConfirm();
+              }
+            }}
+            disabled={busy}
+          />
+          <Button size="sm" variant="primary" onClick={handleAddNewConfirm} disabled={busy}>
+            Add
+          </Button>
+          <Button size="sm" variant="outline-secondary" onClick={handleAddNewCancel} disabled={busy}>
+            Cancel
+          </Button>
+        </div>
+      ) : (
+        <Form.Select
+          size="sm"
+          aria-label={`Segment for transaction ${id}`}
+          value={segment}
+          onChange={handleSelectChange}
+          disabled={disabled}
+        >
+          {dropdownOptions.map((name) => (
+            <option value={name} key={name}>
+              {name}
+            </option>
+          ))}
+          <option value={ADD_NEW_SEGMENT_OPTION}>+ Add new segment</option>
+        </Form.Select>
+      )}
+      {busy && (
+        <Spinner
+          animation="border"
+          size="sm"
+          className="ms-2"
+          role="status"
+          aria-label="Saving segment change"
+        />
+      )}
+      {error && (
+        <div className="mt-1">
+          <Alert variant="danger" className="py-1 px-2 mb-1">
+            {error}
+          </Alert>
+          <Button size="sm" variant="outline-danger" onClick={retry}>
+            Retry
+          </Button>
+        </div>
+      )}
+    </>
+  );
 
   return (
     <tr className="transaction">
@@ -132,68 +231,48 @@ function Transaction({ transaction, segments, onSegmentAdded, onSegmentUpdated }
       </td>
       <td className="transactionCategory">{category}</td>
       <td className="transactionSegment">
-        {showAddInput ? (
-          <div className="d-flex gap-1 align-items-center flex-wrap">
-            <Form.Control
-              size="sm"
-              type="text"
-              aria-label={`New segment name for transaction ${id}`}
-              placeholder="New segment name"
-              value={newSegmentDraft}
-              onChange={(event) => setNewSegmentDraft(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  handleAddNewConfirm();
-                }
-              }}
-              disabled={busy}
-            />
-            <Button size="sm" variant="primary" onClick={handleAddNewConfirm} disabled={busy}>
-              Add
-            </Button>
-            <Button size="sm" variant="outline-secondary" onClick={handleAddNewCancel} disabled={busy}>
-              Cancel
-            </Button>
-          </div>
+        {isUndefined ? (
+          renderPicker()
         ) : (
-          <Form.Select
-            size="sm"
-            aria-label={`Segment for transaction ${id}`}
-            value={segment}
-            onChange={handleSelectChange}
-            disabled={disabled}
-          >
-            {dropdownOptions.map((name) => (
-              <option value={name} key={name}>
-                {name}
-              </option>
-            ))}
-            <option value={ADD_NEW_SEGMENT_OPTION}>+ Add new segment</option>
-          </Form.Select>
-        )}
-        {busy && (
-          <Spinner
-            animation="border"
-            size="sm"
-            className="ms-2"
-            role="status"
-            aria-label="Saving segment change"
-          />
-        )}
-        {error && (
-          <div className="mt-1">
-            <Alert variant="danger" className="py-1 px-2 mb-1">
-              {error}
-            </Alert>
-            <Button size="sm" variant="outline-danger" onClick={retry}>
-              Retry
+          <div className="d-flex align-items-center gap-2">
+            <span>{segment}</span>
+            <Button
+              size="sm"
+              variant="outline-secondary"
+              aria-label={`Change segment for transaction ${id}`}
+              onClick={openChangeModal}
+            >
+              Edit
             </Button>
           </div>
         )}
       </td>
       <td className="transactionPaidTo">{paid_to}</td>
       <td className="transactionMemo">{memo}</td>
+
+      {/* Only rendered for already-classified rows (segment !== "Undefined").
+          Deliberately left mounted (not hidden) while the confirmation
+          popup below is also open, so react-bootstrap stacks them rather
+          than one replacing the other - that keeps this modal's own error/
+          retry UI (inside renderPicker()) visible/reachable if the persist
+          call the popup triggers fails, instead of it being torn down
+          underneath a modal with no error display of its own. Both close
+          together on a successful persist() (see setShowChangeModal(false)
+          there). */}
+      {showChangeModal && (
+        <Modal
+          show
+          onHide={handleChangeModalHide}
+          aria-labelledby={`change-segment-modal-title-${id}`}
+        >
+          <Modal.Header closeButton>
+            <Modal.Title id={`change-segment-modal-title-${id}`}>
+              Change Segment
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body>{renderPicker()}</Modal.Body>
+        </Modal>
+      )}
 
       {modal && (
         <Modal

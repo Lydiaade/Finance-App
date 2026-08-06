@@ -57,11 +57,18 @@ function row1Select() {
   return screen.getByRole("combobox", { name: "Segment for transaction 1" });
 }
 
-function row2Select() {
+// Row 2 (segment: "Bills") is already classified, so it no longer renders an
+// always-visible inline <Form.Select> (FM-19 review follow-up) - its picker
+// only exists inside the "Change Segment" modal, opened via this button.
+function row2EditButton() {
+  return screen.getByRole("button", { name: "Change segment for transaction 2" });
+}
+
+function row2ModalSelect() {
   return screen.getByRole("combobox", { name: "Segment for transaction 2" });
 }
 
-test("renders each transaction row with an editable segment dropdown populated from GET /segments", async () => {
+test("renders row 1 (still Undefined) with an editable inline segment dropdown populated from GET /segments", async () => {
   setupFetchMock();
   render(<TransactionTable items={items} />);
 
@@ -73,10 +80,29 @@ test("renders each transaction row with an editable segment dropdown populated f
     expect(within(row1Select()).getByText("Groceries")).toBeInTheDocument()
   );
   expect(row1Select()).toHaveValue("Undefined");
-  expect(row2Select()).toHaveValue("Bills");
   expect(within(row1Select()).getByText("Bills")).toBeInTheDocument();
-  expect(within(row2Select()).getByText("Groceries")).toBeInTheDocument();
   expect(within(row1Select()).getByText("+ Add new segment")).toBeInTheDocument();
+});
+
+test("renders row 2 (already classified as \"Bills\") as plain text with no inline dropdown, and its Edit button opens a modal with the same options", async () => {
+  setupFetchMock();
+  render(<TransactionTable items={items} />);
+
+  // Row 2's `category` is also "Bills", so its segment cell is checked
+  // directly via class rather than `getByText`, which would otherwise
+  // ambiguously match both cells.
+  const row2SegmentCell = document.querySelectorAll(".transactionSegment")[1];
+  expect(row2SegmentCell).toHaveTextContent("Bills");
+  expect(screen.queryByRole("combobox", { name: "Segment for transaction 2" })).not.toBeInTheDocument();
+
+  await userEvent.click(row2EditButton());
+
+  expect(await screen.findByText("Change Segment")).toBeInTheDocument();
+  expect(row2ModalSelect()).toHaveValue("Bills");
+  await waitFor(() =>
+    expect(within(row2ModalSelect()).getByText("Groceries")).toBeInTheDocument()
+  );
+  expect(within(row2ModalSelect()).getByText("+ Add new segment")).toBeInTheDocument();
 });
 
 test("a failed GET /segments surfaces a visible warning, distinct from a genuine empty-segments state", async () => {
@@ -119,9 +145,6 @@ test("creating a new segment inline in one row makes it immediately selectable i
     expect(within(row1Select()).getByText("Groceries")).toBeInTheDocument()
   );
 
-  // Row 2 doesn't have "Entertainment" as an option yet.
-  expect(within(row2Select()).queryByText("Entertainment")).not.toBeInTheDocument();
-
   await userEvent.selectOptions(row1Select(), "+ Add new segment");
   await userEvent.type(
     screen.getByLabelText("New segment name for transaction 1"),
@@ -129,12 +152,20 @@ test("creating a new segment inline in one row makes it immediately selectable i
   );
   await userEvent.click(screen.getByRole("button", { name: "Add" }));
 
-  await waitFor(() => expect(row1Select()).toHaveValue("Entertainment"));
+  // Row 1 is now itself classified as "Entertainment", so its inline select
+  // is gone too (replaced by plain text + Edit, per this same ticket).
+  await waitFor(() =>
+    expect(screen.queryByRole("combobox", { name: "Segment for transaction 1" })).not.toBeInTheDocument()
+  );
 
-  // Row 2's own dropdown now lists the segment created via row 1's inline
-  // edit, without a page reload - proving the cross-row propagation the
-  // table-level `segments` state is built for.
-  expect(within(row2Select()).getByText("Entertainment")).toBeInTheDocument();
+  // Row 2's picker (opened via its "Change Segment" modal, since it's
+  // already classified as "Bills") now lists the segment created via row
+  // 1's inline edit, without a page reload - proving the cross-row
+  // propagation the table-level `segments` state is built for.
+  await userEvent.click(row2EditButton());
+  await waitFor(() =>
+    expect(within(row2ModalSelect()).getByText("Entertainment")).toBeInTheDocument()
+  );
 });
 
 test("after a successful inline segment update, the visible list reflects the change without a manual refresh, other rows unaffected (AC-18)", async () => {
@@ -162,6 +193,19 @@ test("after a successful inline segment update, the visible list reflects the ch
 
   await userEvent.selectOptions(row1Select(), "Groceries");
 
-  await waitFor(() => expect(row1Select()).toHaveValue("Groceries"));
-  expect(row2Select()).toHaveValue("Bills");
+  // Row 1 is now itself classified (segment no longer "Undefined"), so per
+  // this same ticket it flips to the plain-text + Edit presentation too -
+  // the inline select it was just edited through disappears once it has a
+  // real value, without a manual refresh. (Row 1's `category` is also
+  // "Groceries", so the segment cell is checked directly via its class
+  // rather than `getByText`, which would otherwise ambiguously match both.)
+  await waitFor(() =>
+    expect(screen.queryByRole("combobox", { name: "Segment for transaction 1" })).not.toBeInTheDocument()
+  );
+  const segmentCells = document.querySelectorAll(".transactionSegment");
+  expect(segmentCells[0]).toHaveTextContent("Groceries");
+  // Row 2 is unaffected - still shown as classified plain text "Bills", not
+  // reverted to an inline dropdown or otherwise disturbed by row 1's update.
+  expect(segmentCells[1]).toHaveTextContent("Bills");
+  expect(row2EditButton()).toBeInTheDocument();
 });
