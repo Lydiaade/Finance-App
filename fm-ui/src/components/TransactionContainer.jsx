@@ -43,7 +43,34 @@ const TransactionContainer = ({ id }) => {
       const response = await fetch(
         `${BACKEND_URL}/accounts/account/${id}/transactions?${params.toString()}`
       );
+      if (!response.ok) {
+        // Bug fix: AccountController/AccountService return a plain-text body
+        // on rejection (e.g. "Date cannot be in the future"), not JSON -
+        // calling response.json() on that would throw and get swallowed by
+        // the generic catch below, leaving stale pre-filter items on screen
+        // looking like a valid filtered result. Only surface this for a
+        // filtered request - the unfiltered load has no error UI in scope
+        // here, matching the filterLoading gating above.
+        if (filtering) {
+          let message = "Failed to load filtered transactions. Please try again.";
+          try {
+            const text = await response.text();
+            if (text) {
+              message = text;
+            }
+          } catch (readError) {
+            // Body couldn't be read - fall back to the generic message above.
+          }
+          setFilterError(message);
+          setItems([]);
+          setTotalPages(0);
+        }
+        return;
+      }
       const data = await response.json();
+      if (filtering) {
+        setFilterError("");
+      }
       setItems(data.content);
       setTotalPages(data.totalPages);
     } catch (error) {
@@ -168,7 +195,7 @@ const TransactionContainer = ({ id }) => {
         </div>
       )}
 
-      {isFiltered && !filterLoading && items.length === 0 ? (
+      {isFiltered && !filterLoading && !filterError && items.length === 0 ? (
         <p>No transactions in this date range</p>
       ) : (
         <TransactionTable items={items} />

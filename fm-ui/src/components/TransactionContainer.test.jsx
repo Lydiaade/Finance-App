@@ -226,6 +226,34 @@ test("AC-18: a valid range with zero results shows a distinct message, not the l
   expect(screen.queryByRole("status")).not.toBeInTheDocument();
 });
 
+test("bug fix: a server-side rejection of a filtered request (plain-text 400 body) surfaces an error instead of showing stale pre-filter items as the filtered result", async () => {
+  setupFetchMock((url) => {
+    if (url.includes("startDate=")) {
+      // AccountController/AccountService return a plain-text body on
+      // rejection, not JSON - this reproduces that, e.g. from clock skew
+      // making a client-valid request fail server-side validation.
+      return jsonResponse(400, "Date cannot be in the future");
+    }
+    return jsonResponse(200, page(unfilteredItems));
+  });
+  render(<TransactionContainer id={1} />);
+  await waitFor(() => expect(transactionCalls()).toHaveLength(1));
+  expect(await screen.findByText("Tesco")).toBeInTheDocument();
+
+  await userEvent.type(screen.getByLabelText("Start date"), "2020-01-01");
+  await userEvent.type(screen.getByLabelText("End date"), "2020-01-31");
+  await userEvent.click(screen.getByRole("button", { name: "Apply" }));
+
+  await waitFor(() => expect(transactionCalls()).toHaveLength(2));
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Date cannot be in the future"
+  );
+  // The pre-filter row must not remain on screen looking like a valid
+  // filtered result, and the loading indicator must have cleared.
+  expect(screen.queryByText("Tesco")).not.toBeInTheDocument();
+  expect(screen.queryByRole("status")).not.toBeInTheDocument();
+});
+
 test("AC-20: paginating while a filter is applied keeps the filter active on subsequent requests", async () => {
   setupFetchMock((url) => {
     if (url.includes("startDate=")) {
