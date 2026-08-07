@@ -36,10 +36,13 @@ function jsonResponse(status, body) {
 }
 
 // Routes fetch calls by URL/method so tests don't depend on call order.
-function setupFetchMock({ onSubmit } = {}) {
+function setupFetchMock({ onSubmit, onCreateSegment } = {}) {
   global.fetch = jest.fn((url, options) => {
     if (url.endsWith("/segments") && !options) {
       return jsonResponse(200, segments);
+    }
+    if (url.endsWith("/segments/segment") && options?.method === "POST") {
+      return onCreateSegment ? onCreateSegment(options) : jsonResponse(201, {});
     }
     if (url.endsWith("/transactions/transaction") && options?.method === "POST") {
       return onSubmit ? onSubmit(options) : jsonResponse(201, {});
@@ -74,6 +77,26 @@ test("populates account dropdown from props and segment dropdown from GET /segme
   );
   expect(screen.getByRole("option", { name: "Bills" })).toBeInTheDocument();
   expect(screen.getByRole("option", { name: "No segment" })).toBeInTheDocument();
+});
+
+test("a failed GET /segments surfaces a visible warning, distinct from a genuine empty-segments state", async () => {
+  global.fetch = jest.fn((url, options) => {
+    if (url.endsWith("/segments") && !options) {
+      return Promise.reject(new Error("network down"));
+    }
+    return jsonResponse(200, []);
+  });
+  render(<AddTransactionForm accounts={accounts} />);
+
+  await waitFor(() =>
+    expect(screen.getByText(/Couldn't load segments/)).toBeInTheDocument()
+  );
+  // The dropdown itself is still usable - "No segment" and "+ Add new
+  // segment" are still present even though no real segments loaded.
+  expect(screen.getByRole("option", { name: "No segment" })).toBeInTheDocument();
+  expect(
+    screen.getByRole("option", { name: "+ Add new segment" })
+  ).toBeInTheDocument();
 });
 
 test("submitting with each required field missing shows inline validation only for that field, no error view", async () => {
@@ -311,4 +334,138 @@ test("duplicate transaction (same amount/payee/date submitted twice) succeeds bo
     url.endsWith("/transactions/transaction") && options?.method === "POST"
   );
   expect(submitCalls).toHaveLength(2);
+});
+
+// FM-19: AC-20/AC-21 - "+ Add new segment" option on the existing segment
+// dropdown, without breaking the FM-23 happy path covered above.
+//
+// Segment creation/dedup (AC-11/AC-12) happens server-side inside
+// addManualTransaction (SegmentService.getOrCreateSegment) - the form
+// submits the typed name as-is and never calls POST /segments/segment
+// itself, trusting the response's segment field as the canonical value.
+test("'+ Add new segment' submits the typed name directly, without a separate segment-creation call", async () => {
+  let createCalled = false;
+  let submitBody = null;
+  setupFetchMock({
+    onCreateSegment: () => {
+      createCalled = true;
+      return jsonResponse(201, {});
+    },
+    onSubmit: (options) => {
+      submitBody = JSON.parse(options.body);
+      return jsonResponse(201, {
+        id: 99,
+        date: "2020-01-15",
+        account: { id: 1, name: "Current Account" },
+        amount: 25.5,
+        segment: "Entertainment",
+        paid_to: "Tesco",
+        memo: null,
+      });
+    },
+  });
+  render(<AddTransactionForm accounts={accounts} />);
+  await waitFor(() => screen.getByRole("option", { name: "Groceries" }));
+
+  await fillValidForm();
+  await userEvent.selectOptions(screen.getByLabelText("Segment"), "+ Add new segment");
+  await userEvent.type(screen.getByLabelText("New segment name"), "Entertainment");
+  await userEvent.click(screen.getByRole("button", { name: "Add transaction" }));
+
+  await waitFor(() => expect(screen.getByText("Transaction added")).toBeInTheDocument());
+  expect(createCalled).toBe(false);
+  expect(submitBody.segment).toBe("Entertainment");
+  expect(screen.getByText(/Segment: Entertainment/)).toBeInTheDocument();
+});
+
+test("submitting an existing segment name in a different case trusts the backend's canonical response instead of the raw typed value", async () => {
+  let createCalled = false;
+  let submitBody = null;
+  setupFetchMock({
+    onCreateSegment: () => {
+      createCalled = true;
+      return jsonResponse(201, {});
+    },
+    onSubmit: (options) => {
+      submitBody = JSON.parse(options.body);
+      // Simulates SegmentService.getOrCreateSegment reusing the existing
+      // "Groceries" row's stored casing rather than the raw "groceries" sent.
+      return jsonResponse(201, {
+        id: 99,
+        date: "2020-01-15",
+        account: { id: 1, name: "Current Account" },
+        amount: 25.5,
+        segment: "Groceries",
+        paid_to: "Tesco",
+        memo: null,
+      });
+    },
+  });
+  render(<AddTransactionForm accounts={accounts} />);
+  await waitFor(() => screen.getByRole("option", { name: "Groceries" }));
+
+  await fillValidForm();
+  await userEvent.selectOptions(screen.getByLabelText("Segment"), "+ Add new segment");
+  await userEvent.type(screen.getByLabelText("New segment name"), "groceries");
+  await userEvent.click(screen.getByRole("button", { name: "Add transaction" }));
+
+  await waitFor(() => expect(screen.getByText(/Segment: Groceries/)).toBeInTheDocument());
+  expect(createCalled).toBe(false);
+  expect(submitBody.segment).toBe("groceries");
+});
+
+test("choosing '+ Add new segment' then leaving the name blank is blocked with inline validation, no submit", async () => {
+  setupFetchMock();
+  render(<AddTransactionForm accounts={accounts} />);
+  await waitFor(() => screen.getByRole("option", { name: "Groceries" }));
+
+  await fillValidForm();
+  await userEvent.selectOptions(screen.getByLabelText("Segment"), "+ Add new segment");
+  await userEvent.click(screen.getByRole("button", { name: "Add transaction" }));
+
+  expect(
+    screen.getByText("Enter a name for the new segment, or choose an existing one from the list.")
+  ).toBeInTheDocument();
+  expect(global.fetch).not.toHaveBeenCalledWith(
+    expect.stringContaining("/transactions/transaction"),
+    expect.anything()
+  );
+});
+
+// AC-11 (QA gap fill): the ticket requires a segment created inline to be
+// "immediately usable... in the same interaction (no page reload required)".
+// The existing "+ Add new segment" tests only assert the create/submit
+// behaviour up to the success view - none of them ever reopen the segment
+// dropdown afterwards to confirm the newly created name is actually listed.
+// This is the one path (unlike Transaction/TransactionTable's cross-row
+// propagation test) where that "usable in the same session" claim for
+// AddTransactionForm specifically went unverified.
+test("a segment created via '+ Add new segment' is listed as a selectable option after 'Add another transaction' (AC-11, same session, no reload)", async () => {
+  setupFetchMock({
+    onSubmit: () =>
+      jsonResponse(201, {
+        id: 99,
+        date: "2020-01-15",
+        account: { id: 1, name: "Current Account" },
+        amount: 25.5,
+        segment: "Entertainment",
+        paid_to: "Tesco",
+        memo: null,
+      }),
+  });
+  render(<AddTransactionForm accounts={accounts} />);
+  await waitFor(() => screen.getByRole("option", { name: "Groceries" }));
+
+  await fillValidForm();
+  await userEvent.selectOptions(screen.getByLabelText("Segment"), "+ Add new segment");
+  await userEvent.type(screen.getByLabelText("New segment name"), "Entertainment");
+  await userEvent.click(screen.getByRole("button", { name: "Add transaction" }));
+  await waitFor(() => expect(screen.getByText("Transaction added")).toBeInTheDocument());
+
+  await userEvent.click(screen.getByRole("button", { name: "Add another transaction" }));
+
+  // The reset form's segment dropdown must list "Entertainment" without any
+  // further GET /segments call being needed - proving it came from local
+  // state merged in onSubmit, not a page/component reload.
+  expect(screen.getByRole("option", { name: "Entertainment" })).toBeInTheDocument();
 });

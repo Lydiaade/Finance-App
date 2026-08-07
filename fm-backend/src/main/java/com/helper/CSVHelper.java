@@ -2,9 +2,12 @@ package com.helper;
 
 import com.dto.BankAccount;
 import com.dto.FileUpload;
+import com.dto.PayeeSegmentRule;
 import com.dto.Transaction;
 import com.exceptions.UnsuccessfulTransactionRetrieval;
 import com.repository.AccountRepository;
+import com.repository.PayeeSegmentRuleRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,6 +20,12 @@ import java.util.*;
 
 @Service
 public class CSVHelper {
+
+    // FM-19: new plumbing - CSVHelper previously had zero repository dependencies. Consulted by
+    // exact paid_to to apply a user-established segment rule instead of the entity's "Undefined"
+    // default (AC-9). Column-parsing logic itself (the position-based split(",")) is untouched.
+    @Autowired
+    private PayeeSegmentRuleRepository payeeSegmentRuleRepository;
 
     public FileUpload csvToTransactions(MultipartFile file, BankAccount bankAccount) throws IOException {
         FileUpload file_info = new FileUpload(file.getOriginalFilename(), bankAccount);
@@ -77,7 +86,12 @@ public class CSVHelper {
             String[] splitDetails = transactionValues[5].replaceAll("\"", "").split("\t");
             String paid_to = splitDetails[0].trim();
             String memo = splitDetails[1].trim();
-            return new Transaction(date, account, amount, category, paid_to, memo);
+            Transaction transaction = new Transaction(date, account, amount, category, paid_to, memo);
+            // FM-19 AC-9: if a payee rule exists for this exact paid_to, use its segment instead
+            // of the entity's "Undefined" default. If none exists, behavior is unchanged.
+            Optional<PayeeSegmentRule> rule = payeeSegmentRuleRepository.findByPaidTo(paid_to);
+            rule.ifPresent(payeeSegmentRule -> transaction.setSegment(payeeSegmentRule.getSegment()));
+            return transaction;
         } catch (ArrayIndexOutOfBoundsException e) {
             System.err.println("A row doesn't follow the structure required");
             throw new UnsuccessfulTransactionRetrieval("Unsuccessful transaction transformation");

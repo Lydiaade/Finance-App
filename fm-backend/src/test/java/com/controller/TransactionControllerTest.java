@@ -1,8 +1,11 @@
 package com.controller;
 
 import com.dto.request.NewTransactionRequest;
+import com.dto.request.UpdateTransactionSegmentRequest;
 import com.dto.response.AccountSummary;
+import com.dto.response.SegmentPreviewResponse;
 import com.dto.response.TransactionResponse;
+import com.dto.response.UpdateTransactionSegmentResponse;
 import com.service.TransactionService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,12 +14,17 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.io.FileNotFoundException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -135,5 +143,86 @@ class TransactionControllerTest {
                 org.mockito.ArgumentCaptor.forClass(NewTransactionRequest.class);
         verify(transactionService).addManualTransaction(captor.capture());
         org.junit.jupiter.api.Assertions.assertNull(captor.getValue().accountId());
+    }
+
+    // ---- FM-19: GET /transactions/transaction/{id}/segment-preview ----
+
+    @Test
+    void previewEndpointReturns200WithMatchingTransactionCount() throws Exception {
+        when(transactionService.previewSegmentChange(42)).thenReturn(new SegmentPreviewResponse(12));
+
+        mockMvc.perform(get("/transactions/transaction/42/segment-preview")
+                        .param("segment", "Groceries"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.matchingTransactionCount").value(12));
+    }
+
+    @Test
+    void previewEndpointReturns404ForUnknownTransactionId() throws Exception {
+        when(transactionService.previewSegmentChange(999))
+                .thenThrow(new FileNotFoundException("This transaction does not exist"));
+
+        mockMvc.perform(get("/transactions/transaction/999/segment-preview")
+                        .param("segment", "Groceries"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("This transaction does not exist"));
+    }
+
+    // ---- FM-19: PATCH /transactions/transaction/{id}/segment ----
+
+    @Test
+    void updateSegmentEndpointReturns200WithUpdatedTransactionAndRenamedCount() throws Exception {
+        TransactionResponse updatedTransaction = new TransactionResponse(
+                42, LocalDate.of(2024, 1, 15), new AccountSummary(1, "Current Account"),
+                BigDecimal.valueOf(-25.50), "Groceries", "Tesco", "Weekly shop");
+        when(transactionService.updateTransactionSegment(eq(42), any(UpdateTransactionSegmentRequest.class)))
+                .thenReturn(new UpdateTransactionSegmentResponse(updatedTransaction, 3));
+
+        mockMvc.perform(patch("/transactions/transaction/42/segment")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "segment": "Groceries",
+                                    "applyToExisting": true
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.transaction.id").value(42))
+                .andExpect(jsonPath("$.transaction.segment").value("Groceries"))
+                .andExpect(jsonPath("$.updatedTransactionCount").value(3));
+    }
+
+    @Test
+    void updateSegmentEndpointReturns400ForBlankSegment() throws Exception {
+        when(transactionService.updateTransactionSegment(anyInt(), any(UpdateTransactionSegmentRequest.class)))
+                .thenThrow(new IllegalArgumentException("Segment is required"));
+
+        mockMvc.perform(patch("/transactions/transaction/42/segment")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "segment": "",
+                                    "applyToExisting": false
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Segment is required"));
+    }
+
+    @Test
+    void updateSegmentEndpointReturns404ForUnknownTransactionId() throws Exception {
+        when(transactionService.updateTransactionSegment(eq(999), any(UpdateTransactionSegmentRequest.class)))
+                .thenThrow(new FileNotFoundException("This transaction does not exist"));
+
+        mockMvc.perform(patch("/transactions/transaction/999/segment")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "segment": "Groceries",
+                                    "applyToExisting": false
+                                }
+                                """))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("This transaction does not exist"));
     }
 }

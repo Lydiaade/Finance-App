@@ -1,20 +1,39 @@
 package com.helper;
 
+import com.dto.BankAccount;
+import com.dto.FileUpload;
+import com.dto.PayeeSegmentRule;
+import com.dto.Transaction;
+import com.repository.PayeeSegmentRuleRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.File;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 public class CSVHelperTest {
+
+    @InjectMocks
     private CSVHelper csvHelper;
+
+    @Mock
+    private PayeeSegmentRuleRepository payeeSegmentRuleRepository;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        csvHelper = new CSVHelper();
     }
 
     @Test
@@ -29,37 +48,46 @@ public class CSVHelperTest {
         assertTrue(absolutePath.contains("src/test/resources"));
     }
 
-//    @Test
-//    public void csvFileToTransactionObjects() {
-//        String path = "src/test/resources/testData.csv";
-//        LocalDate currentBalanceDate = LocalDate.now();
-//        BankAccount account = new BankAccount("Main Account", "SORTNUMBER", "ACCNUMBER", new BigDecimal(2000), currentBalanceDate);
-//        when(accRepository.findBySortCodeAndAccountNumber("SORTNUMBER", "ACCNUMBER")).thenReturn(List.of(account));
-//
-//        File file = new File(path);
-//        FileUpload file_transfer = new FileUpload(file.getName());
-//        Transaction expectedResult1 = new Transaction("31/03/2022", account, BigDecimal.valueOf(-9), "Debit", "BAR BRUNO", "ON 29 MAR CPM");
-//        Transaction expectedResult2 = new Transaction("30/04/2022", account, BigDecimal.valueOf(-150.79), "Bill Payment", "PersonA", "4929136097234001 BBP");
-//
-//        FileUpload result = csvHelper.transformFileToTransactions(file, file_transfer);
-//
-//        assertEquals(2, result.getTransactions().size());
-//        assertEquals(expectedResult1, result.getTransactions().get(0));
-//        assertEquals(expectedResult2, result.getTransactions().get(1));
-//    }
+    private BankAccount testAccount() {
+        return new BankAccount("Current Account", "SORTNUMBER", "ACCNUMBER", new BigDecimal(2000), LocalDate.now());
+    }
 
-//    @Test
-//    public void failsToTransformCsvFileToTransactionObjectsWhenAccountDoesNotExist() {
-//        String path = "src/test/resources/testData.csv";
-//        when(accRepository.findBySortCodeAndAccountNumber("SORTNUMBER", "ACCNUMBER")).thenReturn(new ArrayList<>());
-//
-//        File file = new File(path);
-//        FileUpload file_transfer = new FileUpload(file.getName());
-//        Exception exception = assertThrows(IllegalArgumentException.class, () -> csvHelper.transformFileToTransactions(file, file_transfer));
-//
-//        String expectedMessage = "An account needs to be created first for for the account provided.";
-//        String actualMessage = exception.getMessage();
-//
-//        assertTrue(actualMessage.contains(expectedMessage));
-//    }
+    // FM-19 AC-9 - a transaction whose paid_to matches an existing rule gets the rule's segment
+    // on import, not the entity's "Undefined" default.
+    @Test
+    public void importedTransactionUsesMatchingPayeeRuleSegment() {
+        BankAccount account = testAccount();
+        when(payeeSegmentRuleRepository.findByPaidTo("BAR BRUNO"))
+                .thenReturn(Optional.of(new PayeeSegmentRule("BAR BRUNO", "Eating Out")));
+
+        File file = new File("src/test/resources/testData.csv");
+        FileUpload fileUpload = new FileUpload("testData.csv", account);
+
+        FileUpload result = csvHelper.transformFileToTransactions(file, fileUpload, account);
+
+        Transaction matched = result.getTransactions().stream()
+                .filter(t -> "BAR BRUNO".equals(t.getPaid_to()))
+                .findFirst()
+                .orElseThrow();
+        assertEquals("Eating Out", matched.getSegment());
+    }
+
+    // FM-19 AC-9 regression - a transaction with no matching rule still defaults to "Undefined",
+    // exactly as before this ticket's changes.
+    @Test
+    public void importedTransactionWithNoMatchingRuleStillDefaultsToUndefined() {
+        BankAccount account = testAccount();
+        when(payeeSegmentRuleRepository.findByPaidTo("BAR BRUNO")).thenReturn(Optional.empty());
+
+        File file = new File("src/test/resources/testData.csv");
+        FileUpload fileUpload = new FileUpload("testData.csv", account);
+
+        FileUpload result = csvHelper.transformFileToTransactions(file, fileUpload, account);
+
+        Transaction unmatched = result.getTransactions().stream()
+                .filter(t -> "BAR BRUNO".equals(t.getPaid_to()))
+                .findFirst()
+                .orElseThrow();
+        assertEquals("Undefined", unmatched.getSegment());
+    }
 }
