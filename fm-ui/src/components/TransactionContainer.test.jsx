@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import TransactionContainer from "./TransactionContainer";
+import { getTodayIsoDate } from "../helpers/utils";
 
 function page(content, { totalPages = 1 } = {}) {
   return { content, totalPages };
@@ -113,6 +114,23 @@ test("AC-14: start-after-end is blocked client-side with an inline error and no 
     "Start date cannot be after end date"
   );
   expect(transactionCalls()).toHaveLength(1);
+});
+
+test("AC-5/AC-14: an end date of exactly today is inclusive and valid client-side (not treated as future)", async () => {
+  setupFetchMock((url) => jsonResponse(200, page(unfilteredItems)));
+  render(<TransactionContainer id={1} />);
+  await waitFor(() => expect(transactionCalls()).toHaveLength(1));
+
+  const today = getTodayIsoDate();
+  await userEvent.type(screen.getByLabelText("Start date"), "2020-01-01");
+  await userEvent.type(screen.getByLabelText("End date"), today);
+  await userEvent.click(screen.getByRole("button", { name: "Apply" }));
+
+  // No client-side validation error, and the filtered request actually fires.
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  await waitFor(() => expect(transactionCalls()).toHaveLength(2));
+  const url = lastTransactionCallUrl();
+  expect(url.searchParams.get("endDate")).toBe(today);
 });
 
 test("AC-14: a future date is blocked client-side with an inline error and no network call", async () => {
