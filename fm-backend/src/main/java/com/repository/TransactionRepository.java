@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Repository
@@ -21,6 +22,16 @@ public interface TransactionRepository extends JpaRepository<Transaction, Intege
 
     @Query(value = "SELECT * FROM transaction WHERE account_id=?1", countQuery = "SELECT COUNT(*) FROM transaction WHERE account_id=?1", nativeQuery = true)
     Page<Transaction> findAllByAccount_IdWithPagination(int id, Pageable pageable);
+
+    // FM-52: AC-8 - the date-range WHERE clause is deliberately duplicated identically on both the
+    // row-fetching query and the countQuery. Spring Data's native countQuery is a completely
+    // separate, hand-written string (not derived from the main query), so if this filter were only
+    // added to one of them, totalElements/totalPages would silently reflect the wrong (unfiltered)
+    // total once a date filter actually narrows the result set. Both bounds are inclusive (AC-6/AC-7).
+    @Query(value = "SELECT * FROM transaction WHERE account_id=?1 AND date >= ?2 AND date <= ?3",
+            countQuery = "SELECT COUNT(*) FROM transaction WHERE account_id=?1 AND date >= ?2 AND date <= ?3",
+            nativeQuery = true)
+    Page<Transaction> findAllByAccount_IdAndDateBetweenWithPagination(int id, LocalDate startDate, LocalDate endDate, Pageable pageable);
 
     @Query(value = "SELECT * FROM transaction WHERE account_id=?1 AND EXTRACT('month' from date) = ?2 AND EXTRACT('year' from date) = ?3", nativeQuery = true)
     List<Transaction> findAllByAccount_IdAndDateInMonthYear(int id, int month, int year);

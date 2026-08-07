@@ -76,8 +76,35 @@ public class AccountService {
         accountRepository.deleteById(id);
     }
 
-    public Page<Transaction> getPaginatedAccountTransactions(int id, int page, int size) {
+    // FM-52: startDate/endDate are optional and, when both supplied, form an inclusive range.
+    // AC-2 requires the no-filter path to stay byte-for-byte unchanged, so the original
+    // unfiltered/paginated query is only used when neither date is supplied; the new date-range
+    // query (with an identical WHERE clause on its native countQuery, per AC-8) is used otherwise.
+    public Page<Transaction> getPaginatedAccountTransactions(int id, int page, int size, LocalDate startDate, LocalDate endDate) {
+        validateDateRange(startDate, endDate);
         Pageable pageable = PageRequest.of(page, size);
-        return transactionRepository.findAllByAccount_IdWithPagination(id, pageable);
+        if (startDate == null && endDate == null) {
+            return transactionRepository.findAllByAccount_IdWithPagination(id, pageable);
+        }
+        return transactionRepository.findAllByAccount_IdAndDateBetweenWithPagination(id, startDate, endDate, pageable);
+    }
+
+    // FM-52: AC-3/AC-4/AC-5. Order follows the acceptance criteria as written: reject a lone
+    // param first, then an inverted range, then a future date. endDate == today is valid
+    // (inclusive), matching the existing future-date check in
+    // TransactionService.addManualTransaction, which rejects only isAfter(LocalDate.now()).
+    private void validateDateRange(LocalDate startDate, LocalDate endDate) {
+        if ((startDate == null) != (endDate == null)) {
+            throw new IllegalArgumentException("Both start date and end date are required");
+        }
+        if (startDate == null) {
+            return;
+        }
+        if (startDate.isAfter(endDate)) {
+            throw new IllegalArgumentException("Start date cannot be after end date");
+        }
+        if (startDate.isAfter(LocalDate.now()) || endDate.isAfter(LocalDate.now())) {
+            throw new IllegalArgumentException("Date cannot be in the future");
+        }
     }
 }

@@ -5,11 +5,13 @@ import com.dto.request.NewBankAccountRequest;
 import com.service.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.FileNotFoundException;
+import java.time.LocalDate;
 import java.util.Currency;
 import java.util.EnumSet;
 import java.util.List;
@@ -52,12 +54,25 @@ public class AccountController {
         return new ResponseEntity<>(Currency.getAvailableCurrencies(), HttpStatus.OK);
     }
 
+    // FM-52: startDate/endDate are optional, ISO yyyy-MM-dd (bound via Spring's default LocalDate
+    // conversion, same format the manual-add-transaction JSON path already uses). All range
+    // validation (both-required, start-after-end, future-date) lives in AccountService per the
+    // existing controller-thin/service-holds-logic convention - the controller only translates the
+    // service's IllegalArgumentException into a 400, matching TransactionController's pattern for
+    // addTransaction/updateTransactionSegment.
     @GetMapping("/account/{id}/transactions")
-    public Page<Transaction> getAccountTransactions(
+    public ResponseEntity<?> getAccountTransactions(
             @PathVariable("id") int id,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return accountService.getPaginatedAccountTransactions(id, page, size);
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        try {
+            Page<Transaction> transactions = accountService.getPaginatedAccountTransactions(id, page, size, startDate, endDate);
+            return new ResponseEntity<>(transactions, HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
     }
 
     @GetMapping("/account/{id}/transactions/monthly")
