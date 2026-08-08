@@ -7,14 +7,16 @@ import com.repository.TransactionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.io.FileNotFoundException;
 import java.math.BigDecimal;
@@ -24,10 +26,6 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 // Note: this test previously called `new AccountService(accountRepository, transactionRepository,
@@ -86,42 +84,55 @@ public class AccountServiceTest {
         assertTrue(actualMessage.contains(expectedMessage));
     }
 
-    // ---- FM-52: getPaginatedAccountTransactions date-range filtering ----
+    // ---- FM-53: getPaginatedAccountTransactions ----
+    //
+    // FM-53 replaced the two hand-written native pagination queries (each with its own separate
+    // repository method) with a single transactionRepository.findAll(Specification, Pageable)
+    // call, so there's no longer a distinct method per filter combination to verify via
+    // Mockito's `verify(...)`. What a Mockito-level unit test *can* still prove is: (a) the
+    // service's date-range validation is unaffected by FM-53 (AC-9, still exercised below with the
+    // new method signature per AC-28), and (b) the Pageable passed to the repository carries the
+    // deterministic Sort required by AC-4. Proving the Specification itself actually filters
+    // correctly (account scope, date range, segment, AND-combination, pagination correctness
+    // across pages) needs a real database/query round trip - that's covered by
+    // AccountServiceFilteredTransactionsIntegrationTest, not here.
 
-    // AC-2: with neither date supplied, the original unfiltered/paginated repository method must
-    // still be the one invoked (not the new date-range query), so today's behavior stays
-    // byte-for-byte unchanged.
     @Test
-    public void usesTheUnfilteredQueryWhenNeitherDateIsSupplied() {
+    public void callsRepositoryFindAllWithSpecificationAndDeterministicSort() {
         Page<Transaction> stubbedPage = new PageImpl<>(List.of());
-        when(transactionRepository.findAllByAccount_IdWithPagination(eq(1), any(Pageable.class)))
+        when(transactionRepository.findAll(any(Specification.class), any(Pageable.class)))
                 .thenReturn(stubbedPage);
 
-        Page<Transaction> result = service.getPaginatedAccountTransactions(1, 0, 10, null, null);
+        Page<Transaction> result = service.getPaginatedAccountTransactions(1, 0, 10, null, null, null);
 
         assertEquals(stubbedPage, result);
-        verify(transactionRepository).findAllByAccount_IdWithPagination(1, PageRequest.of(0, 10));
-        verify(transactionRepository, never())
-                .findAllByAccount_IdAndDateBetweenWithPagination(anyInt(), any(), any(), any());
+
+        ArgumentCaptor<Specification> specCaptor = ArgumentCaptor.forClass(Specification.class);
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        org.mockito.Mockito.verify(transactionRepository).findAll(specCaptor.capture(), pageableCaptor.capture());
+
+        assertNotNull(specCaptor.getValue());
+        Pageable capturedPageable = pageableCaptor.getValue();
+        assertEquals(0, capturedPageable.getPageNumber());
+        assertEquals(10, capturedPageable.getPageSize());
+        // AC-4: explicit deterministic sort - date descending, then id as a tiebreaker - not the
+        // undefined/incidental order the old native queries left row order to.
+        assertEquals(Sort.by(Sort.Order.desc("date"), Sort.Order.desc("id")), capturedPageable.getSort());
     }
 
-    // AC-1/AC-7: with both dates supplied, the date-range query must be used, with both bounds
-    // passed through unchanged (inclusive range, no swapping).
     @Test
-    public void usesTheDateRangeQueryWhenBothDatesAreSupplied() {
-        LocalDate startDate = LocalDate.of(2024, 1, 1);
-        LocalDate endDate = LocalDate.of(2024, 1, 31);
+    public void passesSegmentAndDateRangeThroughToTheSpecificationBuildRegardlessOfCombination() {
         Page<Transaction> stubbedPage = new PageImpl<>(List.of());
-        when(transactionRepository.findAllByAccount_IdAndDateBetweenWithPagination(
-                eq(1), eq(startDate), eq(endDate), any(Pageable.class)))
+        when(transactionRepository.findAll(any(Specification.class), any(Pageable.class)))
                 .thenReturn(stubbedPage);
 
-        Page<Transaction> result = service.getPaginatedAccountTransactions(1, 0, 10, startDate, endDate);
+        LocalDate startDate = LocalDate.of(2024, 1, 1);
+        LocalDate endDate = LocalDate.of(2024, 1, 31);
+
+        Page<Transaction> result = service.getPaginatedAccountTransactions(1, 0, 10, startDate, endDate, "Groceries");
 
         assertEquals(stubbedPage, result);
-        verify(transactionRepository)
-                .findAllByAccount_IdAndDateBetweenWithPagination(1, startDate, endDate, PageRequest.of(0, 10));
-        verify(transactionRepository, never()).findAllByAccount_IdWithPagination(anyInt(), any());
+        org.mockito.Mockito.verify(transactionRepository).findAll(any(Specification.class), any(Pageable.class));
     }
 
     // AC-6: startDate == endDate is a valid single-day range, not an error.
@@ -129,21 +140,21 @@ public class AccountServiceTest {
     public void allowsAndFiltersOnASingleDayRange() {
         LocalDate sameDay = LocalDate.now().minusDays(1);
         Page<Transaction> stubbedPage = new PageImpl<>(List.of());
-        when(transactionRepository.findAllByAccount_IdAndDateBetweenWithPagination(
-                eq(1), eq(sameDay), eq(sameDay), any(Pageable.class)))
+        when(transactionRepository.findAll(any(Specification.class), any(Pageable.class)))
                 .thenReturn(stubbedPage);
 
-        Page<Transaction> result = service.getPaginatedAccountTransactions(1, 0, 10, sameDay, sameDay);
+        Page<Transaction> result = service.getPaginatedAccountTransactions(1, 0, 10, sameDay, sameDay, null);
 
         assertEquals(stubbedPage, result);
     }
 
-    // AC-3: exactly one of the two params supplied must be rejected, not treated as an
-    // open-ended filter, regardless of which one is missing.
+    // AC-3/AC-9: exactly one of the two date params supplied must be rejected, not treated as an
+    // open-ended filter, regardless of which one is missing - and this is unaffected by whether a
+    // segment filter is also present.
     @Test
     public void rejectsWhenOnlyStartDateIsSupplied() {
         Exception exception = assertThrows(IllegalArgumentException.class,
-                () -> service.getPaginatedAccountTransactions(1, 0, 10, LocalDate.now(), null));
+                () -> service.getPaginatedAccountTransactions(1, 0, 10, LocalDate.now(), null, null));
 
         assertEquals("Both start date and end date are required", exception.getMessage());
     }
@@ -151,7 +162,17 @@ public class AccountServiceTest {
     @Test
     public void rejectsWhenOnlyEndDateIsSupplied() {
         Exception exception = assertThrows(IllegalArgumentException.class,
-                () -> service.getPaginatedAccountTransactions(1, 0, 10, null, LocalDate.now()));
+                () -> service.getPaginatedAccountTransactions(1, 0, 10, null, LocalDate.now(), null));
+
+        assertEquals("Both start date and end date are required", exception.getMessage());
+    }
+
+    // AC-9: a lone date param is still rejected even when a segment filter is also present -
+    // segment presence must not bypass the existing date validation.
+    @Test
+    public void rejectsWhenOnlyStartDateIsSuppliedEvenWithASegmentFilterPresent() {
+        Exception exception = assertThrows(IllegalArgumentException.class,
+                () -> service.getPaginatedAccountTransactions(1, 0, 10, LocalDate.now(), null, "Groceries"));
 
         assertEquals("Both start date and end date are required", exception.getMessage());
     }
@@ -163,7 +184,7 @@ public class AccountServiceTest {
         LocalDate endDate = LocalDate.now().minusDays(1);
 
         Exception exception = assertThrows(IllegalArgumentException.class,
-                () -> service.getPaginatedAccountTransactions(1, 0, 10, startDate, endDate));
+                () -> service.getPaginatedAccountTransactions(1, 0, 10, startDate, endDate, null));
 
         assertEquals("Start date cannot be after end date", exception.getMessage());
     }
@@ -175,7 +196,7 @@ public class AccountServiceTest {
         LocalDate endDate = LocalDate.now().plusDays(2);
 
         Exception exception = assertThrows(IllegalArgumentException.class,
-                () -> service.getPaginatedAccountTransactions(1, 0, 10, startDate, endDate));
+                () -> service.getPaginatedAccountTransactions(1, 0, 10, startDate, endDate, null));
 
         assertEquals("Date cannot be in the future", exception.getMessage());
     }
@@ -186,7 +207,7 @@ public class AccountServiceTest {
         LocalDate endDate = LocalDate.now().plusDays(1);
 
         Exception exception = assertThrows(IllegalArgumentException.class,
-                () -> service.getPaginatedAccountTransactions(1, 0, 10, startDate, endDate));
+                () -> service.getPaginatedAccountTransactions(1, 0, 10, startDate, endDate, null));
 
         assertEquals("Date cannot be in the future", exception.getMessage());
     }
@@ -198,11 +219,10 @@ public class AccountServiceTest {
         LocalDate startDate = LocalDate.now().minusDays(5);
         LocalDate endDate = LocalDate.now();
         Page<Transaction> stubbedPage = new PageImpl<>(List.of());
-        when(transactionRepository.findAllByAccount_IdAndDateBetweenWithPagination(
-                eq(1), eq(startDate), eq(endDate), any(Pageable.class)))
+        when(transactionRepository.findAll(any(Specification.class), any(Pageable.class)))
                 .thenReturn(stubbedPage);
 
-        Page<Transaction> result = service.getPaginatedAccountTransactions(1, 0, 10, startDate, endDate);
+        Page<Transaction> result = service.getPaginatedAccountTransactions(1, 0, 10, startDate, endDate, null);
 
         assertEquals(stubbedPage, result);
     }
