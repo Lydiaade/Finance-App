@@ -29,12 +29,18 @@ function jsonResponse(status, body) {
   });
 }
 
-// Segment lookups fired by the nested TransactionTable aren't the concern of
-// these tests - always resolve them to an empty list so they don't interfere.
-function setupFetchMock(handleTransactions) {
+// Segment lookups fired by the nested TransactionTable, and now also by
+// TransactionContainer's own filter dropdown (FM-53), aren't the concern of
+// most of these tests - default to an empty list so they don't interfere.
+// FM-53 tests that care about the dropdown's actual contents pass
+// `segmentsList`, and AC-27 passes `segmentsError` to simulate a failed load.
+function setupFetchMock(handleTransactions, { segmentsList = [], segmentsError = false } = {}) {
   global.fetch = jest.fn((url) => {
     if (url.endsWith("/segments")) {
-      return jsonResponse(200, []);
+      if (segmentsError) {
+        return Promise.reject(new Error("Network error"));
+      }
+      return jsonResponse(200, segmentsList);
     }
     return handleTransactions(url);
   });
@@ -47,6 +53,27 @@ function transactionCalls() {
 function lastTransactionCallUrl() {
   const calls = transactionCalls();
   return new URL(calls[calls.length - 1][0]);
+}
+
+// GET /segments resolves independently of the transactions fetch, so reading
+// the dropdown's options must wait for it to actually land in state rather
+// than assuming it's there as soon as the initial transaction list is.
+function segmentOptionLabels(select) {
+  return Array.from(select.querySelectorAll("option")).map(
+    (option) => option.textContent
+  );
+}
+
+// GET /segments resolves asynchronously (separately from the transactions
+// fetch), so a test-authored segment name isn't guaranteed to exist as an
+// <option> the instant the component mounts - wait for it before selecting,
+// rather than racing userEvent.selectOptions against the fetch.
+async function selectSegment(value) {
+  const select = screen.getByLabelText("Segment");
+  await waitFor(() =>
+    expect(Array.from(select.options).map((option) => option.value)).toContain(value)
+  );
+  await userEvent.selectOptions(select, value);
 }
 
 beforeEach(() => {
@@ -299,4 +326,368 @@ test("AC-20: paginating while a filter is applied keeps the filter active on sub
   expect(url.searchParams.get("page")).toBe("1");
   expect(url.searchParams.get("startDate")).toBe("2020-01-01");
   expect(url.searchParams.get("endDate")).toBe("2020-01-31");
+});
+
+// FM-53: segment filter -----------------------------------------------------
+
+test("AC-16: segment dropdown offers a placeholder, then real segments, without a duplicate Undefined when one already exists", async () => {
+  setupFetchMock(() => jsonResponse(200, page(unfilteredItems)), {
+    segmentsList: [
+      { id: 1, name: "Groceries" },
+      { id: 2, name: "Undefined" },
+    ],
+  });
+  render(<TransactionContainer id={1} />);
+  await waitFor(() => expect(transactionCalls()).toHaveLength(1));
+
+  const select = screen.getByLabelText("Segment");
+  await waitFor(() =>
+    expect(segmentOptionLabels(select)).toEqual(["All segments", "Groceries", "Undefined"])
+  );
+});
+
+test("AC-16: adds a synthetic Undefined option when the real segment list doesn't already have one", async () => {
+  setupFetchMock(() => jsonResponse(200, page(unfilteredItems)), {
+    segmentsList: [{ id: 1, name: "Groceries" }],
+  });
+  render(<TransactionContainer id={1} />);
+  await waitFor(() => expect(transactionCalls()).toHaveLength(1));
+
+  const select = screen.getByLabelText("Segment");
+  await waitFor(() =>
+    expect(segmentOptionLabels(select)).toEqual(["All segments", "Undefined", "Groceries"])
+  );
+});
+
+test("AC-17: selecting a segment with no dates entered and applying sends segment only, resets to page 1", async () => {
+  setupFetchMock(
+    (url) => {
+      if (url.includes("segment=")) {
+        return jsonResponse(200, page([unfilteredItems[0]], { totalPages: 2 }));
+      }
+      return jsonResponse(200, page(unfilteredItems, { totalPages: 1 }));
+    },
+    { segmentsList: [{ id: 1, name: "Groceries" }] }
+  );
+  render(<TransactionContainer id={1} />);
+  await waitFor(() => expect(transactionCalls()).toHaveLength(1));
+
+  await selectSegment("Groceries");
+  await userEvent.click(screen.getByRole("button", { name: "Apply" }));
+
+  await waitFor(() => expect(transactionCalls()).toHaveLength(2));
+  const url = lastTransactionCallUrl();
+  expect(url.searchParams.get("segment")).toBe("Groceries");
+  expect(url.searchParams.get("startDate")).toBeNull();
+  expect(url.searchParams.get("endDate")).toBeNull();
+  expect(url.searchParams.get("page")).toBe("0");
+
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: "2" })).toBeInTheDocument()
+  );
+});
+
+test("AC-18: a valid date range with no segment selected does not send a segment param (no regression)", async () => {
+  setupFetchMock((url) => jsonResponse(200, page(unfilteredItems)));
+  render(<TransactionContainer id={1} />);
+  await waitFor(() => expect(transactionCalls()).toHaveLength(1));
+
+  await userEvent.type(screen.getByLabelText("Start date"), "2020-01-01");
+  await userEvent.type(screen.getByLabelText("End date"), "2020-01-31");
+  await userEvent.click(screen.getByRole("button", { name: "Apply" }));
+
+  await waitFor(() => expect(transactionCalls()).toHaveLength(2));
+  const url = lastTransactionCallUrl();
+  expect(url.searchParams.get("startDate")).toBe("2020-01-01");
+  expect(url.searchParams.get("endDate")).toBe("2020-01-31");
+  expect(url.searchParams.has("segment")).toBe(false);
+});
+
+test("AC-19: selecting a segment and a valid date range sends all three params together, resets to page 1", async () => {
+  setupFetchMock((url) => jsonResponse(200, page(unfilteredItems)), {
+    segmentsList: [{ id: 1, name: "Groceries" }],
+  });
+  render(<TransactionContainer id={1} />);
+  await waitFor(() => expect(transactionCalls()).toHaveLength(1));
+
+  await selectSegment("Groceries");
+  await userEvent.type(screen.getByLabelText("Start date"), "2020-01-01");
+  await userEvent.type(screen.getByLabelText("End date"), "2020-01-31");
+  await userEvent.click(screen.getByRole("button", { name: "Apply" }));
+
+  await waitFor(() => expect(transactionCalls()).toHaveLength(2));
+  const url = lastTransactionCallUrl();
+  expect(url.searchParams.get("segment")).toBe("Groceries");
+  expect(url.searchParams.get("startDate")).toBe("2020-01-01");
+  expect(url.searchParams.get("endDate")).toBe("2020-01-31");
+  expect(url.searchParams.get("page")).toBe("0");
+});
+
+test("AC-20: Apply is enabled when a segment is selected even with both date fields empty", async () => {
+  setupFetchMock(() => jsonResponse(200, page(unfilteredItems)), {
+    segmentsList: [{ id: 1, name: "Groceries" }],
+  });
+  render(<TransactionContainer id={1} />);
+  await waitFor(() => expect(transactionCalls()).toHaveLength(1));
+
+  expect(screen.getByRole("button", { name: "Apply" })).toBeDisabled();
+  await selectSegment("Groceries");
+  expect(screen.getByRole("button", { name: "Apply" })).toBeEnabled();
+});
+
+test("AC-20: a single date filled in with no segment selected keeps Apply disabled", async () => {
+  setupFetchMock(() => jsonResponse(200, page(unfilteredItems)));
+  render(<TransactionContainer id={1} />);
+  await waitFor(() => expect(transactionCalls()).toHaveLength(1));
+
+  await userEvent.type(screen.getByLabelText("Start date"), "2020-01-01");
+  expect(screen.getByRole("button", { name: "Apply" })).toBeDisabled();
+});
+
+test("AC-20: a single date plus a selected segment is blocked with an inline error, without silently dropping the segment or the partial date", async () => {
+  setupFetchMock(() => jsonResponse(200, page(unfilteredItems)), {
+    segmentsList: [{ id: 1, name: "Groceries" }],
+  });
+  render(<TransactionContainer id={1} />);
+  await waitFor(() => expect(transactionCalls()).toHaveLength(1));
+
+  await selectSegment("Groceries");
+  await userEvent.type(screen.getByLabelText("Start date"), "2020-01-01");
+  const applyButton = screen.getByRole("button", { name: "Apply" });
+  // Enabled because the segment alone would be a valid, completable filter -
+  // the partial date is what actually blocks the request on click.
+  expect(applyButton).toBeEnabled();
+  await userEvent.click(applyButton);
+
+  expect(screen.getByRole("alert")).toHaveTextContent(
+    "Both start date and end date are required"
+  );
+  // No new request fired beyond the initial unfiltered load.
+  expect(transactionCalls()).toHaveLength(1);
+  // Neither the segment selection nor the partial date was cleared.
+  expect(screen.getByLabelText("Segment")).toHaveValue("Groceries");
+  expect(screen.getByLabelText("Start date")).toHaveValue("2020-01-01");
+});
+
+test("AC-21: Clear resets the segment to the placeholder and clears both dates in one action, refetching the unfiltered list", async () => {
+  setupFetchMock(
+    (url) => {
+      if (url.includes("segment=") || url.includes("startDate=")) {
+        return jsonResponse(200, page([], { totalPages: 0 }));
+      }
+      return jsonResponse(200, page(unfilteredItems, { totalPages: 1 }));
+    },
+    { segmentsList: [{ id: 1, name: "Groceries" }] }
+  );
+  render(<TransactionContainer id={1} />);
+  await waitFor(() => expect(transactionCalls()).toHaveLength(1));
+
+  await selectSegment("Groceries");
+  await userEvent.type(screen.getByLabelText("Start date"), "2020-01-01");
+  await userEvent.type(screen.getByLabelText("End date"), "2020-01-31");
+  await userEvent.click(screen.getByRole("button", { name: "Apply" }));
+  await waitFor(() => expect(transactionCalls()).toHaveLength(2));
+
+  await userEvent.click(screen.getByRole("button", { name: "Clear" }));
+
+  expect(screen.getByLabelText("Segment")).toHaveValue("");
+  expect(screen.getByLabelText("Start date")).toHaveValue("");
+  expect(screen.getByLabelText("End date")).toHaveValue("");
+  await waitFor(() => expect(transactionCalls()).toHaveLength(3));
+  const url = lastTransactionCallUrl();
+  expect(url.searchParams.has("segment")).toBe(false);
+  expect(url.searchParams.get("startDate")).toBeNull();
+  expect(url.searchParams.get("endDate")).toBeNull();
+  expect(url.searchParams.get("page")).toBe("0");
+});
+
+test("AC-22: selecting Undefined and applying sends segment=Undefined", async () => {
+  setupFetchMock((url) => jsonResponse(200, page(unfilteredItems)));
+  render(<TransactionContainer id={1} />);
+  await waitFor(() => expect(transactionCalls()).toHaveLength(1));
+
+  await selectSegment("Undefined");
+  await userEvent.click(screen.getByRole("button", { name: "Apply" }));
+
+  await waitFor(() => expect(transactionCalls()).toHaveLength(2));
+  const url = lastTransactionCallUrl();
+  expect(url.searchParams.get("segment")).toBe("Undefined");
+});
+
+test("AC-23: a segment-only request shows the same loading indicator a date-only request gets", async () => {
+  let resolveFilteredFetch;
+  setupFetchMock(
+    (url) => {
+      if (url.includes("segment=")) {
+        return new Promise((resolve) => {
+          resolveFilteredFetch = () => resolve(jsonResponse(200, page(unfilteredItems)));
+        });
+      }
+      return jsonResponse(200, page(unfilteredItems));
+    },
+    { segmentsList: [{ id: 1, name: "Groceries" }] }
+  );
+  render(<TransactionContainer id={1} />);
+  await waitFor(() => expect(transactionCalls()).toHaveLength(1));
+
+  await selectSegment("Groceries");
+  await userEvent.click(screen.getByRole("button", { name: "Apply" }));
+
+  expect(await screen.findByRole("status")).toHaveTextContent(
+    "Loading filtered transactions"
+  );
+
+  resolveFilteredFetch();
+  await waitFor(() => expect(screen.queryByRole("status")).not.toBeInTheDocument());
+});
+
+test("AC-23: a segment-only request surfaces a plain-text error body instead of showing stale pre-filter items", async () => {
+  setupFetchMock(
+    (url) => {
+      if (url.includes("segment=")) {
+        return jsonResponse(400, "Unexpected error filtering by segment");
+      }
+      return jsonResponse(200, page(unfilteredItems));
+    },
+    { segmentsList: [{ id: 1, name: "Groceries" }] }
+  );
+  render(<TransactionContainer id={1} />);
+  await waitFor(() => expect(transactionCalls()).toHaveLength(1));
+  expect(await screen.findByText("Tesco")).toBeInTheDocument();
+
+  await selectSegment("Groceries");
+  await userEvent.click(screen.getByRole("button", { name: "Apply" }));
+
+  await waitFor(() => expect(transactionCalls()).toHaveLength(2));
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Unexpected error filtering by segment"
+  );
+  expect(screen.queryByText("Tesco")).not.toBeInTheDocument();
+  expect(screen.queryByRole("status")).not.toBeInTheDocument();
+});
+
+test("AC-24: a segment-only zero-result shows segment-specific wording, not date-specific wording", async () => {
+  setupFetchMock(
+    (url) => {
+      if (url.includes("segment=")) {
+        return jsonResponse(200, page([], { totalPages: 0 }));
+      }
+      return jsonResponse(200, page(unfilteredItems));
+    },
+    { segmentsList: [{ id: 1, name: "Groceries" }] }
+  );
+  render(<TransactionContainer id={1} />);
+  await waitFor(() => expect(transactionCalls()).toHaveLength(1));
+
+  await selectSegment("Groceries");
+  await userEvent.click(screen.getByRole("button", { name: "Apply" }));
+
+  await waitFor(() =>
+    expect(screen.getByText("No transactions for this segment")).toBeInTheDocument()
+  );
+  expect(
+    screen.queryByText("No transactions in this date range")
+  ).not.toBeInTheDocument();
+});
+
+test("AC-24: a combined segment + date zero-result shows wording describing both filters", async () => {
+  setupFetchMock(
+    (url) => {
+      if (url.includes("segment=") && url.includes("startDate=")) {
+        return jsonResponse(200, page([], { totalPages: 0 }));
+      }
+      return jsonResponse(200, page(unfilteredItems));
+    },
+    { segmentsList: [{ id: 1, name: "Groceries" }] }
+  );
+  render(<TransactionContainer id={1} />);
+  await waitFor(() => expect(transactionCalls()).toHaveLength(1));
+
+  await selectSegment("Groceries");
+  await userEvent.type(screen.getByLabelText("Start date"), "2020-01-01");
+  await userEvent.type(screen.getByLabelText("End date"), "2020-01-31");
+  await userEvent.click(screen.getByRole("button", { name: "Apply" }));
+
+  await waitFor(() =>
+    expect(
+      screen.getByText("No transactions match this segment and date range")
+    ).toBeInTheDocument()
+  );
+});
+
+test("AC-25: paginating while a segment filter (with dates) is applied keeps re-fetching with the same segment and dates", async () => {
+  setupFetchMock(
+    (url) => {
+      if (url.includes("segment=") && url.includes("startDate=")) {
+        return jsonResponse(200, page(unfilteredItems, { totalPages: 3 }));
+      }
+      return jsonResponse(200, page(unfilteredItems, { totalPages: 1 }));
+    },
+    { segmentsList: [{ id: 1, name: "Groceries" }] }
+  );
+  render(<TransactionContainer id={1} />);
+  await waitFor(() => expect(transactionCalls()).toHaveLength(1));
+
+  await selectSegment("Groceries");
+  await userEvent.type(screen.getByLabelText("Start date"), "2020-01-01");
+  await userEvent.type(screen.getByLabelText("End date"), "2020-01-31");
+  await userEvent.click(screen.getByRole("button", { name: "Apply" }));
+  await waitFor(() => expect(transactionCalls()).toHaveLength(2));
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: "3" })).toBeInTheDocument()
+  );
+
+  await userEvent.click(screen.getByRole("button", { name: "2" }));
+
+  await waitFor(() => expect(transactionCalls()).toHaveLength(3));
+  const url = lastTransactionCallUrl();
+  expect(url.searchParams.get("page")).toBe("1");
+  expect(url.searchParams.get("segment")).toBe("Groceries");
+  expect(url.searchParams.get("startDate")).toBe("2020-01-01");
+  expect(url.searchParams.get("endDate")).toBe("2020-01-31");
+});
+
+test("AC-26: a fresh mount doesn't persist a previously selected segment", async () => {
+  setupFetchMock(() => jsonResponse(200, page(unfilteredItems)), {
+    segmentsList: [{ id: 1, name: "Groceries" }],
+  });
+  const { unmount } = render(<TransactionContainer id={1} />);
+  await waitFor(() => expect(transactionCalls()).toHaveLength(1));
+  await selectSegment("Groceries");
+  await userEvent.click(screen.getByRole("button", { name: "Apply" }));
+  await waitFor(() => expect(transactionCalls()).toHaveLength(2));
+  unmount();
+
+  render(<TransactionContainer id={1} />);
+  await waitFor(() => expect(transactionCalls()).toHaveLength(3));
+  const url = lastTransactionCallUrl();
+  expect(url.searchParams.has("segment")).toBe(false);
+  expect(screen.getByLabelText("Segment")).toHaveValue("");
+});
+
+test("AC-27: if GET /segments fails, the dropdown still renders (placeholder + Undefined) and date-only filtering is unaffected", async () => {
+  setupFetchMock(() => jsonResponse(200, page(unfilteredItems)), {
+    segmentsError: true,
+  });
+  render(<TransactionContainer id={1} />);
+  await waitFor(() => expect(transactionCalls()).toHaveLength(1));
+
+  const select = screen.getByLabelText("Segment");
+  expect(segmentOptionLabels(select)).toEqual(["All segments", "Undefined"]);
+  // The nested TransactionTable has its own, differently-worded "couldn't
+  // load segments" warning for its own failed GET /segments call - scope
+  // this to the filter bar's own wording so the two don't collide.
+  await waitFor(() =>
+    expect(
+      screen.getByText(/Couldn't load segments\. You can still filter by date/)
+    ).toBeInTheDocument()
+  );
+
+  await userEvent.type(screen.getByLabelText("Start date"), "2020-01-01");
+  await userEvent.type(screen.getByLabelText("End date"), "2020-01-31");
+  await userEvent.click(screen.getByRole("button", { name: "Apply" }));
+
+  await waitFor(() => expect(transactionCalls()).toHaveLength(2));
+  const url = lastTransactionCallUrl();
+  expect(url.searchParams.get("startDate")).toBe("2020-01-01");
 });
