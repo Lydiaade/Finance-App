@@ -359,6 +359,40 @@ test("AC-16: adds a synthetic Undefined option when the real segment list doesn'
   );
 });
 
+// QA/FM-53 gap: the Segments page's plain add-segment flow has zero name
+// dedup (unlike getOrCreateSegment's case-insensitive reuse elsewhere), so a
+// real segment literally named "undefined" (different casing than the
+// backend's literal default "Undefined") is a genuinely reachable state, not
+// just theoretical. The dedup check must be case-sensitive so this doesn't
+// silently make the literal "Undefined" default segment unreachable via the
+// dropdown - both must appear as independently selectable, independently
+// filterable options.
+test("AC-16/AC-6: a real segment differing only in case from 'Undefined' does not suppress the synthetic option - both remain independently selectable", async () => {
+  setupFetchMock((url) => jsonResponse(200, page(unfilteredItems)), {
+    segmentsList: [{ id: 1, name: "undefined" }],
+  });
+  render(<TransactionContainer id={1} />);
+  await waitFor(() => expect(transactionCalls()).toHaveLength(1));
+
+  const select = screen.getByLabelText("Segment");
+  await waitFor(() =>
+    expect(segmentOptionLabels(select)).toEqual(["All segments", "Undefined", "undefined"])
+  );
+
+  await selectSegment("Undefined");
+  await userEvent.click(screen.getByRole("button", { name: "Apply" }));
+  await waitFor(() => expect(transactionCalls()).toHaveLength(2));
+  expect(lastTransactionCallUrl().searchParams.get("segment")).toBe("Undefined");
+
+  await userEvent.click(screen.getByRole("button", { name: "Clear" }));
+  await waitFor(() => expect(transactionCalls()).toHaveLength(3));
+
+  await selectSegment("undefined");
+  await userEvent.click(screen.getByRole("button", { name: "Apply" }));
+  await waitFor(() => expect(transactionCalls()).toHaveLength(4));
+  expect(lastTransactionCallUrl().searchParams.get("segment")).toBe("undefined");
+});
+
 test("AC-17: selecting a segment with no dates entered and applying sends segment only, resets to page 1", async () => {
   setupFetchMock(
     (url) => {

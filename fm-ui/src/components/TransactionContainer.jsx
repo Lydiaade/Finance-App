@@ -53,9 +53,23 @@ const TransactionContainer = ({ id }) => {
   }, []);
 
   // AC-16: don't render a synthetic "Undefined" option if the real segment
-  // list already has one, case-insensitively.
+  // list already has one - matched case-sensitively (exact string), not
+  // case-insensitively, to mirror the backend's exact-match semantics
+  // (TransactionSpecifications.hasSegment/AC-6/AC-12). QA/FM-53 gap: the
+  // Segments page's plain "add new segment" flow (SegmentController.addSegment
+  // -> SegmentService.addSegment) has zero name-dedup, unlike
+  // getOrCreateSegment's case-insensitive reuse used elsewhere - so a real
+  // Segment row named e.g. "undefined" (different casing) is genuinely
+  // reachable today. A case-insensitive check here would then suppress the
+  // synthetic option and make the literal "Undefined" default segment
+  // permanently unfilterable via this dropdown, even though the backend
+  // would happily match it as a distinct value from "undefined". Comparing
+  // exactly means only a real segment literally named "Undefined" (which
+  // really would render as a visually-identical duplicate <option>)
+  // suppresses the synthetic one - any other casing renders as its own,
+  // separately selectable and separately filterable option.
   const hasRealUndefinedSegment = segments.some(
-    (segment) => segment.name.toLowerCase() === UNDEFINED_SEGMENT_VALUE.toLowerCase()
+    (segment) => segment.name === UNDEFINED_SEGMENT_VALUE
   );
 
   // Applied segment/dates are always set/cleared together per filter type
