@@ -248,4 +248,49 @@ class AccountServiceFilteredTransactionsIntegrationTest {
         }
         assertEquals(LocalDate.of(2024, 1, 10), firstPage.getContent().get(0).getDate());
     }
+
+    // AC-4: proves the "id desc" tiebreaker is load-bearing, not merely present. Two transactions
+    // are seeded sharing the exact same date (2024-01-11, the most recent date in the set, so the
+    // tied pair sorts to the very front). Paging with size=1 forces the tied pair onto two
+    // consecutive pages - if the code were ever "simplified" to sort by date alone, the relative
+    // order of these two rows across separate page queries would be unspecified, risking the row
+    // appearing on both pages (duplicate) or neither (omission). With the id tiebreaker in place,
+    // each tied row is returned exactly once, deterministically ordered by id descending.
+    @Test
+    void tiedDateTransactionsAreSplitAcrossAPageBoundaryWithoutDuplicationOrOmission() {
+        Transaction tiedA = new Transaction(
+                LocalDate.of(2024, 1, 11), mainAccount, BigDecimal.TEN, null, "Tied Payee A", "memo");
+        tiedA.setSegment("Groceries");
+        tiedA = transactionRepository.save(tiedA);
+
+        Transaction tiedB = new Transaction(
+                LocalDate.of(2024, 1, 11), mainAccount, BigDecimal.TEN, null, "Tied Payee B", "memo");
+        tiedB.setSegment("Groceries");
+        tiedB = transactionRepository.save(tiedB);
+
+        int higherId = Math.max(tiedA.getId(), tiedB.getId());
+        int lowerId = Math.min(tiedA.getId(), tiedB.getId());
+
+        // Page size 1: the tied pair (both dated 2024-01-11, the most recent date) sorts to the
+        // very front, so the first two single-row pages are exactly the tied pair, split across
+        // the page 0/page 1 boundary.
+        Page<Transaction> firstPage = accountService.getPaginatedAccountTransactions(
+                mainAccount.getId(), 0, 1, null, null, null);
+        Page<Transaction> secondPage = accountService.getPaginatedAccountTransactions(
+                mainAccount.getId(), 1, 1, null, null, null);
+
+        assertEquals(12, firstPage.getTotalElements());
+        assertEquals(1, firstPage.getContent().size());
+        assertEquals(1, secondPage.getContent().size());
+        assertEquals(higherId, firstPage.getContent().get(0).getId(),
+                "within a date tie, the higher id must sort first (id desc tiebreaker)");
+        assertEquals(lowerId, secondPage.getContent().get(0).getId(),
+                "the lower id of the tied pair must land on the very next page, not be skipped or repeated");
+
+        // Full traversal at the suite's standard page size confirms the tied pair (and every other
+        // row) is still returned exactly once end to end, with totalElements now 12.
+        Set<Integer> allIds = collectAllIdsAcrossAllPages(null, null, null, 12);
+        assertTrue(allIds.contains(higherId));
+        assertTrue(allIds.contains(lowerId));
+    }
 }
