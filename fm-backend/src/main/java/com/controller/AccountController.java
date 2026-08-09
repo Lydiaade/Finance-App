@@ -60,15 +60,19 @@ public class AccountController {
     // existing controller-thin/service-holds-logic convention - the controller only translates the
     // service's IllegalArgumentException into a 400, matching TransactionController's pattern for
     // addTransaction/updateTransactionSegment.
+    // FM-53: segment is a new optional query param (AC-5). A blank/whitespace-only/absent value
+    // means "no segment filter" - that's handled in TransactionSpecifications.hasSegment, not
+    // here, so the controller stays thin and passes the raw param straight through.
     @GetMapping("/account/{id}/transactions")
     public ResponseEntity<?> getAccountTransactions(
             @PathVariable("id") int id,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) String segment) {
         try {
-            Page<Transaction> transactions = accountService.getPaginatedAccountTransactions(id, page, size, startDate, endDate);
+            Page<Transaction> transactions = accountService.getPaginatedAccountTransactions(id, page, size, startDate, endDate, segment);
             return new ResponseEntity<>(transactions, HttpStatus.OK);
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);

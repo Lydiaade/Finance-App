@@ -5,10 +5,13 @@ import com.dto.MonthlyTransactionTotal;
 import com.dto.Transaction;
 import com.repository.AccountRepository;
 import com.repository.TransactionRepository;
+import com.repository.TransactionSpecifications;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.io.FileNotFoundException;
@@ -76,17 +79,27 @@ public class AccountService {
         accountRepository.deleteById(id);
     }
 
-    // FM-52: startDate/endDate are optional and, when both supplied, form an inclusive range.
-    // AC-2 requires the no-filter path to stay byte-for-byte unchanged, so the original
-    // unfiltered/paginated query is only used when neither date is supplied; the new date-range
-    // query (with an identical WHERE clause on its native countQuery, per AC-8) is used otherwise.
-    public Page<Transaction> getPaginatedAccountTransactions(int id, int page, int size, LocalDate startDate, LocalDate endDate) {
+    // FM-53: replaces the two hand-written native pagination queries from FM-52 with a single
+    // Specification<Transaction>, composing account id (always required), optional inclusive date
+    // range, and optional exact-match segment (AC-1/AC-8). Spring Data derives the count query
+    // from the same Specification, so there's no separate countQuery string that can drift out of
+    // sync with the row-fetching query.
+    //
+    // AC-4: today's native queries had no explicit Sort, so row order was undefined/incidental.
+    // This is a deliberate behavior clarification (not implicit) - an explicit deterministic Sort
+    // (date descending, then id as a tiebreaker) is added here so pagination is provably correct
+    // (no duplicate/missing rows across pages) under the Specification approach.
+    public Page<Transaction> getPaginatedAccountTransactions(int id, int page, int size, LocalDate startDate, LocalDate endDate, String segment) {
         validateDateRange(startDate, endDate);
-        Pageable pageable = PageRequest.of(page, size);
-        if (startDate == null && endDate == null) {
-            return transactionRepository.findAllByAccount_IdWithPagination(id, pageable);
-        }
-        return transactionRepository.findAllByAccount_IdAndDateBetweenWithPagination(id, startDate, endDate, pageable);
+        Sort sort = Sort.by(Sort.Order.desc("date"), Sort.Order.desc("id"));
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Specification<Transaction> specification = Specification
+                .where(TransactionSpecifications.hasAccountId(id))
+                .and(TransactionSpecifications.dateBetween(startDate, endDate))
+                .and(TransactionSpecifications.hasSegment(segment));
+
+        return transactionRepository.findAll(specification, pageable);
     }
 
     // FM-52: AC-3/AC-4/AC-5. Order follows the acceptance criteria as written: reject a lone
