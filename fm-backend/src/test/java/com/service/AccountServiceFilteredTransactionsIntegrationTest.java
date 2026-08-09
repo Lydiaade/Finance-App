@@ -20,15 +20,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-// FM-53: real-database (H2) coverage for AccountService.getPaginatedAccountTransactions's
-// Specification-based rewrite. A Mockito-based test (AccountServiceTest) stubs the repository call
-// entirely, so it can never prove the Specification actually filters correctly, that
-// account-scoping and the date/segment filters combine with AND, or that pagination is free of
-// duplicates/omissions across pages under the new explicit Sort (AC-4) - only a real
-// Pageable/Specification round trip against a real query can, which is what this class does.
+// Real-database (H2) round trip: AccountServiceTest mocks the repository entirely, so it can't
+// prove the Specification actually filters, combines account/date/segment with AND, or paginates
+// without duplicates/omissions - only a real query round trip can.
 //
-// @Transactional at the class level rolls back each test's writes so tests don't leak state into
-// each other via the shared H2 context, matching UploadControllerIntegrationTest's pattern.
+// Rolls back each test's writes so state doesn't leak between tests, matching
+// UploadControllerIntegrationTest's pattern.
 @SpringBootTest
 @Transactional
 class AccountServiceFilteredTransactionsIntegrationTest {
@@ -45,19 +42,6 @@ class AccountServiceFilteredTransactionsIntegrationTest {
     private BankAccount mainAccount;
     private BankAccount otherAccount;
 
-    // AC-10: a deterministic, multi-segment, multi-date transaction set on one account, plus at
-    // least one transaction on a *different* account that would otherwise match every filter
-    // combination below (same date-range window, same "Groceries" segment) - this is the
-    // regression proof that account-scoping isn't accidentally dropped by the Specification
-    // rewrite.
-    //
-    // Main account (10 transactions, 2024-01-01 .. 2024-01-10, one per day):
-    //   01: Groceries   02: Groceries   03: Bills   04: Bills   05: Undefined
-    //   06: Undefined   07: Groceries   08: Bills   09: Undefined  10: Groceries
-    //
-    // Date range used below, [2024-01-03, 2024-01-08] inclusive, covers ids for 03-08:
-    //   Bills, Bills, Undefined, Undefined, Groceries, Bills -> 6 transactions, of which exactly
-    //   one (01-07) is segment "Groceries".
     @BeforeEach
     void seedTransactions() {
         mainAccount = accountRepository.save(
@@ -76,18 +60,16 @@ class AccountServiceFilteredTransactionsIntegrationTest {
             transactionRepository.save(transaction);
         }
 
-        // Same date window, same "Groceries" segment as several main-account transactions - if
-        // account scoping were ever dropped from the Specification, this transaction would leak
-        // into every combination tested below.
+        // Shares the date window and "Groceries" segment with several main-account transactions,
+        // so it would leak into every filter combination below if account-scoping ever broke.
         Transaction otherAccountTransaction = new Transaction(
                 LocalDate.of(2024, 1, 5), otherAccount, BigDecimal.TEN, null, "Other Payee", "memo");
         otherAccountTransaction.setSegment("Groceries");
         transactionRepository.save(otherAccountTransaction);
     }
 
-    // Drains every page (small page size, deliberately smaller than the expected result set) and
-    // returns the full set of transaction ids returned across all pages, while asserting
-    // totalElements/totalPages consistency and that no id is returned twice.
+    // Page size is deliberately smaller than the expected result set, to force traversal across
+    // multiple pages.
     private Set<Integer> collectAllIdsAcrossAllPages(LocalDate startDate, LocalDate endDate, String segment, long expectedTotalElements) {
         int pageSize = 3;
         Set<Integer> seenIds = new HashSet<>();
@@ -130,16 +112,12 @@ class AccountServiceFilteredTransactionsIntegrationTest {
                 "the other account's transaction must never be returned, under any filter combination");
     }
 
-    // AC-2/AC-10: no filters - every one of the main account's 10 transactions is returned exactly
-    // once across pages, and the other account's transaction is never returned.
     @Test
     void noFiltersReturnsAllTenMainAccountTransactionsExactlyOnceAcrossPages() {
         Set<Integer> ids = collectAllIdsAcrossAllPages(null, null, null, 10);
         assertEquals(10, ids.size());
     }
 
-    // AC-3/AC-6/AC-7/AC-10: date-only - inclusive range [01-03, 01-08] matches exactly the 6
-    // transactions dated 03 through 08.
     @Test
     void dateOnlyFilterReturnsExactlyTheTransactionsInTheInclusiveRange() {
         Set<Integer> ids = collectAllIdsAcrossAllPages(LocalDate.of(2024, 1, 3), LocalDate.of(2024, 1, 8), null, 6);
@@ -150,8 +128,6 @@ class AccountServiceFilteredTransactionsIntegrationTest {
         }
     }
 
-    // AC-5/AC-6/AC-10: segment-only, exact match on "Groceries" - matches days 01, 02, 07, 10 (4
-    // transactions), regardless of date.
     @Test
     void segmentOnlyFilterReturnsExactlyTheMatchingSegmentTransactions() {
         Set<Integer> ids = collectAllIdsAcrossAllPages(null, null, "Groceries", 4);
@@ -161,9 +137,6 @@ class AccountServiceFilteredTransactionsIntegrationTest {
         }
     }
 
-    // AC-8/AC-10: date range AND segment combine - within [01-03, 01-08], only day 07 is
-    // "Groceries", so exactly 1 transaction matches (not the 6 that match the date range alone,
-    // nor the 4 that match the segment alone).
     @Test
     void dateAndSegmentFiltersCombineWithAnd() {
         Set<Integer> ids = collectAllIdsAcrossAllPages(LocalDate.of(2024, 1, 3), LocalDate.of(2024, 1, 8), "Groceries", 1);
@@ -173,9 +146,6 @@ class AccountServiceFilteredTransactionsIntegrationTest {
         assertEquals("Groceries", onlyMatch.getSegment());
     }
 
-    // AC-11: a legitimately-empty combination - a valid segment combined with a date range that
-    // has zero matches for that segment - is 200 with totalElements=0, totalPages=0, empty
-    // content, not an error.
     @Test
     void combinationWithZeroMatchesReturnsEmptyPageNotAnError() {
         Page<Transaction> result = accountService.getPaginatedAccountTransactions(
@@ -186,8 +156,6 @@ class AccountServiceFilteredTransactionsIntegrationTest {
         assertTrue(result.getContent().isEmpty());
     }
 
-    // AC-6/AC-12: segment matching is exact and case-sensitive - "groceries" (lowercase) must not
-    // match any of the four "Groceries" transactions.
     @Test
     void segmentFilterIsCaseSensitiveAndDoesNotMatchDifferentCasing() {
         Page<Transaction> result = accountService.getPaginatedAccountTransactions(
@@ -197,8 +165,7 @@ class AccountServiceFilteredTransactionsIntegrationTest {
         assertTrue(result.getContent().isEmpty());
     }
 
-    // AC-6: segment="Undefined" is plain equality against the literal string "Undefined", no
-    // special-case branch - matches days 05, 06, 09 (3 transactions).
+    // "Undefined" is a literal string match, not a special no-filter case like null/blank.
     @Test
     void segmentEqualsUndefinedMatchesLiterally() {
         Set<Integer> ids = collectAllIdsAcrossAllPages(null, null, "Undefined", 3);
@@ -208,8 +175,6 @@ class AccountServiceFilteredTransactionsIntegrationTest {
         }
     }
 
-    // AC-7: blank/whitespace-only segment means "no filter", not a literal empty-string match -
-    // same result as passing no segment at all (10 matches, not 0).
     @Test
     void blankSegmentMeansNoFilterNotALiteralEmptyMatch() {
         Page<Transaction> result = accountService.getPaginatedAccountTransactions(
@@ -218,7 +183,6 @@ class AccountServiceFilteredTransactionsIntegrationTest {
         assertEquals(10, result.getTotalElements());
     }
 
-    // AC-7: a non-blank, non-matching segment value is a valid request, not an error.
     @Test
     void nonMatchingSegmentValueIsAValidEmptyResultNotAnError() {
         Page<Transaction> result = accountService.getPaginatedAccountTransactions(
@@ -229,10 +193,6 @@ class AccountServiceFilteredTransactionsIntegrationTest {
         assertTrue(result.getContent().isEmpty());
     }
 
-    // AC-4: explicit deterministic sort (date descending, then id descending as a tiebreaker)
-    // means the first page's first row is always the most recent transaction, and consecutive
-    // pages never repeat or skip a row - this cross-checks the no-duplicates/no-omissions
-    // assertion in collectAllIdsAcrossAllPages with an explicit ordering check on unfiltered data.
     @Test
     void resultsAreOrderedDeterministicallyByDateDescendingThenIdDescending() {
         Page<Transaction> firstPage = accountService.getPaginatedAccountTransactions(
@@ -249,13 +209,9 @@ class AccountServiceFilteredTransactionsIntegrationTest {
         assertEquals(LocalDate.of(2024, 1, 10), firstPage.getContent().get(0).getDate());
     }
 
-    // AC-4: proves the "id desc" tiebreaker is load-bearing, not merely present. Two transactions
-    // are seeded sharing the exact same date (2024-01-11, the most recent date in the set, so the
-    // tied pair sorts to the very front). Paging with size=1 forces the tied pair onto two
-    // consecutive pages - if the code were ever "simplified" to sort by date alone, the relative
-    // order of these two rows across separate page queries would be unspecified, risking the row
-    // appearing on both pages (duplicate) or neither (omission). With the id tiebreaker in place,
-    // each tied row is returned exactly once, deterministically ordered by id descending.
+    // Two same-dated transactions are forced onto adjacent single-row pages: without the id-desc
+    // tiebreaker, their relative order across pages would be unspecified, risking a duplicate or
+    // omitted row.
     @Test
     void tiedDateTransactionsAreSplitAcrossAPageBoundaryWithoutDuplicationOrOmission() {
         Transaction tiedA = new Transaction(
@@ -271,9 +227,6 @@ class AccountServiceFilteredTransactionsIntegrationTest {
         int higherId = Math.max(tiedA.getId(), tiedB.getId());
         int lowerId = Math.min(tiedA.getId(), tiedB.getId());
 
-        // Page size 1: the tied pair (both dated 2024-01-11, the most recent date) sorts to the
-        // very front, so the first two single-row pages are exactly the tied pair, split across
-        // the page 0/page 1 boundary.
         Page<Transaction> firstPage = accountService.getPaginatedAccountTransactions(
                 mainAccount.getId(), 0, 1, null, null, null);
         Page<Transaction> secondPage = accountService.getPaginatedAccountTransactions(
@@ -287,8 +240,6 @@ class AccountServiceFilteredTransactionsIntegrationTest {
         assertEquals(lowerId, secondPage.getContent().get(0).getId(),
                 "the lower id of the tied pair must land on the very next page, not be skipped or repeated");
 
-        // Full traversal at the suite's standard page size confirms the tied pair (and every other
-        // row) is still returned exactly once end to end, with totalElements now 12.
         Set<Integer> allIds = collectAllIdsAcrossAllPages(null, null, null, 12);
         assertTrue(allIds.contains(higherId));
         assertTrue(allIds.contains(lowerId));

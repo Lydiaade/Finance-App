@@ -23,16 +23,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-// FM-52: HTTP-level coverage for GET /accounts/account/{id}/transactions - complements the
-// Mockito-based AccountServiceTest (business rules) by proving the controller actually parses the
-// ISO "yyyy-MM-dd" query params into real LocalDates before calling the service (AC-1), leaves the
-// existing page/size params and success response shape alone when no dates are supplied (AC-2),
-// and translates the service's validation IllegalArgumentException into a real 400 with the
-// exception's message as a plain-text body (AC-3/AC-4/AC-5), matching TransactionController's
-// existing addTransaction/updateTransactionSegment pattern.
-// FM-53: extended to also cover the new `segment` query param (AC-13) - absent, blank, and
-// present, alone and combined with the existing date params - proving the controller passes it
-// straight through to the service without altering the response shape.
 @WebMvcTest(AccountController.class)
 class AccountControllerTest {
 
@@ -42,8 +32,6 @@ class AccountControllerTest {
     @MockBean
     private AccountService accountService;
 
-    // AC-2: no startDate/endDate/segment supplied -> service is called with null dates and null
-    // segment, same page/size handling as before, 200 with the page body.
     @Test
     void noFilterParamsSuppliedCallsServiceWithNullsAndReturns200() throws Exception {
         Page<Transaction> stubbedPage = new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
@@ -57,8 +45,6 @@ class AccountControllerTest {
         verify(accountService).getPaginatedAccountTransactions(1, 0, 10, null, null, null);
     }
 
-    // AC-1: startDate/endDate query params (ISO yyyy-MM-dd) are parsed into real LocalDates and
-    // passed through to the service.
     @Test
     void dateParamsAreParsedFromIsoStringsAndPassedToTheService() throws Exception {
         Page<Transaction> stubbedPage = new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
@@ -75,7 +61,6 @@ class AccountControllerTest {
                 1, 0, 10, LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 31), null);
     }
 
-    // AC-5/AC-13: a segment param, on its own (no dates), is parsed and passed straight through.
     @Test
     void segmentParamAloneIsPassedThroughToTheService() throws Exception {
         Page<Transaction> stubbedPage = new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
@@ -89,8 +74,6 @@ class AccountControllerTest {
         verify(accountService).getPaginatedAccountTransactions(1, 0, 10, null, null, "Groceries");
     }
 
-    // AC-8: segment and date-range params combine on the same request - both are threaded through
-    // to the same service call, no alternate request shape.
     @Test
     void segmentAndDateParamsCombineOnTheSameRequest() throws Exception {
         Page<Transaction> stubbedPage = new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
@@ -108,9 +91,8 @@ class AccountControllerTest {
                 1, 0, 10, LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 31), "Bills");
     }
 
-    // AC-7: a blank/whitespace-only segment param is still passed through as-is (the
-    // no-filter-if-blank decision lives in the service/specification layer, not the controller) -
-    // this just proves the controller doesn't reject or otherwise mangle it.
+    // Blank/whitespace handling ("no filter" vs. literal match) is decided in the service layer,
+    // not here - this only proves the controller passes the value through unmodified.
     @Test
     void blankSegmentParamIsPassedThroughUnmodified() throws Exception {
         Page<Transaction> stubbedPage = new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
@@ -124,8 +106,6 @@ class AccountControllerTest {
         verify(accountService).getPaginatedAccountTransactions(1, 0, 10, null, null, "   ");
     }
 
-    // AC-3: service rejection for a lone date param must surface as a real 400 with the
-    // exception's message as the body.
     @Test
     void serviceRejectionForALoneDateParamReturns400WithMessageBody() throws Exception {
         when(accountService.getPaginatedAccountTransactions(eq(1), eq(0), eq(10), eq(LocalDate.of(2024, 1, 1)), isNull(), isNull()))
@@ -137,7 +117,6 @@ class AccountControllerTest {
                 .andExpect(content().string("Both start date and end date are required"));
     }
 
-    // AC-4: an inverted range surfaces the service's specific message via 400.
     @Test
     void serviceRejectionForAnInvertedRangeReturns400WithMessageBody() throws Exception {
         when(accountService.getPaginatedAccountTransactions(
@@ -151,7 +130,6 @@ class AccountControllerTest {
                 .andExpect(content().string("Start date cannot be after end date"));
     }
 
-    // AC-5: a future date surfaces the service's specific message via 400.
     @Test
     void serviceRejectionForAFutureDateReturns400WithMessageBody() throws Exception {
         LocalDate future = LocalDate.now().plusDays(1);
@@ -165,8 +143,6 @@ class AccountControllerTest {
                 .andExpect(content().string("Date cannot be in the future"));
     }
 
-    // AC-9: date validation still fires (and still surfaces as 400) even when a segment param is
-    // also present - segment must not short-circuit the existing date validation.
     @Test
     void dateValidationStillAppliesWhenASegmentParamIsAlsoPresent() throws Exception {
         when(accountService.getPaginatedAccountTransactions(eq(1), eq(0), eq(10), eq(LocalDate.of(2024, 1, 1)), isNull(), eq("Groceries")))
