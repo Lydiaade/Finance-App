@@ -9,12 +9,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-// FM-53: extends JpaSpecificationExecutor so the account-scoped, paginated transactions query
-// (previously two separate hand-written native queries from FM-52, each with its own
-// separately-maintained native countQuery string) can be expressed as a single
-// Specification<Transaction> - see TransactionSpecifications. Spring Data derives the count query
-// automatically from the Specification, so there is no longer a hand-written countQuery to drift
-// out of sync with the row-fetching query.
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Integer>, JpaSpecificationExecutor<Transaction> {
 

@@ -54,15 +54,8 @@ public class AccountController {
         return new ResponseEntity<>(Currency.getAvailableCurrencies(), HttpStatus.OK);
     }
 
-    // FM-52: startDate/endDate are optional, ISO yyyy-MM-dd (bound via Spring's default LocalDate
-    // conversion, same format the manual-add-transaction JSON path already uses). All range
-    // validation (both-required, start-after-end, future-date) lives in AccountService per the
-    // existing controller-thin/service-holds-logic convention - the controller only translates the
-    // service's IllegalArgumentException into a 400, matching TransactionController's pattern for
-    // addTransaction/updateTransactionSegment.
-    // FM-53: segment is a new optional query param (AC-5). A blank/whitespace-only/absent value
-    // means "no segment filter" - that's handled in TransactionSpecifications.hasSegment, not
-    // here, so the controller stays thin and passes the raw param straight through.
+    // Range validation lives in AccountService, not here - the controller just translates its
+    // IllegalArgumentException into a 400, matching TransactionController's existing pattern.
     @GetMapping("/account/{id}/transactions")
     public ResponseEntity<?> getAccountTransactions(
             @PathVariable("id") int id,
