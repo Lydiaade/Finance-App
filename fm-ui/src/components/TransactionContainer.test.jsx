@@ -29,11 +29,8 @@ function jsonResponse(status, body) {
   });
 }
 
-// Segment lookups fired by the nested TransactionTable, and now also by
-// TransactionContainer's own filter dropdown (FM-53), aren't the concern of
-// most of these tests - default to an empty list so they don't interfere.
-// FM-53 tests that care about the dropdown's actual contents pass
-// `segmentsList`, and AC-27 passes `segmentsError` to simulate a failed load.
+// GET /segments is called by both the nested TransactionTable and this
+// component's own filter dropdown - default to an empty list so most tests aren't affected by it.
 function setupFetchMock(handleTransactions, { segmentsList = [], segmentsError = false } = {}) {
   global.fetch = jest.fn((url) => {
     if (url.endsWith("/segments")) {
@@ -55,19 +52,14 @@ function lastTransactionCallUrl() {
   return new URL(calls[calls.length - 1][0]);
 }
 
-// GET /segments resolves independently of the transactions fetch, so reading
-// the dropdown's options must wait for it to actually land in state rather
-// than assuming it's there as soon as the initial transaction list is.
 function segmentOptionLabels(select) {
   return Array.from(select.querySelectorAll("option")).map(
     (option) => option.textContent
   );
 }
 
-// GET /segments resolves asynchronously (separately from the transactions
-// fetch), so a test-authored segment name isn't guaranteed to exist as an
-// <option> the instant the component mounts - wait for it before selecting,
-// rather than racing userEvent.selectOptions against the fetch.
+// GET /segments resolves asynchronously, separately from the transactions
+// fetch, so wait for the option to exist before selecting it.
 async function selectSegment(value) {
   const select = screen.getByLabelText("Segment");
   await waitFor(() =>
@@ -109,7 +101,6 @@ test("AC-12: typing into the date inputs does not by itself trigger a refetch", 
   await userEvent.type(screen.getByLabelText("Start date"), "2020-01-01");
   await userEvent.type(screen.getByLabelText("End date"), "2020-01-31");
 
-  // Still just the one initial fetch - no request fired from typing alone.
   expect(transactionCalls()).toHaveLength(1);
 });
 
@@ -153,7 +144,6 @@ test("AC-5/AC-14: an end date of exactly today is inclusive and valid client-sid
   await userEvent.type(screen.getByLabelText("End date"), today);
   await userEvent.click(screen.getByRole("button", { name: "Apply" }));
 
-  // No client-side validation error, and the filtered request actually fires.
   expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   await waitFor(() => expect(transactionCalls()).toHaveLength(2));
   const url = lastTransactionCallUrl();
@@ -194,7 +184,6 @@ test("AC-15: a successful Apply refetches with startDate/endDate, resets to page
   expect(url.searchParams.get("endDate")).toBe("2020-01-31");
   expect(url.searchParams.get("page")).toBe("0");
 
-  // Filtered result set reports 3 pages - pagination controls reflect that.
   await waitFor(() =>
     expect(screen.getByRole("button", { name: "3" })).toBeInTheDocument()
   );
@@ -274,9 +263,8 @@ test("AC-18: a valid range with zero results shows a distinct message, not the l
 test("bug fix: a server-side rejection of a filtered request (plain-text 400 body) surfaces an error instead of showing stale pre-filter items as the filtered result", async () => {
   setupFetchMock((url) => {
     if (url.includes("startDate=")) {
-      // AccountController/AccountService return a plain-text body on
-      // rejection, not JSON - this reproduces that, e.g. from clock skew
-      // making a client-valid request fail server-side validation.
+      // The backend returns a plain-text (not JSON) body on this kind of
+      // rejection - reproduce that shape here.
       return jsonResponse(400, "Date cannot be in the future");
     }
     return jsonResponse(200, page(unfilteredItems));
@@ -293,8 +281,6 @@ test("bug fix: a server-side rejection of a filtered request (plain-text 400 bod
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "Date cannot be in the future"
   );
-  // The pre-filter row must not remain on screen looking like a valid
-  // filtered result, and the loading indicator must have cleared.
   expect(screen.queryByText("Tesco")).not.toBeInTheDocument();
   expect(screen.queryByRole("status")).not.toBeInTheDocument();
 });
@@ -328,8 +314,6 @@ test("AC-20: paginating while a filter is applied keeps the filter active on sub
   expect(url.searchParams.get("endDate")).toBe("2020-01-31");
 });
 
-// FM-53: segment filter -----------------------------------------------------
-
 test("AC-16: segment dropdown offers a placeholder, then real segments, without a duplicate Undefined when one already exists", async () => {
   setupFetchMock(() => jsonResponse(200, page(unfilteredItems)), {
     segmentsList: [
@@ -359,14 +343,8 @@ test("AC-16: adds a synthetic Undefined option when the real segment list doesn'
   );
 });
 
-// QA/FM-53 gap: the Segments page's plain add-segment flow has zero name
-// dedup (unlike getOrCreateSegment's case-insensitive reuse elsewhere), so a
-// real segment literally named "undefined" (different casing than the
-// backend's literal default "Undefined") is a genuinely reachable state, not
-// just theoretical. The dedup check must be case-sensitive so this doesn't
-// silently make the literal "Undefined" default segment unreachable via the
-// dropdown - both must appear as independently selectable, independently
-// filterable options.
+// The Segments page's add-segment flow doesn't dedupe names case-insensitively,
+// so a real "undefined" segment is a reachable state alongside the synthetic "Undefined".
 test("AC-16/AC-6: a real segment differing only in case from 'Undefined' does not suppress the synthetic option - both remain independently selectable", async () => {
   setupFetchMock((url) => jsonResponse(200, page(unfilteredItems)), {
     segmentsList: [{ id: 1, name: "undefined" }],
@@ -496,9 +474,7 @@ test("AC-20: a single date plus a selected segment is blocked with an inline err
   expect(screen.getByRole("alert")).toHaveTextContent(
     "Both start date and end date are required"
   );
-  // No new request fired beyond the initial unfiltered load.
   expect(transactionCalls()).toHaveLength(1);
-  // Neither the segment selection nor the partial date was cleared.
   expect(screen.getByLabelText("Segment")).toHaveValue("Groceries");
   expect(screen.getByLabelText("Start date")).toHaveValue("2020-01-01");
 });
@@ -708,9 +684,8 @@ test("AC-27: if GET /segments fails, the dropdown still renders (placeholder + U
 
   const select = screen.getByLabelText("Segment");
   expect(segmentOptionLabels(select)).toEqual(["All segments", "Undefined"]);
-  // The nested TransactionTable has its own, differently-worded "couldn't
-  // load segments" warning for its own failed GET /segments call - scope
-  // this to the filter bar's own wording so the two don't collide.
+  // TransactionTable has its own, differently-worded "couldn't load segments"
+  // warning - scope this check to the filter bar's own wording to avoid a collision.
   await waitFor(() =>
     expect(
       screen.getByText(/Couldn't load segments\. You can still filter by date/)
