@@ -94,8 +94,6 @@ public class AccountService {
         return transactionRepository.findAll(specification, pageable);
     }
 
-    // endDate == today is valid (inclusive), matching the existing future-date check in
-    // TransactionService.addManualTransaction.
     private void validateDateRange(LocalDate startDate, LocalDate endDate) {
         if ((startDate == null) != (endDate == null)) {
             throw new IllegalArgumentException("Both start date and end date are required");

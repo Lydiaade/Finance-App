@@ -54,8 +54,6 @@ public class AccountController {
         return new ResponseEntity<>(Currency.getAvailableCurrencies(), HttpStatus.OK);
     }
 
-    // Range validation lives in AccountService, not here - the controller just translates its
-    // IllegalArgumentException into a 400, matching TransactionController's existing pattern.
     @GetMapping("/account/{id}/transactions")
     public ResponseEntity<?> getAccountTransactions(
             @PathVariable("id") int id,

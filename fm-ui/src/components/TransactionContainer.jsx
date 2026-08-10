@@ -12,8 +12,6 @@ const TransactionContainer = ({ id }) => {
   const [totalPages, setTotalPages] = useState(0);
   const itemsPerPage = 10;
 
-  // "Input" (typed/picked) state is separate from "applied" (last sent to the backend) -
-  // only Apply moves input into applied, so typing/picking never triggers a refetch on its own.
   const [startDateInput, setStartDateInput] = useState("");
   const [endDateInput, setEndDateInput] = useState("");
   const [segmentInput, setSegmentInput] = useState("");
@@ -39,9 +37,8 @@ const TransactionContainer = ({ id }) => {
       });
   }, []);
 
-  // Exact-match (not case-insensitive) on purpose, to mirror the backend's exact-match
-  // filtering - segment names have no dedup on creation, so "undefined" and "Undefined" can
-  // both exist as distinct, separately-filterable real segments.
+  // Exact-match on purpose: segment names have no dedup on creation, so "undefined" and
+  // "Undefined" can both exist as distinct, separately-filterable segments.
   const hasRealUndefinedSegment = segments.some(
     (segment) => segment.name === UNDEFINED_SEGMENT_VALUE
   );
@@ -66,8 +63,7 @@ const TransactionContainer = ({ id }) => {
         `${BACKEND_URL}/accounts/account/${id}/transactions?${params.toString()}`
       );
       if (!response.ok) {
-        // The backend returns a plain-text body on rejection, not JSON - response.json()
-        // would throw here and leave stale items on screen looking like a valid result.
+        // body is plain text, not JSON
         if (filtering) {
           let message = "Failed to load filtered transactions. Please try again.";
           try {
@@ -76,7 +72,7 @@ const TransactionContainer = ({ id }) => {
               message = text;
             }
           } catch (readError) {
-            // ignore - fall back to the generic message above
+            // no-op
           }
           setFilterError(message);
           setItems([]);
@@ -108,8 +104,6 @@ const TransactionContainer = ({ id }) => {
     setCurrentPage(page);
   };
 
-  // Mirrors the backend's own date validation as a fast-fail UX layer - the backend still
-  // enforces these rules independently.
   const validationErrorFor = (startDate, endDate) => {
     const today = getTodayIsoDate();
     if (startDate > endDate) {

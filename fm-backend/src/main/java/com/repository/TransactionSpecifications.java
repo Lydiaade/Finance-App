@@ -24,8 +24,6 @@ public class TransactionSpecifications {
                 criteriaBuilder.between(root.get("date"), startDate, endDate);
     }
 
-    // null (rather than an empty-string equality predicate) so the caller's Specification.and()
-    // skips this filter entirely when no segment was requested.
     public static Specification<Transaction> hasSegment(String segment) {
         if (!StringUtils.hasText(segment)) {
             return null;
