@@ -21,6 +21,11 @@ function EditAccount() {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const [accountLoaded, setAccountLoaded] = useState(false);
+  const [balance, setBalance] = useState("");
+  const [balanceDate, setBalanceDate] = useState("");
+  const [savingBalance, setSavingBalance] = useState(false);
+  const [balanceError, setBalanceError] = useState("");
+  const [balanceSuccess, setBalanceSuccess] = useState(false);
   useEffect(() => {
     async function fetchData() {
       // You can await here
@@ -28,6 +33,12 @@ function EditAccount() {
         .then((data) => data.json())
         .then((data) => {
           setAccount(data);
+          setBalance(
+            data.currentBalance !== undefined && data.currentBalance !== null
+              ? String(data.currentBalance)
+              : ""
+          );
+          setBalanceDate(data.currentBalanceDate || "");
         })
         .finally(() => setAccountLoaded(true));
     }
@@ -68,6 +79,50 @@ function EditAccount() {
       );
       setDeleting(false);
       setShowDeleteConfirm(false);
+    }
+  }
+
+  async function saveBalance(event) {
+    event.preventDefault();
+    if (!balance || !balance.toString().trim()) {
+      setBalanceSuccess(false);
+      setBalanceError("Balance is required.");
+      return;
+    }
+    setSavingBalance(true);
+    setBalanceError("");
+    setBalanceSuccess(false);
+    try {
+      const response = await fetch(
+        `${BACKEND_URL}/accounts/account/${account.id}/balance`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            currentBalance: Number(balance),
+            currentBalanceDate: balanceDate,
+          }),
+        }
+      );
+      if (!response.ok) {
+        const message = await response.text();
+        throw new Error(message || "Couldn't update the balance. Please try again.");
+      }
+      const updated = await response.json();
+      setAccount(updated);
+      setBalance(
+        updated.currentBalance !== undefined && updated.currentBalance !== null
+          ? String(updated.currentBalance)
+          : balance
+      );
+      setBalanceDate(updated.currentBalanceDate || balanceDate);
+      setBalanceSuccess(true);
+    } catch (error) {
+      setBalanceError(
+        error.message || "Couldn't update the balance. Please try again."
+      );
+    } finally {
+      setSavingBalance(false);
     }
   }
 
@@ -117,6 +172,70 @@ function EditAccount() {
           <FormGroup className="form-buttons">
             <Button type="submit" className="btn btn-primary">
               Save Changes
+            </Button>
+          </FormGroup>
+        </Form>
+      </Container>
+      <Container>
+        <h2 className="h5">Balance</h2>
+        {balanceError && (
+          <Alert variant="danger" dismissible onClose={() => setBalanceError("")}>
+            {balanceError}
+          </Alert>
+        )}
+        {balanceSuccess && (
+          <Alert
+            variant="success"
+            dismissible
+            onClose={() => setBalanceSuccess(false)}
+          >
+            Balance updated successfully.
+          </Alert>
+        )}
+        <Form onSubmit={saveBalance}>
+          <Form.Group
+            as={Row}
+            className="mb-3"
+            controlId="formHorizontalBalance"
+          >
+            <Form.Label column sm={4}>
+              Balance:
+            </Form.Label>
+            <Col sm={8}>
+              <Form.Control
+                type="number"
+                step="0.01"
+                name="currentBalance"
+                value={balance}
+                onChange={(e) => setBalance(e.target.value)}
+                required
+              />
+            </Col>
+          </Form.Group>
+          <Form.Group
+            as={Row}
+            className="mb-3"
+            controlId="formHorizontalBalanceDate"
+          >
+            <Form.Label column sm={4}>
+              Balance Date:
+            </Form.Label>
+            <Col sm={8}>
+              <Form.Control
+                type="date"
+                name="currentBalanceDate"
+                value={balanceDate}
+                onChange={(e) => setBalanceDate(e.target.value)}
+              />
+            </Col>
+          </Form.Group>
+          <FormGroup className="form-buttons">
+            <Button
+              type="submit"
+              className="btn btn-primary"
+              disabled={savingBalance || !accountLoaded}
+            >
+              {savingBalance ? "Saving..." : "Save Balance"}
             </Button>
           </FormGroup>
         </Form>
