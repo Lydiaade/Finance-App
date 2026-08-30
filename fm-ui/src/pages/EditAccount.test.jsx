@@ -15,6 +15,7 @@ const account = {
   sortCode: "11-22-33",
   accountNumber: "12345678",
   currentBalance: 100,
+  currentBalanceDate: "2024-01-01",
 };
 
 function response(status, body) {
@@ -22,6 +23,8 @@ function response(status, body) {
     status,
     ok: status >= 200 && status < 300,
     json: () => Promise.resolve(body),
+    text: () =>
+      Promise.resolve(typeof body === "string" ? body : JSON.stringify(body)),
   });
 }
 
@@ -33,10 +36,13 @@ function deferred() {
   return { promise, resolve };
 }
 
-function setupFetchMock({ del, get } = {}) {
+function setupFetchMock({ del, get, patch } = {}) {
   global.fetch = jest.fn((url, options) => {
     if (options?.method === "DELETE") {
       return del ? del(url) : response(204, null);
+    }
+    if (options?.method === "PATCH") {
+      return patch ? patch(url, options) : response(200, account);
     }
     return get ? get(url) : response(200, account);
   });
@@ -204,4 +210,229 @@ test("a failed delete followed by reopening the dialog clears the previous error
 
   await userEvent.click(screen.getByRole("button", { name: "Yes, delete account" }));
   await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith("/accounts"));
+});
+
+test("balance and balance date fields pre-populate from the fetched account", async () => {
+  const decimalAccount = {
+    id: 7,
+    name: "Savings",
+    sortCode: "44-55-66",
+    accountNumber: "87654321",
+    currentBalance: 1234.56,
+    currentBalanceDate: "2024-03-10",
+  };
+  global.fetch = jest.fn(() => response(200, decimalAccount));
+
+  render(
+    <MemoryRouter>
+      <EditAccount />
+    </MemoryRouter>
+  );
+
+  expect(await screen.findByDisplayValue("1234.56")).toBeInTheDocument();
+  expect(screen.getByDisplayValue("2024-03-10")).toBeInTheDocument();
+});
+
+test("a successful balance save shows confirmation and calls the endpoint with the correct payload", async () => {
+  const updatedAccount = {
+    ...account,
+    currentBalance: 250.75,
+    currentBalanceDate: "2024-02-01",
+  };
+  setupFetchMock({ patch: () => response(200, updatedAccount) });
+  await renderPage();
+
+  const balanceInput = screen.getByLabelText("Balance:");
+  await userEvent.clear(balanceInput);
+  await userEvent.type(balanceInput, "250.75");
+
+  fireEvent.change(screen.getByLabelText("Balance Date:"), {
+    target: { value: "2024-02-01" },
+  });
+
+  await userEvent.click(screen.getByRole("button", { name: "Save Balance" }));
+
+  expect(global.fetch).toHaveBeenCalledWith(
+    expect.stringContaining(`/accounts/account/${account.id}/balance`),
+    expect.objectContaining({
+      method: "PATCH",
+      body: JSON.stringify({
+        currentBalance: 250.75,
+        currentBalanceDate: "2024-02-01",
+      }),
+    })
+  );
+
+  expect(
+    await screen.findByText("Balance updated successfully.")
+  ).toBeInTheDocument();
+  expect(screen.getByDisplayValue("250.75")).toBeInTheDocument();
+});
+
+test("a very large decimal balance survives the Number() conversion on save without precision loss", async () => {
+  // Sanity check for the frontend's `Number(balance)` conversion (routes through a JS double
+  // before JSON.stringify) on a realistic-but-extreme value, not just a typical 2-decimal amount.
+  const largeBalance = "999999999999.99";
+  const updatedAccount = {
+    ...account,
+    currentBalance: 999999999999.99,
+    currentBalanceDate: "2024-02-01",
+  };
+  setupFetchMock({ patch: () => response(200, updatedAccount) });
+  await renderPage();
+
+  const balanceInput = screen.getByLabelText("Balance:");
+  await userEvent.clear(balanceInput);
+  fireEvent.change(balanceInput, { target: { value: largeBalance } });
+
+  fireEvent.change(screen.getByLabelText("Balance Date:"), {
+    target: { value: "2024-02-01" },
+  });
+
+  await userEvent.click(screen.getByRole("button", { name: "Save Balance" }));
+
+  expect(global.fetch).toHaveBeenCalledWith(
+    expect.stringContaining(`/accounts/account/${account.id}/balance`),
+    expect.objectContaining({
+      method: "PATCH",
+      body: JSON.stringify({
+        currentBalance: 999999999999.99,
+        currentBalanceDate: "2024-02-01",
+      }),
+    })
+  );
+
+  expect(
+    await screen.findByText("Balance updated successfully.")
+  ).toBeInTheDocument();
+  expect(screen.getByDisplayValue("999999999999.99")).toBeInTheDocument();
+});
+
+test("a failed balance save shows an error and does not indicate success", async () => {
+  setupFetchMock({ patch: () => response(400, "Balance is required.") });
+  await renderPage();
+
+  await userEvent.click(screen.getByRole("button", { name: "Save Balance" }));
+
+  expect(await screen.findByText("Balance is required.")).toBeInTheDocument();
+  expect(
+    screen.queryByText("Balance updated successfully.")
+  ).not.toBeInTheDocument();
+});
+
+test("a 404 balance save response shows an error and does not indicate success", async () => {
+  setupFetchMock({ patch: () => response(404, "Account not found.") });
+  await renderPage();
+
+  await userEvent.click(screen.getByRole("button", { name: "Save Balance" }));
+
+  expect(await screen.findByText("Account not found.")).toBeInTheDocument();
+  expect(
+    screen.queryByText("Balance updated successfully.")
+  ).not.toBeInTheDocument();
+});
+
+test("submitting with the balance field cleared does not send a request or show success", async () => {
+  setupFetchMock();
+  await renderPage();
+
+  const balanceInput = screen.getByLabelText("Balance:");
+  await userEvent.clear(balanceInput);
+
+  await userEvent.click(screen.getByRole("button", { name: "Save Balance" }));
+
+  expect(global.fetch).not.toHaveBeenCalled();
+  expect(
+    screen.queryByText("Balance updated successfully.")
+  ).not.toBeInTheDocument();
+});
+
+test("submitting with the balance date field cleared does not send a request or show success", async () => {
+  // Backend deserialises currentBalanceDate as a LocalDate with no empty-string handling -
+  // sending "" would 400 with an unfriendly body instead of a validation message, so this
+  // must be blocked client-side before the request goes out.
+  setupFetchMock();
+  await renderPage();
+
+  fireEvent.change(screen.getByLabelText("Balance Date:"), {
+    target: { value: "" },
+  });
+
+  await userEvent.click(screen.getByRole("button", { name: "Save Balance" }));
+
+  expect(global.fetch).not.toHaveBeenCalled();
+  expect(await screen.findByText("Balance date is required.")).toBeInTheDocument();
+  expect(
+    screen.queryByText("Balance updated successfully.")
+  ).not.toBeInTheDocument();
+});
+
+test("editing the balance after a failed save clears the stale error", async () => {
+  setupFetchMock({ patch: () => response(400, "Balance is required.") });
+  await renderPage();
+
+  await userEvent.click(screen.getByRole("button", { name: "Save Balance" }));
+  await screen.findByText("Balance is required.");
+
+  fireEvent.change(screen.getByLabelText("Balance:"), { target: { value: "50" } });
+
+  expect(screen.queryByText("Balance is required.")).not.toBeInTheDocument();
+});
+
+test("editing the balance date after a successful save clears the stale success message", async () => {
+  setupFetchMock({ patch: () => response(200, account) });
+  await renderPage();
+
+  await userEvent.click(screen.getByRole("button", { name: "Save Balance" }));
+  await screen.findByText("Balance updated successfully.");
+
+  fireEvent.change(screen.getByLabelText("Balance Date:"), {
+    target: { value: "2024-05-01" },
+  });
+
+  expect(
+    screen.queryByText("Balance updated successfully.")
+  ).not.toBeInTheDocument();
+});
+
+test("clicking Save Balance twice while the request is in flight only sends one PATCH", async () => {
+  const patchRequest = deferred();
+  setupFetchMock({ patch: () => patchRequest.promise });
+  await renderPage();
+
+  const saveButton = screen.getByRole("button", { name: "Save Balance" });
+  await userEvent.click(saveButton);
+
+  expect(await screen.findByRole("button", { name: "Saving..." })).toBeDisabled();
+
+  // A second click while disabled must not be able to fire a second request.
+  await userEvent.click(screen.getByRole("button", { name: "Saving..." }));
+  expect(global.fetch).toHaveBeenCalledTimes(1);
+
+  patchRequest.resolve(response(200, account));
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: "Save Balance" })).toBeEnabled()
+  );
+});
+
+test("the Save Balance button is disabled until the account has loaded", async () => {
+  const getRequest = deferred();
+  setupFetchMock({ get: () => getRequest.promise });
+
+  render(
+    <MemoryRouter>
+      <EditAccount />
+    </MemoryRouter>
+  );
+
+  expect(screen.getByRole("button", { name: "Save Balance" })).toBeDisabled();
+
+  getRequest.resolve(response(200, account));
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: "Save Balance" })).toBeEnabled()
+  );
+  expect(global.fetch).not.toHaveBeenCalledWith(
+    expect.stringContaining("/balance"),
+    expect.objectContaining({ method: "PATCH" })
+  );
 });

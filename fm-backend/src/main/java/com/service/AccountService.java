@@ -53,6 +53,16 @@ public class AccountService {
         return account.get();
     }
 
+    public BankAccount updateAccountBalance(int id, BigDecimal currentBalance, LocalDate currentBalanceDate) throws FileNotFoundException {
+        if (currentBalance == null || currentBalanceDate == null) {
+            throw new IllegalArgumentException("Both currentBalance and currentBalanceDate are required");
+        }
+        BankAccount account = getAccount(id);
+        account.setCurrentBalance(currentBalance);
+        account.setCurrentBalanceDate(currentBalanceDate);
+        return accountRepository.save(account);
+    }
+
     public List<Transaction> getAccountTransactions(int id) {
         return transactionRepository.findAllByAccount_Id(id);
     }
