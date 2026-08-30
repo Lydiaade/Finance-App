@@ -269,6 +269,45 @@ test("a successful balance save shows confirmation and calls the endpoint with t
   expect(screen.getByDisplayValue("250.75")).toBeInTheDocument();
 });
 
+test("a very large decimal balance survives the Number() conversion on save without precision loss", async () => {
+  // Sanity check for the frontend's `Number(balance)` conversion (routes through a JS double
+  // before JSON.stringify) on a realistic-but-extreme value, not just a typical 2-decimal amount.
+  const largeBalance = "999999999999.99";
+  const updatedAccount = {
+    ...account,
+    currentBalance: 999999999999.99,
+    currentBalanceDate: "2024-02-01",
+  };
+  setupFetchMock({ patch: () => response(200, updatedAccount) });
+  await renderPage();
+
+  const balanceInput = screen.getByLabelText("Balance:");
+  await userEvent.clear(balanceInput);
+  fireEvent.change(balanceInput, { target: { value: largeBalance } });
+
+  fireEvent.change(screen.getByLabelText("Balance Date:"), {
+    target: { value: "2024-02-01" },
+  });
+
+  await userEvent.click(screen.getByRole("button", { name: "Save Balance" }));
+
+  expect(global.fetch).toHaveBeenCalledWith(
+    expect.stringContaining(`/accounts/account/${account.id}/balance`),
+    expect.objectContaining({
+      method: "PATCH",
+      body: JSON.stringify({
+        currentBalance: 999999999999.99,
+        currentBalanceDate: "2024-02-01",
+      }),
+    })
+  );
+
+  expect(
+    await screen.findByText("Balance updated successfully.")
+  ).toBeInTheDocument();
+  expect(screen.getByDisplayValue("999999999999.99")).toBeInTheDocument();
+});
+
 test("a failed balance save shows an error and does not indicate success", async () => {
   setupFetchMock({ patch: () => response(400, "Balance is required.") });
   await renderPage();

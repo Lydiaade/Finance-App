@@ -6,6 +6,8 @@ import com.dto.Transaction;
 import com.repository.AccountRepository;
 import com.repository.FileUploadRepository;
 import com.repository.TransactionRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +35,9 @@ class AccountServiceUpdateBalanceIntegrationTest {
 
     @Autowired
     private FileUploadRepository fileUploadRepository;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     private BankAccount account;
 
@@ -62,6 +67,32 @@ class AccountServiceUpdateBalanceIntegrationTest {
 
         assertEquals(1, transactionRepository.findAllByAccount_Id(account.getId()).size());
         assertEquals(1, fileUploadRepository.findAllByBankAccount_Id(account.getId()).size());
+    }
+
+    // The service-level unit tests (AccountServiceTest) mock accountRepository.save() to return
+    // the same in-memory object, so they can't actually prove the value survives a real database
+    // round trip. This flushes and clears the persistence context so the reload below is a genuine
+    // SELECT against the H2 database, not a return of the cached managed entity - the only way to
+    // prove the `numeric(38,2)` column genuinely preserves a boundary-large and boundary-small
+    // value rather than silently rounding/truncating on write.
+    @Test
+    void updatingBalancePersistsExactPrecisionThroughARealDatabaseRoundTrip() throws FileNotFoundException {
+        BigDecimal veryLargeBalance = new BigDecimal("999999999999.99");
+        accountService.updateAccountBalance(account.getId(), veryLargeBalance, LocalDate.of(2024, 7, 1));
+        entityManager.flush();
+        entityManager.clear();
+
+        BankAccount reloaded = accountRepository.findById(account.getId()).orElseThrow();
+        assertEquals("999999999999.99", reloaded.getCurrentBalance().toPlainString());
+        assertEquals(LocalDate.of(2024, 7, 1), reloaded.getCurrentBalanceDate());
+
+        BigDecimal verySmallBalance = new BigDecimal("0.01");
+        accountService.updateAccountBalance(account.getId(), verySmallBalance, LocalDate.of(2024, 8, 1));
+        entityManager.flush();
+        entityManager.clear();
+
+        BankAccount reloadedAgain = accountRepository.findById(account.getId()).orElseThrow();
+        assertEquals("0.01", reloadedAgain.getCurrentBalance().toPlainString());
     }
 
     @Test
