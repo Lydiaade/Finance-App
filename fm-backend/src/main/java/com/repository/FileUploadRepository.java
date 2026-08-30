@@ -12,4 +12,6 @@ import java.util.List;
 public interface FileUploadRepository extends JpaRepository<FileUpload, Long> {
     @Query("SELECT new com.dto.response.FileInfoResponse(f.id, f.fileName, f.successfulTransactions, f.failedTransactions, f.uploadedAt, f.bankAccount) FROM FileUpload f")
     List<FileInfoResponse> getUploadCondensedData();
+
+    List<FileUpload> findAllByBankAccount_Id(int accountId);
 }

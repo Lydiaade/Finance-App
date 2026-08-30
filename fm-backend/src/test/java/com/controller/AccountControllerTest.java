@@ -16,8 +16,11 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -177,5 +180,28 @@ class AccountControllerTest {
                         .param("segment", "Groceries"))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string("Both start date and end date are required"));
+    }
+
+    // A successful delete (including of an account that had FileUpload rows, per FM-63) must
+    // return a genuine 2xx - the frontend only navigates away on a successful response.
+    @Test
+    void deleteAccountReturnsNoContentOnSuccess() throws Exception {
+        doNothing().when(accountService).deleteAccount(1);
+
+        mockMvc.perform(delete("/accounts/account/1"))
+                .andExpect(status().isNoContent());
+
+        verify(accountService).deleteAccount(1);
+    }
+
+    // FM-63 leaves this contract untouched: any exception raised by the service (e.g. the
+    // account not existing) still surfaces as a 404, not a new error shape.
+    @Test
+    void deleteAccountForNonExistentIdStillReturns404() throws Exception {
+        doThrow(new org.springframework.dao.EmptyResultDataAccessException(1))
+                .when(accountService).deleteAccount(999);
+
+        mockMvc.perform(delete("/accounts/account/999"))
+                .andExpect(status().isNotFound());
     }
 }

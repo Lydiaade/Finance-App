@@ -1,9 +1,11 @@
 package com.service;
 
 import com.dto.BankAccount;
+import com.dto.FileUpload;
 import com.dto.MonthlyTransactionTotal;
 import com.dto.Transaction;
 import com.repository.AccountRepository;
+import com.repository.FileUploadRepository;
 import com.repository.TransactionRepository;
 import com.repository.TransactionSpecifications;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +33,9 @@ public class AccountService {
 
     @Autowired
     private TransactionRepository transactionRepository;
+
+    @Autowired
+    private FileUploadRepository fileUploadRepository;
 
     @Autowired
     private FinanceManagerService financeManagerService;
@@ -72,10 +77,15 @@ public class AccountService {
     }
 
     public void deleteAccount(int id){
+        // Must stay: FileUpload -> Transaction cascade alone would miss manually-added
+        // transactions (fileUpload = null, FM-23), since they aren't reachable from any
+        // FileUpload's transactions list.
         List<Transaction> transactions = transactionRepository.findAllByAccount_Id(id);
         for (Transaction transaction: transactions) {
             transactionRepository.deleteById(transaction.getId());
         }
+        List<FileUpload> fileUploads = fileUploadRepository.findAllByBankAccount_Id(id);
+        fileUploadRepository.deleteAll(fileUploads);
         accountRepository.deleteById(id);
     }
 
