@@ -20,6 +20,7 @@ function EditAccount() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+  const [accountLoaded, setAccountLoaded] = useState(false);
   useEffect(() => {
     async function fetchData() {
       // You can await here
@@ -27,7 +28,8 @@ function EditAccount() {
         .then((data) => data.json())
         .then((data) => {
           setAccount(data);
-        });
+        })
+        .finally(() => setAccountLoaded(true));
     }
     if (!initialised.current) {
       initialised.current = true;
@@ -40,7 +42,11 @@ function EditAccount() {
     setShowDeleteConfirm(true);
   }
 
+  // Closing via Cancel, the header X, a backdrop click, or Escape must all be
+  // equivalent no-ops - but not while a delete is in flight, otherwise the
+  // dialog can be dismissed mid-request with no way to see the outcome.
   function cancelDelete() {
+    if (deleting) return;
     setShowDeleteConfirm(false);
   }
 
@@ -126,14 +132,25 @@ function EditAccount() {
             {deleteError}
           </Alert>
         )}
-        <Button className="btn btn-danger" onClick={openDeleteConfirm}>
+        <Button
+          className="btn btn-danger"
+          onClick={openDeleteConfirm}
+          disabled={!accountLoaded}
+        >
           Delete Account
         </Button>
       </Container>
 
-      <Modal show={showDeleteConfirm} onHide={cancelDelete} animation={false}>
+      <Modal
+        show={showDeleteConfirm}
+        onHide={cancelDelete}
+        animation={false}
+        aria-labelledby="delete-account-modal-title"
+      >
         <Modal.Header closeButton>
-          <Modal.Title>Delete this account?</Modal.Title>
+          <Modal.Title id="delete-account-modal-title">
+            Delete this account?
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           This will permanently delete this account, along with all of its
