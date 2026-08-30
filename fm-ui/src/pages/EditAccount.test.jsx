@@ -307,3 +307,93 @@ test("submitting with the balance field cleared does not send a request or show 
     screen.queryByText("Balance updated successfully.")
   ).not.toBeInTheDocument();
 });
+
+test("submitting with the balance date field cleared does not send a request or show success", async () => {
+  // Backend deserialises currentBalanceDate as a LocalDate with no empty-string handling -
+  // sending "" would 400 with an unfriendly body instead of a validation message, so this
+  // must be blocked client-side before the request goes out.
+  setupFetchMock();
+  await renderPage();
+
+  fireEvent.change(screen.getByLabelText("Balance Date:"), {
+    target: { value: "" },
+  });
+
+  await userEvent.click(screen.getByRole("button", { name: "Save Balance" }));
+
+  expect(global.fetch).not.toHaveBeenCalled();
+  expect(await screen.findByText("Balance date is required.")).toBeInTheDocument();
+  expect(
+    screen.queryByText("Balance updated successfully.")
+  ).not.toBeInTheDocument();
+});
+
+test("editing the balance after a failed save clears the stale error", async () => {
+  setupFetchMock({ patch: () => response(400, "Balance is required.") });
+  await renderPage();
+
+  await userEvent.click(screen.getByRole("button", { name: "Save Balance" }));
+  await screen.findByText("Balance is required.");
+
+  fireEvent.change(screen.getByLabelText("Balance:"), { target: { value: "50" } });
+
+  expect(screen.queryByText("Balance is required.")).not.toBeInTheDocument();
+});
+
+test("editing the balance date after a successful save clears the stale success message", async () => {
+  setupFetchMock({ patch: () => response(200, account) });
+  await renderPage();
+
+  await userEvent.click(screen.getByRole("button", { name: "Save Balance" }));
+  await screen.findByText("Balance updated successfully.");
+
+  fireEvent.change(screen.getByLabelText("Balance Date:"), {
+    target: { value: "2024-05-01" },
+  });
+
+  expect(
+    screen.queryByText("Balance updated successfully.")
+  ).not.toBeInTheDocument();
+});
+
+test("clicking Save Balance twice while the request is in flight only sends one PATCH", async () => {
+  const patchRequest = deferred();
+  setupFetchMock({ patch: () => patchRequest.promise });
+  await renderPage();
+
+  const saveButton = screen.getByRole("button", { name: "Save Balance" });
+  await userEvent.click(saveButton);
+
+  expect(await screen.findByRole("button", { name: "Saving..." })).toBeDisabled();
+
+  // A second click while disabled must not be able to fire a second request.
+  await userEvent.click(screen.getByRole("button", { name: "Saving..." }));
+  expect(global.fetch).toHaveBeenCalledTimes(1);
+
+  patchRequest.resolve(response(200, account));
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: "Save Balance" })).toBeEnabled()
+  );
+});
+
+test("the Save Balance button is disabled until the account has loaded", async () => {
+  const getRequest = deferred();
+  setupFetchMock({ get: () => getRequest.promise });
+
+  render(
+    <MemoryRouter>
+      <EditAccount />
+    </MemoryRouter>
+  );
+
+  expect(screen.getByRole("button", { name: "Save Balance" })).toBeDisabled();
+
+  getRequest.resolve(response(200, account));
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: "Save Balance" })).toBeEnabled()
+  );
+  expect(global.fetch).not.toHaveBeenCalledWith(
+    expect.stringContaining("/balance"),
+    expect.objectContaining({ method: "PATCH" })
+  );
+});

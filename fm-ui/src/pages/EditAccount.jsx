@@ -82,11 +82,35 @@ function EditAccount() {
     }
   }
 
+  function handleBalanceChange(event) {
+    setBalance(event.target.value);
+    setBalanceError("");
+    setBalanceSuccess(false);
+  }
+
+  function handleBalanceDateChange(event) {
+    setBalanceDate(event.target.value);
+    setBalanceError("");
+    setBalanceSuccess(false);
+  }
+
   async function saveBalance(event) {
     event.preventDefault();
-    if (!balance || !balance.toString().trim()) {
+    if (savingBalance) return;
+    const trimmedBalance = balance.toString().trim();
+    if (!trimmedBalance) {
       setBalanceSuccess(false);
       setBalanceError("Balance is required.");
+      return;
+    }
+    if (Number.isNaN(Number(trimmedBalance))) {
+      setBalanceSuccess(false);
+      setBalanceError("Enter a valid balance amount.");
+      return;
+    }
+    if (!balanceDate) {
+      setBalanceSuccess(false);
+      setBalanceError("Balance date is required.");
       return;
     }
     setSavingBalance(true);
@@ -207,7 +231,7 @@ function EditAccount() {
                 step="0.01"
                 name="currentBalance"
                 value={balance}
-                onChange={(e) => setBalance(e.target.value)}
+                onChange={handleBalanceChange}
                 required
               />
             </Col>
@@ -225,7 +249,8 @@ function EditAccount() {
                 type="date"
                 name="currentBalanceDate"
                 value={balanceDate}
-                onChange={(e) => setBalanceDate(e.target.value)}
+                onChange={handleBalanceDateChange}
+                required
               />
             </Col>
           </Form.Group>
