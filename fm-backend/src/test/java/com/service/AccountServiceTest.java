@@ -84,6 +84,141 @@ public class AccountServiceTest {
         assertTrue(actualMessage.contains(expectedMessage));
     }
 
+    // ---- updateAccountBalance ----
+
+    @Test
+    public void updateAccountBalanceSavesOnlyBalanceAndDateAndReturnsUpdatedAccount() throws FileNotFoundException {
+        BankAccount account = new BankAccount("Account Name", "SORT NUMBER", "ACCOUNT NUMBER", new BigDecimal("1000.00"), LocalDate.of(2024, 1, 1));
+        when(accountRepository.findById(1)).thenReturn(Optional.of(account));
+        when(accountRepository.save(account)).thenReturn(account);
+
+        BigDecimal newBalance = new BigDecimal("123.45");
+        LocalDate newDate = LocalDate.of(2024, 6, 1);
+
+        BankAccount result = service.updateAccountBalance(1, newBalance, newDate);
+
+        assertEquals(newBalance, result.getCurrentBalance());
+        assertEquals(newDate, result.getCurrentBalanceDate());
+        assertEquals("Account Name", result.getName());
+        assertEquals("SORT NUMBER", result.getSortCode());
+        assertEquals("ACCOUNT NUMBER", result.getAccountNumber());
+    }
+
+    @Test
+    public void updateAccountBalanceLeavesUnrelatedFieldsUntouched() throws FileNotFoundException {
+        BankAccount account = new BankAccount("Original Name", "111111", "22222222", "DEBIT", "BARCLAYS", "GBP", new BigDecimal("500.00"), "2024-01-01");
+        account.setMainBankAccount(true);
+        when(accountRepository.findById(1)).thenReturn(Optional.of(account));
+        when(accountRepository.save(account)).thenReturn(account);
+
+        BankAccount result = service.updateAccountBalance(1, new BigDecimal("999.99"), LocalDate.of(2024, 12, 25));
+
+        assertEquals("Original Name", result.getName());
+        assertEquals("111111", result.getSortCode());
+        assertEquals("22222222", result.getAccountNumber());
+        assertEquals(com.dto.BankAccountType.DEBIT, result.getAccountType());
+        assertEquals(com.dto.BankName.BARCLAYS, result.getBankName());
+        assertEquals(java.util.Currency.getInstance("GBP"), result.getCurrency());
+        assertTrue(result.isMainBankAccount());
+    }
+
+    @Test
+    public void updateAccountBalanceForNonExistentAccountThrowsFileNotFoundException() {
+        when(accountRepository.findById(999)).thenReturn(Optional.empty());
+
+        Exception exception = assertThrows(FileNotFoundException.class,
+                () -> service.updateAccountBalance(999, BigDecimal.TEN, LocalDate.now()));
+
+        assertTrue(exception.getMessage().contains("This account does not exist"));
+        org.mockito.Mockito.verify(accountRepository, org.mockito.Mockito.never()).save(any());
+    }
+
+    @Test
+    public void updateAccountBalanceRejectsNullBalance() {
+        Exception exception = assertThrows(IllegalArgumentException.class,
+                () -> service.updateAccountBalance(1, null, LocalDate.now()));
+
+        assertEquals("Both currentBalance and currentBalanceDate are required", exception.getMessage());
+        org.mockito.Mockito.verifyNoInteractions(accountRepository);
+    }
+
+    @Test
+    public void updateAccountBalanceRejectsNullDate() {
+        Exception exception = assertThrows(IllegalArgumentException.class,
+                () -> service.updateAccountBalance(1, BigDecimal.TEN, null));
+
+        assertEquals("Both currentBalance and currentBalanceDate are required", exception.getMessage());
+        org.mockito.Mockito.verifyNoInteractions(accountRepository);
+    }
+
+    @Test
+    public void updateAccountBalanceAllowsANegativeBalance() throws FileNotFoundException {
+        BankAccount account = new BankAccount("Account Name", "SORT NUMBER", "ACCOUNT NUMBER", new BigDecimal("100.00"), LocalDate.now());
+        when(accountRepository.findById(1)).thenReturn(Optional.of(account));
+        when(accountRepository.save(account)).thenReturn(account);
+
+        BigDecimal overdrawnBalance = new BigDecimal("-250.75");
+
+        BankAccount result = service.updateAccountBalance(1, overdrawnBalance, LocalDate.now());
+
+        assertEquals(overdrawnBalance, result.getCurrentBalance());
+    }
+
+    @Test
+    public void updateAccountBalanceAllowsAFutureBalanceDate() throws FileNotFoundException {
+        BankAccount account = new BankAccount("Account Name", "SORT NUMBER", "ACCOUNT NUMBER", new BigDecimal("100.00"), LocalDate.now());
+        when(accountRepository.findById(1)).thenReturn(Optional.of(account));
+        when(accountRepository.save(account)).thenReturn(account);
+
+        LocalDate futureDate = LocalDate.now().plusYears(1);
+
+        BankAccount result = service.updateAccountBalance(1, BigDecimal.TEN, futureDate);
+
+        assertEquals(futureDate, result.getCurrentBalanceDate());
+    }
+
+    @Test
+    public void updateAccountBalanceSucceedsWhenValuesAreIdenticalToExisting() throws FileNotFoundException {
+        BigDecimal existingBalance = new BigDecimal("100.00");
+        LocalDate existingDate = LocalDate.of(2024, 3, 1);
+        BankAccount account = new BankAccount("Account Name", "SORT NUMBER", "ACCOUNT NUMBER", existingBalance, existingDate);
+        when(accountRepository.findById(1)).thenReturn(Optional.of(account));
+        when(accountRepository.save(account)).thenReturn(account);
+
+        BankAccount result = service.updateAccountBalance(1, existingBalance, existingDate);
+
+        assertEquals(existingBalance, result.getCurrentBalance());
+        assertEquals(existingDate, result.getCurrentBalanceDate());
+    }
+
+    @Test
+    public void updateAccountBalancePreservesDecimalPrecisionExactly() throws FileNotFoundException {
+        BankAccount account = new BankAccount("Account Name", "SORT NUMBER", "ACCOUNT NUMBER", new BigDecimal("1.00"), LocalDate.now());
+        when(accountRepository.findById(1)).thenReturn(Optional.of(account));
+        when(accountRepository.save(account)).thenReturn(account);
+
+        BigDecimal preciseBalance = new BigDecimal("123.45");
+
+        BankAccount result = service.updateAccountBalance(1, preciseBalance, LocalDate.now());
+
+        assertEquals("123.45", result.getCurrentBalance().toPlainString());
+    }
+
+    @Test
+    public void updateAccountBalanceHandlesVeryLargeAndVerySmallValuesWithoutLoss() throws FileNotFoundException {
+        BankAccount account = new BankAccount("Account Name", "SORT NUMBER", "ACCOUNT NUMBER", BigDecimal.ZERO, LocalDate.now());
+        when(accountRepository.findById(1)).thenReturn(Optional.of(account));
+        when(accountRepository.save(account)).thenReturn(account);
+
+        BigDecimal verySmall = new BigDecimal("0.01");
+        BankAccount smallResult = service.updateAccountBalance(1, verySmall, LocalDate.now());
+        assertEquals("0.01", smallResult.getCurrentBalance().toPlainString());
+
+        BigDecimal veryLarge = new BigDecimal("999999999999.99");
+        BankAccount largeResult = service.updateAccountBalance(1, veryLarge, LocalDate.now());
+        assertEquals("999999999999.99", largeResult.getCurrentBalance().toPlainString());
+    }
+
     // ---- FM-53: getPaginatedAccountTransactions ----
     //
     // FM-53 replaced the two hand-written native pagination queries (each with its own separate

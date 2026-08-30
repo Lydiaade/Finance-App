@@ -2,6 +2,7 @@ package com.controller;
 
 import com.dto.*;
 import com.dto.request.NewBankAccountRequest;
+import com.dto.request.UpdateAccountBalanceRequest;
 import com.service.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -89,6 +90,18 @@ public class AccountController {
         BankAccount account = new BankAccount(request.name(), request.sortCode(), request.accountNumber(), request.accountType(), request.accountBank(), request.currency(), request.currentBalance(), request.balanceDate());
         accountService.addAccount(account);
         return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+
+    @PatchMapping("/account/{id}/balance")
+    public ResponseEntity<?> updateAccountBalance(@PathVariable("id") int id, @RequestBody UpdateAccountBalanceRequest request) {
+        try {
+            BankAccount account = accountService.updateAccountBalance(id, request.currentBalance(), request.currentBalanceDate());
+            return new ResponseEntity<>(account, HttpStatus.OK);
+        } catch (FileNotFoundException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
     }
 
     @DeleteMapping("/account/{id}")

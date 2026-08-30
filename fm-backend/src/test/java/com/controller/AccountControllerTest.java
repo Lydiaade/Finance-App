@@ -1,5 +1,6 @@
 package com.controller;
 
+import com.dto.BankAccount;
 import com.dto.Transaction;
 import com.service.AccountService;
 import org.junit.jupiter.api.Test;
@@ -9,11 +10,15 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.io.FileNotFoundException;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doNothing;
@@ -22,6 +27,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -203,5 +209,117 @@ class AccountControllerTest {
 
         mockMvc.perform(delete("/accounts/account/999"))
                 .andExpect(status().isNotFound());
+    }
+
+    // ---- PATCH /accounts/account/{id}/balance ----
+
+    @Test
+    void updateAccountBalanceReturns200WithUpdatedAccount() throws Exception {
+        BankAccount updated = new BankAccount("Account Name", "SORT NUMBER", "ACCOUNT NUMBER",
+                new BigDecimal("123.45"), LocalDate.of(2024, 6, 1));
+        when(accountService.updateAccountBalance(eq(1), eq(new BigDecimal("123.45")), eq(LocalDate.of(2024, 6, 1))))
+                .thenReturn(updated);
+
+        mockMvc.perform(patch("/accounts/account/1/balance")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "currentBalance": 123.45,
+                                    "currentBalanceDate": "2024-06-01"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.currentBalance").value(123.45))
+                .andExpect(jsonPath("$.currentBalanceDate").value("2024-06-01"));
+
+        verify(accountService).updateAccountBalance(1, new BigDecimal("123.45"), LocalDate.of(2024, 6, 1));
+    }
+
+    @Test
+    void updateAccountBalanceReturns404ForUnknownAccountId() throws Exception {
+        when(accountService.updateAccountBalance(eq(999), any(BigDecimal.class), any(LocalDate.class)))
+                .thenThrow(new FileNotFoundException("This account does not exist"));
+
+        mockMvc.perform(patch("/accounts/account/999/balance")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "currentBalance": 100.00,
+                                    "currentBalanceDate": "2024-06-01"
+                                }
+                                """))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("This account does not exist"));
+    }
+
+    @Test
+    void updateAccountBalanceReturns400ForMissingCurrentBalance() throws Exception {
+        when(accountService.updateAccountBalance(eq(1), isNull(), any(LocalDate.class)))
+                .thenThrow(new IllegalArgumentException("Both currentBalance and currentBalanceDate are required"));
+
+        mockMvc.perform(patch("/accounts/account/1/balance")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "currentBalanceDate": "2024-06-01"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Both currentBalance and currentBalanceDate are required"));
+    }
+
+    @Test
+    void updateAccountBalanceReturns400ForMissingCurrentBalanceDate() throws Exception {
+        when(accountService.updateAccountBalance(eq(1), any(BigDecimal.class), isNull()))
+                .thenThrow(new IllegalArgumentException("Both currentBalance and currentBalanceDate are required"));
+
+        mockMvc.perform(patch("/accounts/account/1/balance")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "currentBalance": 100.00
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Both currentBalance and currentBalanceDate are required"));
+    }
+
+    @Test
+    void updateAccountBalanceAcceptsANegativeBalance() throws Exception {
+        BankAccount updated = new BankAccount("Account Name", "SORT NUMBER", "ACCOUNT NUMBER",
+                new BigDecimal("-50.00"), LocalDate.of(2024, 6, 1));
+        when(accountService.updateAccountBalance(eq(1), eq(new BigDecimal("-50.00")), eq(LocalDate.of(2024, 6, 1))))
+                .thenReturn(updated);
+
+        mockMvc.perform(patch("/accounts/account/1/balance")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "currentBalance": -50.00,
+                                    "currentBalanceDate": "2024-06-01"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.currentBalance").value(-50.00));
+    }
+
+    @Test
+    void updateAccountBalanceAcceptsAFutureBalanceDate() throws Exception {
+        LocalDate future = LocalDate.now().plusYears(1);
+        BankAccount updated = new BankAccount("Account Name", "SORT NUMBER", "ACCOUNT NUMBER",
+                new BigDecimal("100.00"), future);
+        when(accountService.updateAccountBalance(eq(1), eq(new BigDecimal("100.00")), eq(future)))
+                .thenReturn(updated);
+
+        mockMvc.perform(patch("/accounts/account/1/balance")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "currentBalance": 100.00,
+                                    "currentBalanceDate": "%s"
+                                }
+                                """.formatted(future)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.currentBalanceDate").value(future.toString()));
     }
 }
