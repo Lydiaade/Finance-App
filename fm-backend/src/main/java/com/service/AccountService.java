@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.FileNotFoundException;
 import java.math.BigDecimal;
@@ -76,6 +77,10 @@ public class AccountService {
         accountRepository.save(account);
     }
 
+    // @Transactional: transactions, file uploads, and the account itself must delete as one unit -
+    // without this, each repository call commits independently, so a failure partway through
+    // leaves a partial "ghost" state (e.g. transactions gone but account/uploads still present).
+    @Transactional
     public void deleteAccount(int id){
         // Must stay: FileUpload -> Transaction cascade alone would miss manually-added
         // transactions (fileUpload = null, FM-23), since they aren't reachable from any
